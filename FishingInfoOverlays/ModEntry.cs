@@ -14,7 +14,7 @@ namespace StardewMods
     /// <summary>The mod entry point.</summary>
     public class ModEntry : Mod
     {
-        private bool dayStarted;    //world fish preview data
+        private bool dayStarted;    //world fish preview data 
         private Dictionary<string, string> locationData;
         private Dictionary<int, string> fishData;
         private List<int> fishHere;
