@@ -80,48 +80,51 @@ namespace StardewMods
             Config = Helper.ReadConfig<ModConfig>();
             ITranslationHelper Transl = Helper.Translation;
             var GenericMC = Helper.ModRegistry.GetApi<GenericModConfigMenuAPI>("spacechase0.GenericModConfigMenu");
-            GenericMC.RegisterModConfig(ModManifest, () => Config = new ModConfig(), () => Helper.WriteConfig(Config));
-            GenericMC.SetDefaultIngameOptinValue(ModManifest, true);
-            GenericMC.RegisterLabel(ModManifest, Transl.Get("GenericMC.barLabel"), ""); //All of these strings are stored in the traslation files.
-            GenericMC.RegisterParagraph(ModManifest, Transl.Get("GenericMC.barDescription") + "\n");
-            GenericMC.RegisterChoiceOption(ModManifest, Transl.Get("GenericMC.barIconMode"), Transl.Get("GenericMC.barIconModeDesc"),
-                () => (Config.BarIconMode == 0) ? Transl.Get("GenericMC.barIconModeHor") : (Config.BarIconMode == 1) ? Transl.Get("GenericMC.barIconModeVert") : (Config.BarIconMode == 2) ? Transl.Get("GenericMC.barIconModeVertText") : Transl.Get("GenericMC.Disabled"),
-                (string val) => Config.BarIconMode = Int32.Parse((val.Equals(Transl.Get("GenericMC.barIconModeHor"), StringComparison.Ordinal)) ? "0" : (val.Equals(Transl.Get("GenericMC.barIconModeVert"), StringComparison.Ordinal)) ? "1" : (!val.Equals(Transl.Get("GenericMC.Disabled"), StringComparison.Ordinal)) ? "2" : "3"),
-                new string[] { Transl.Get("GenericMC.barIconModeHor"), Transl.Get("GenericMC.barIconModeVert"), Transl.Get("GenericMC.barIconModeVertText"), Transl.Get("GenericMC.Disabled") });//small 'hack' so options appear as name strings, while config.json stores them as integers
-            GenericMC.RegisterSimpleOption(ModManifest, Transl.Get("GenericMC.barPosX"), Transl.Get("GenericMC.barPosXDesc"),
-                 () => Config.BarTopLeftLocationX, (int val) => Config.BarTopLeftLocationX = Math.Max(0, val));
-            GenericMC.RegisterSimpleOption(ModManifest, Transl.Get("GenericMC.barPosY"), Transl.Get("GenericMC.barPosYDesc"),
-                () => Config.BarTopLeftLocationY, (int val) => Config.BarTopLeftLocationY = Math.Max(0, val));
-            GenericMC.RegisterSimpleOption(ModManifest, Transl.Get("GenericMC.barScale"), Transl.Get("GenericMC.barScaleDesc"),
-                () => (float)Config.BarScale, (float val) => Config.BarScale = Math.Min(10, Math.Max(0.1f, val)));
-            GenericMC.RegisterSimpleOption(ModManifest, Transl.Get("GenericMC.barMaxIcons"), Transl.Get("GenericMC.barMaxIconsDesc"),
-               () => Config.BarMaxIcons, (int val) => Config.BarMaxIcons = (int)Math.Min(500, Math.Max(4, val)));
-            GenericMC.RegisterSimpleOption(ModManifest, Transl.Get("GenericMC.barMaxIconsPerRow"), Transl.Get("GenericMC.barMaxIconsPerRowDesc"),
-                () => Config.BarMaxIconsPerRow, (int val) => Config.BarMaxIconsPerRow = (int)Math.Min(500, Math.Max(4, val)));
-            GenericMC.RegisterChoiceOption(ModManifest, Transl.Get("GenericMC.barBackgroundMode"), Transl.Get("GenericMC.barBackgroundModeDesc"),
-                () => (Config.BarBackgroundMode == 0) ? Transl.Get("GenericMC.barBackgroundModeCircles") : (Config.BarBackgroundMode == 1) ? Transl.Get("GenericMC.barBackgroundModeRect") : Transl.Get("GenericMC.Disabled"),
-                (string val) => Config.BarBackgroundMode = Int32.Parse((val.Equals(Transl.Get("GenericMC.barBackgroundModeCircles"), StringComparison.Ordinal)) ? "0" : (val.Equals(Transl.Get("GenericMC.barBackgroundModeRect"), StringComparison.Ordinal)) ? "1" : "2"),
-                new string[] { Transl.Get("GenericMC.barBackgroundModeCircles"), Transl.Get("GenericMC.barBackgroundModeRect"), Transl.Get("GenericMC.Disabled") });
-            GenericMC.RegisterSimpleOption(ModManifest, Transl.Get("GenericMC.barShowBaitTackle"), Transl.Get("GenericMC.barShowBaitTackleDesc"),
-                () => Config.BarShowBaitAndTackleInfo, (bool val) => Config.BarShowBaitAndTackleInfo = val);
-            GenericMC.RegisterSimpleOption(ModManifest, Transl.Get("GenericMC.barShowTrash"), Transl.Get("GenericMC.barShowTrashDesc"),
-                () => Config.BarShowTrash, (bool val) => Config.BarShowTrash = val);
-            GenericMC.RegisterChoiceOption(ModManifest, Transl.Get("GenericMC.barLegendaryMode"), Transl.Get("GenericMC.barLegendaryModeDesc"),
-                () => (Config.BarLegendaryMode == 0) ? Transl.Get("GenericMC.barLegendaryModeVanilla") : (Config.BarLegendaryMode == 1) ? Transl.Get("GenericMC.barLegendaryModeAlways") : Transl.Get("GenericMC.Disabled"),
-                (string val) => Config.BarLegendaryMode = Int32.Parse((val.Equals(Transl.Get("GenericMC.barLegendaryModeVanilla"), StringComparison.Ordinal)) ? "0" : (val.Equals(Transl.Get("GenericMC.barLegendaryModeAlways"), StringComparison.Ordinal)) ? "1" : "2"),
-                new string[] { Transl.Get("GenericMC.barLegendaryModeVanilla"), Transl.Get("GenericMC.barLegendaryModeAlways"), Transl.Get("GenericMC.Disabled") });
-            GenericMC.RegisterClampedOption(ModManifest, Transl.Get("GenericMC.barExtraCheckFrequency"), Transl.Get("GenericMC.barExtraCheckFrequencyDesc"),
-                () => Config.BarExtraCheckFrequency, (int val) => Config.BarExtraCheckFrequency = val, 0, 200);
-            GenericMC.RegisterSimpleOption(ModManifest, Transl.Get("GenericMC.barCrabPotEnabled"), Transl.Get("GenericMC.barCrabPotEnabledDesc"),
-                () => Config.BarCrabPotEnabled, (bool val) => Config.BarCrabPotEnabled = val);
-            GenericMC.RegisterSimpleOption(ModManifest, Transl.Get("GenericMC.barUncaughtDarker"), Transl.Get("GenericMC.barUncaughtDarkerDesc"),
-                () => Config.UncaughtFishAreDark, (bool val) => Config.UncaughtFishAreDark = val);
-            GenericMC.RegisterLabel(ModManifest, Transl.Get("GenericMC.MinigameLabel"), "");
-            GenericMC.RegisterParagraph(ModManifest, Transl.Get("GenericMC.MinigameDescription"));
-            GenericMC.RegisterChoiceOption(ModManifest, Transl.Get("GenericMC.MinigameMode"), Transl.Get("GenericMC.MinigameModeDesc"),
-                () => (Config.MinigamePreviewMode == 0) ? Transl.Get("GenericMC.MinigameModeFull") : (Config.MinigamePreviewMode == 1) ? Transl.Get("GenericMC.MinigameModeSimple") : (Config.MinigamePreviewMode == 2) ? Transl.Get("GenericMC.MinigameModeBarOnly") : Transl.Get("GenericMC.Disabled"),
-                (string val) => Config.MinigamePreviewMode = Int32.Parse((val.Equals(Transl.Get("GenericMC.MinigameModeFull"), StringComparison.Ordinal)) ? "0" : (val.Equals(Transl.Get("GenericMC.MinigameModeSimple"), StringComparison.Ordinal)) ? "1" : (val.Equals(Transl.Get("GenericMC.MinigameModeBarOnly"), StringComparison.Ordinal)) ? "2" : "3"),
-                new string[] { Transl.Get("GenericMC.MinigameModeFull"), Transl.Get("GenericMC.MinigameModeSimple"), Transl.Get("GenericMC.MinigameModeBarOnly"), Transl.Get("GenericMC.Disabled") });
+            if (GenericMC != null)
+            {
+                GenericMC.RegisterModConfig(ModManifest, () => Config = new ModConfig(), () => Helper.WriteConfig(Config));
+                GenericMC.SetDefaultIngameOptinValue(ModManifest, true);
+                GenericMC.RegisterLabel(ModManifest, Transl.Get("GenericMC.barLabel"), ""); //All of these strings are stored in the traslation files.
+                GenericMC.RegisterParagraph(ModManifest, Transl.Get("GenericMC.barDescription") + "\n");
+                GenericMC.RegisterChoiceOption(ModManifest, Transl.Get("GenericMC.barIconMode"), Transl.Get("GenericMC.barIconModeDesc"),
+                    () => (Config.BarIconMode == 0) ? Transl.Get("GenericMC.barIconModeHor") : (Config.BarIconMode == 1) ? Transl.Get("GenericMC.barIconModeVert") : (Config.BarIconMode == 2) ? Transl.Get("GenericMC.barIconModeVertText") : Transl.Get("GenericMC.Disabled"),
+                    (string val) => Config.BarIconMode = Int32.Parse((val.Equals(Transl.Get("GenericMC.barIconModeHor"), StringComparison.Ordinal)) ? "0" : (val.Equals(Transl.Get("GenericMC.barIconModeVert"), StringComparison.Ordinal)) ? "1" : (!val.Equals(Transl.Get("GenericMC.Disabled"), StringComparison.Ordinal)) ? "2" : "3"),
+                    new string[] { Transl.Get("GenericMC.barIconModeHor"), Transl.Get("GenericMC.barIconModeVert"), Transl.Get("GenericMC.barIconModeVertText"), Transl.Get("GenericMC.Disabled") });//small 'hack' so options appear as name strings, while config.json stores them as integers
+                GenericMC.RegisterSimpleOption(ModManifest, Transl.Get("GenericMC.barPosX"), Transl.Get("GenericMC.barPosXDesc"),
+                     () => Config.BarTopLeftLocationX, (int val) => Config.BarTopLeftLocationX = Math.Max(0, val));
+                GenericMC.RegisterSimpleOption(ModManifest, Transl.Get("GenericMC.barPosY"), Transl.Get("GenericMC.barPosYDesc"),
+                    () => Config.BarTopLeftLocationY, (int val) => Config.BarTopLeftLocationY = Math.Max(0, val));
+                GenericMC.RegisterSimpleOption(ModManifest, Transl.Get("GenericMC.barScale"), Transl.Get("GenericMC.barScaleDesc"),
+                    () => (float)Config.BarScale, (float val) => Config.BarScale = Math.Min(10, Math.Max(0.1f, val)));
+                GenericMC.RegisterSimpleOption(ModManifest, Transl.Get("GenericMC.barMaxIcons"), Transl.Get("GenericMC.barMaxIconsDesc"),
+                   () => Config.BarMaxIcons, (int val) => Config.BarMaxIcons = (int)Math.Min(500, Math.Max(4, val)));
+                GenericMC.RegisterSimpleOption(ModManifest, Transl.Get("GenericMC.barMaxIconsPerRow"), Transl.Get("GenericMC.barMaxIconsPerRowDesc"),
+                    () => Config.BarMaxIconsPerRow, (int val) => Config.BarMaxIconsPerRow = (int)Math.Min(500, Math.Max(4, val)));
+                GenericMC.RegisterChoiceOption(ModManifest, Transl.Get("GenericMC.barBackgroundMode"), Transl.Get("GenericMC.barBackgroundModeDesc"),
+                    () => (Config.BarBackgroundMode == 0) ? Transl.Get("GenericMC.barBackgroundModeCircles") : (Config.BarBackgroundMode == 1) ? Transl.Get("GenericMC.barBackgroundModeRect") : Transl.Get("GenericMC.Disabled"),
+                    (string val) => Config.BarBackgroundMode = Int32.Parse((val.Equals(Transl.Get("GenericMC.barBackgroundModeCircles"), StringComparison.Ordinal)) ? "0" : (val.Equals(Transl.Get("GenericMC.barBackgroundModeRect"), StringComparison.Ordinal)) ? "1" : "2"),
+                    new string[] { Transl.Get("GenericMC.barBackgroundModeCircles"), Transl.Get("GenericMC.barBackgroundModeRect"), Transl.Get("GenericMC.Disabled") });
+                GenericMC.RegisterSimpleOption(ModManifest, Transl.Get("GenericMC.barShowBaitTackle"), Transl.Get("GenericMC.barShowBaitTackleDesc"),
+                    () => Config.BarShowBaitAndTackleInfo, (bool val) => Config.BarShowBaitAndTackleInfo = val);
+                GenericMC.RegisterSimpleOption(ModManifest, Transl.Get("GenericMC.barShowTrash"), Transl.Get("GenericMC.barShowTrashDesc"),
+                    () => Config.BarShowTrash, (bool val) => Config.BarShowTrash = val);
+                GenericMC.RegisterChoiceOption(ModManifest, Transl.Get("GenericMC.barLegendaryMode"), Transl.Get("GenericMC.barLegendaryModeDesc"),
+                    () => (Config.BarLegendaryMode == 0) ? Transl.Get("GenericMC.barLegendaryModeVanilla") : (Config.BarLegendaryMode == 1) ? Transl.Get("GenericMC.barLegendaryModeAlways") : Transl.Get("GenericMC.Disabled"),
+                    (string val) => Config.BarLegendaryMode = Int32.Parse((val.Equals(Transl.Get("GenericMC.barLegendaryModeVanilla"), StringComparison.Ordinal)) ? "0" : (val.Equals(Transl.Get("GenericMC.barLegendaryModeAlways"), StringComparison.Ordinal)) ? "1" : "2"),
+                    new string[] { Transl.Get("GenericMC.barLegendaryModeVanilla"), Transl.Get("GenericMC.barLegendaryModeAlways"), Transl.Get("GenericMC.Disabled") });
+                GenericMC.RegisterClampedOption(ModManifest, Transl.Get("GenericMC.barExtraCheckFrequency"), Transl.Get("GenericMC.barExtraCheckFrequencyDesc"),
+                    () => Config.BarExtraCheckFrequency, (int val) => Config.BarExtraCheckFrequency = val, 0, 200);
+                GenericMC.RegisterSimpleOption(ModManifest, Transl.Get("GenericMC.barCrabPotEnabled"), Transl.Get("GenericMC.barCrabPotEnabledDesc"),
+                    () => Config.BarCrabPotEnabled, (bool val) => Config.BarCrabPotEnabled = val);
+                GenericMC.RegisterSimpleOption(ModManifest, Transl.Get("GenericMC.barUncaughtDarker"), Transl.Get("GenericMC.barUncaughtDarkerDesc"),
+                    () => Config.UncaughtFishAreDark, (bool val) => Config.UncaughtFishAreDark = val);
+                GenericMC.RegisterLabel(ModManifest, Transl.Get("GenericMC.MinigameLabel"), "");
+                GenericMC.RegisterParagraph(ModManifest, Transl.Get("GenericMC.MinigameDescription"));
+                GenericMC.RegisterChoiceOption(ModManifest, Transl.Get("GenericMC.MinigameMode"), Transl.Get("GenericMC.MinigameModeDesc"),
+                    () => (Config.MinigamePreviewMode == 0) ? Transl.Get("GenericMC.MinigameModeFull") : (Config.MinigamePreviewMode == 1) ? Transl.Get("GenericMC.MinigameModeSimple") : (Config.MinigamePreviewMode == 2) ? Transl.Get("GenericMC.MinigameModeBarOnly") : Transl.Get("GenericMC.Disabled"),
+                    (string val) => Config.MinigamePreviewMode = Int32.Parse((val.Equals(Transl.Get("GenericMC.MinigameModeFull"), StringComparison.Ordinal)) ? "0" : (val.Equals(Transl.Get("GenericMC.MinigameModeSimple"), StringComparison.Ordinal)) ? "1" : (val.Equals(Transl.Get("GenericMC.MinigameModeBarOnly"), StringComparison.Ordinal)) ? "2" : "3"),
+                    new string[] { Transl.Get("GenericMC.MinigameModeFull"), Transl.Get("GenericMC.MinigameModeSimple"), Transl.Get("GenericMC.MinigameModeBarOnly"), Transl.Get("GenericMC.Disabled") });
+            }
         }
 
         private void OnButtonPressed(object sender, ButtonPressedEventArgs e)
