@@ -20,6 +20,7 @@ namespace StardewMods
         private List<int> fishHere;
         private Texture2D background;
         private string oldLoc = "";
+        private Item oldTool = null;
         private int oldZone = 0;
         private int oldTime = 0;
 
@@ -85,7 +86,7 @@ namespace StardewMods
             GenericMC.RegisterParagraph(ModManifest, Transl.Get("GenericMC.barDescription") + "\n");
             GenericMC.RegisterChoiceOption(ModManifest, Transl.Get("GenericMC.barIconMode"), Transl.Get("GenericMC.barIconModeDesc"),
                 () => (Config.BarIconMode == 0) ? Transl.Get("GenericMC.barIconModeHor") : (Config.BarIconMode == 1) ? Transl.Get("GenericMC.barIconModeVert") : (Config.BarIconMode == 2) ? Transl.Get("GenericMC.barIconModeVertText") : Transl.Get("GenericMC.Disabled"),
-                (string val) => Config.BarIconMode = Int32.Parse((val.Equals(Transl.Get("GenericMC.barIconModeHor"))) ? "0" : (val.Equals(Transl.Get("GenericMC.barIconModeVert"))) ? "1" : (!val.Equals(Transl.Get("GenericMC.Disabled"))) ? "2" : "3"),
+                (string val) => Config.BarIconMode = Int32.Parse((val.Equals(Transl.Get("GenericMC.barIconModeHor"), StringComparison.Ordinal)) ? "0" : (val.Equals(Transl.Get("GenericMC.barIconModeVert"), StringComparison.Ordinal)) ? "1" : (!val.Equals(Transl.Get("GenericMC.Disabled"), StringComparison.Ordinal)) ? "2" : "3"),
                 new string[] { Transl.Get("GenericMC.barIconModeHor"), Transl.Get("GenericMC.barIconModeVert"), Transl.Get("GenericMC.barIconModeVertText"), Transl.Get("GenericMC.Disabled") });//small 'hack' so options appear as name strings, while config.json stores them as integers
             GenericMC.RegisterSimpleOption(ModManifest, Transl.Get("GenericMC.barPosX"), Transl.Get("GenericMC.barPosXDesc"),
                  () => Config.BarTopLeftLocationX, (int val) => Config.BarTopLeftLocationX = Math.Max(0, val));
@@ -99,7 +100,7 @@ namespace StardewMods
                 () => Config.BarMaxIconsPerRow, (int val) => Config.BarMaxIconsPerRow = (int)Math.Min(500, Math.Max(4, val)));
             GenericMC.RegisterChoiceOption(ModManifest, Transl.Get("GenericMC.barBackgroundMode"), Transl.Get("GenericMC.barBackgroundModeDesc"),
                 () => (Config.BarBackgroundMode == 0) ? Transl.Get("GenericMC.barBackgroundModeCircles") : (Config.BarBackgroundMode == 1) ? Transl.Get("GenericMC.barBackgroundModeRect") : Transl.Get("GenericMC.Disabled"),
-                (string val) => Config.BarBackgroundMode = Int32.Parse((val.Equals(Transl.Get("GenericMC.barBackgroundModeCircles"))) ? "0" : (val.Equals(Transl.Get("GenericMC.barBackgroundModeRect"))) ? "1" : "2"),
+                (string val) => Config.BarBackgroundMode = Int32.Parse((val.Equals(Transl.Get("GenericMC.barBackgroundModeCircles"), StringComparison.Ordinal)) ? "0" : (val.Equals(Transl.Get("GenericMC.barBackgroundModeRect"), StringComparison.Ordinal)) ? "1" : "2"),
                 new string[] { Transl.Get("GenericMC.barBackgroundModeCircles"), Transl.Get("GenericMC.barBackgroundModeRect"), Transl.Get("GenericMC.Disabled") });
             GenericMC.RegisterSimpleOption(ModManifest, Transl.Get("GenericMC.barShowBaitTackle"), Transl.Get("GenericMC.barShowBaitTackleDesc"),
                 () => Config.BarShowBaitAndTackleInfo, (bool val) => Config.BarShowBaitAndTackleInfo = val);
@@ -107,7 +108,7 @@ namespace StardewMods
                 () => Config.BarShowTrash, (bool val) => Config.BarShowTrash = val);
             GenericMC.RegisterChoiceOption(ModManifest, Transl.Get("GenericMC.barLegendaryMode"), Transl.Get("GenericMC.barLegendaryModeDesc"),
                 () => (Config.BarLegendaryMode == 0) ? Transl.Get("GenericMC.barLegendaryModeVanilla") : (Config.BarLegendaryMode == 1) ? Transl.Get("GenericMC.barLegendaryModeAlways") : Transl.Get("GenericMC.Disabled"),
-                (string val) => Config.BarLegendaryMode = Int32.Parse((val.Equals(Transl.Get("GenericMC.barLegendaryModeVanilla"))) ? "0" : (val.Equals(Transl.Get("GenericMC.barLegendaryModeAlways"))) ? "1" : "2"),
+                (string val) => Config.BarLegendaryMode = Int32.Parse((val.Equals(Transl.Get("GenericMC.barLegendaryModeVanilla"), StringComparison.Ordinal)) ? "0" : (val.Equals(Transl.Get("GenericMC.barLegendaryModeAlways"), StringComparison.Ordinal)) ? "1" : "2"),
                 new string[] { Transl.Get("GenericMC.barLegendaryModeVanilla"), Transl.Get("GenericMC.barLegendaryModeAlways"), Transl.Get("GenericMC.Disabled") });
             GenericMC.RegisterClampedOption(ModManifest, Transl.Get("GenericMC.barExtraCheckFrequency"), Transl.Get("GenericMC.barExtraCheckFrequencyDesc"),
                 () => Config.BarExtraCheckFrequency, (int val) => Config.BarExtraCheckFrequency = val, 0, 200);
@@ -119,7 +120,7 @@ namespace StardewMods
             GenericMC.RegisterParagraph(ModManifest, Transl.Get("GenericMC.MinigameDescription"));
             GenericMC.RegisterChoiceOption(ModManifest, Transl.Get("GenericMC.MinigameMode"), Transl.Get("GenericMC.MinigameModeDesc"),
                 () => (Config.MinigamePreviewMode == 0) ? Transl.Get("GenericMC.MinigameModeFull") : (Config.MinigamePreviewMode == 1) ? Transl.Get("GenericMC.MinigameModeSimple") : (Config.MinigamePreviewMode == 2) ? Transl.Get("GenericMC.MinigameModeBarOnly") : Transl.Get("GenericMC.Disabled"),
-                (string val) => Config.MinigamePreviewMode = Int32.Parse((val.Equals(Transl.Get("GenericMC.MinigameModeFull"))) ? "0" : (val.Equals(Transl.Get("GenericMC.MinigameModeSimple"))) ? "1" : (val.Equals(Transl.Get("GenericMC.MinigameModeBarOnly"))) ? "2" : "3"),
+                (string val) => Config.MinigamePreviewMode = Int32.Parse((val.Equals(Transl.Get("GenericMC.MinigameModeFull"), StringComparison.Ordinal)) ? "0" : (val.Equals(Transl.Get("GenericMC.MinigameModeSimple"), StringComparison.Ordinal)) ? "1" : (val.Equals(Transl.Get("GenericMC.MinigameModeBarOnly"), StringComparison.Ordinal)) ? "2" : "3"),
                 new string[] { Transl.Get("GenericMC.MinigameModeFull"), Transl.Get("GenericMC.MinigameModeSimple"), Transl.Get("GenericMC.MinigameModeBarOnly"), Transl.Get("GenericMC.Disabled") });
         }
 
@@ -153,11 +154,15 @@ namespace StardewMods
 
         private void OnOneSecondUpdateTicked(object sender, RenderedHudEventArgs e)
         {
-            if (!dayStarted || Game1.eventUp || Game1.player.CurrentTool == null || (!(Game1.player.CurrentTool is FishingRod) && !(Game1.player.CurrentItem.Name.Equals("Crab Pot")))) return;//code stop conditions
-            if (Game1.player.CurrentItem.Name.Equals("Crab Pot") && !barCrabEnabled) return;
-
+            if (!dayStarted || Game1.eventUp || Game1.player.CurrentItem == null || 
+                !((Game1.player.CurrentItem is FishingRod) || (Game1.player.CurrentItem.Name.Equals("Crab Pot", StringComparison.Ordinal)) && barCrabEnabled))
+            {
+                oldTool = null;
+                return;//code stop conditions
+            }
+            
             SpriteFont font = Game1.smallFont;                                                          //UI INIT
-            Rectangle source = GameLocation.getSourceRectForObject(Game1.player.CurrentToolIndex);      //for average icon size
+            Rectangle source = GameLocation.getSourceRectForObject(Game1.player.CurrentItem.ParentSheetIndex);      //for average icon size
             SpriteBatch batch = Game1.spriteBatch;
 
             batch.End();    //stop current UI drawing and start mode where where layers work from 0f-1f
@@ -214,16 +219,16 @@ namespace StardewMods
                 Vector2 boxTopLeft = barPosition;
                 Vector2 boxBottomLeft = barPosition;
 
-                if (showTackles && Game1.player.CurrentTool is FishingRod)    //BAIT AND TACKLE (BOBBERS) PREVIEW
+                if (showTackles && Game1.player.CurrentItem is FishingRod)    //BAIT AND TACKLE (BOBBERS) PREVIEW
                 {
-                    int bait = (Game1.player.CurrentTool as FishingRod).getBaitAttachmentIndex();
-                    int tackle = (Game1.player.CurrentTool as FishingRod).getBobberAttachmentIndex();
+                    int bait = (Game1.player.CurrentItem as FishingRod).getBaitAttachmentIndex();
+                    int tackle = (Game1.player.CurrentItem as FishingRod).getBobberAttachmentIndex();
                     if (bait > -1)
                     {
                         source = GameLocation.getSourceRectForObject(bait);
                         if (backgroundMode == 0) AddBackground(batch, boxTopLeft, boxBottomLeft, iconCount, source, iconScale, boxWidth, boxHeight);
 
-                        int baitCount = (Game1.player.CurrentTool as FishingRod).attachments[0].Stack;
+                        int baitCount = (Game1.player.CurrentItem as FishingRod).attachments[0].Stack;
                         batch.Draw(Game1.objectSpriteSheet, boxBottomLeft, source, Color.White, 0f, Vector2.Zero, 1.9f * barScale, SpriteEffects.None, 0.9f);
                         Utility.drawTinyDigits(baitCount, batch, boxBottomLeft + new Vector2((source.Height * iconScale) - Utility.getWidthOfTinyDigitString(baitCount, 2f * barScale), 18 * barScale), 2f * barScale, 1f, Color.AntiqueWhite);
 
@@ -236,7 +241,7 @@ namespace StardewMods
                         source = GameLocation.getSourceRectForObject(tackle);
                         if (backgroundMode == 0) AddBackground(batch, boxTopLeft, boxBottomLeft, iconCount, source, iconScale, boxWidth, boxHeight);
 
-                        int tackleCount = FishingRod.maxTackleUses - (Game1.player.CurrentTool as FishingRod).attachments[1].uses;
+                        int tackleCount = FishingRod.maxTackleUses - (Game1.player.CurrentItem as FishingRod).attachments[1].uses;
                         batch.Draw(Game1.objectSpriteSheet, boxBottomLeft, source, Color.White, 0f, Vector2.Zero, 1.9f * barScale, SpriteEffects.None, 0.9f);
                         Utility.drawTinyDigits(tackleCount, batch, boxBottomLeft + new Vector2((source.Height * iconScale) - Utility.getWidthOfTinyDigitString(tackleCount, 2f * barScale), 18 * barScale), 2f * barScale, 1f, Color.AntiqueWhite);
 
@@ -255,7 +260,7 @@ namespace StardewMods
 
                 if (Game1.player.currentLocation.canFishHere())
                 {
-                    if (showTrash && (Game1.player.CurrentTool is FishingRod || (barCrabEnabled && !Game1.player.professions.Contains(11)))) //TRASH PREVIEW
+                    if (showTrash && (Game1.player.CurrentItem is FishingRod || (barCrabEnabled && !Game1.player.professions.Contains(11)))) //TRASH PREVIEW
                     {
                         source = GameLocation.getSourceRectForObject(168);
                         if (backgroundMode == 0) AddBackground(batch, boxTopLeft, boxBottomLeft, iconCount, source, iconScale, boxWidth, boxHeight);
@@ -263,7 +268,7 @@ namespace StardewMods
                         batch.Draw(Game1.objectSpriteSheet, boxBottomLeft + new Vector2(2 * barScale, -5 * barScale), source, Color.White, 0f, Vector2.Zero, 1.9f * barScale, SpriteEffects.None, 0.99f);
                         if (iconMode == 2)
                         {
-                            string trashLocalizedName = (new StardewValley.Object(168, 1).Name.Equals("Trash")) ? new StardewValley.Object(168, 1).DisplayName : "Trash";
+                            string trashLocalizedName = (new StardewValley.Object(168, 1).Name.Equals("Trash", StringComparison.Ordinal)) ? new StardewValley.Object(168, 1).DisplayName : "Trash";
                             if (backgroundMode == 0)
                             {
                                 batch.DrawString(font, trashLocalizedName, boxBottomLeft + new Vector2(source.Width * iconScale, 0), Color.Black, 0f, new Vector2(1, -2), 1f * barScale, SpriteEffects.None, 0.9f); //textbg
@@ -280,10 +285,10 @@ namespace StardewMods
 
 
                     string locationName = Game1.player.currentLocation.Name;    //LOCATION FISH PREVIEW                 //this.Monitor.Log("\n", LogLevel.Debug);
-                    if (!locationData.ContainsKey(locationName) && !locationName.StartsWith("UndergroundMine")              //rod
-                        || (locationName.StartsWith("UndergroundMine") && Game1.player.CurrentItem.Name.Equals("Crab Pot")))//crab pot
+                    if (!locationData.ContainsKey(locationName) && !locationName.StartsWith("UndergroundMine", StringComparison.Ordinal)              //rod
+                        || (locationName.StartsWith("UndergroundMine", StringComparison.Ordinal) && Game1.player.CurrentItem.Name.Equals("Crab Pot", StringComparison.Ordinal)))//crab pot
                     {
-                        if (locationName.StartsWith("UndergroundMine"))
+                        if (locationName.StartsWith("UndergroundMine", StringComparison.Ordinal))
                         {
                             string warning = Helper.Translation.Get("Bar.CrabMineWarning");
                             batch.DrawString(font, warning, boxBottomLeft + new Vector2(source.Width * iconScale, 0), Color.Black, 0f, new Vector2(1, -2), 1f * barScale, SpriteEffects.None, 0.9f); //textbg
@@ -292,17 +297,18 @@ namespace StardewMods
                         }
                         batch.End();
                         batch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise);
+                        oldTool = null;
                         return;
                     }
 
-                    if (Game1.player.CurrentTool is FishingRod)
+                    if (Game1.player.CurrentItem is FishingRod)
                     {
                         if (!isMinigame)//don't reset main list while minigame to prevent lag
                         {
-                            if (oldTime != Game1.timeOfDay || !oldLoc.Equals(Game1.player.currentLocation.Name) || oldZone != Game1.player.currentLocation.getFishingLocation(Game1.player.getTileLocation()))
+                            if (oldTime != Game1.timeOfDay || oldTool != Game1.player.CurrentItem || !oldLoc.Equals(Game1.player.currentLocation.Name, StringComparison.Ordinal) || oldZone != Game1.player.currentLocation.getFishingLocation(Game1.player.getTileLocation()))
                             {
-                                oldTime = Game1.timeOfDay;
                                 oldLoc = Game1.player.currentLocation.Name;
+                                oldTime = Game1.timeOfDay;
                                 oldZone = Game1.player.currentLocation.getFishingLocation(Game1.player.getTileLocation());
                                 fishHere = new List<int>();
 
@@ -325,7 +331,7 @@ namespace StardewMods
                             iconCount++;
                             string fishNameLocalized = "???";
 
-                            if (new StardewValley.Object(fish, 1).Name.StartsWith("Error", StringComparison.Ordinal))   //Furniture
+                            if (new StardewValley.Object(fish, 1).Name.Equals("Error Item", StringComparison.Ordinal))  //Furniture
                             {
                                 if (!uncaughtDark || Game1.player.fishCaught.ContainsKey(fish)) fishNameLocalized = new StardewValley.Objects.Furniture(fish, Vector2.Zero).DisplayName;
 
@@ -383,6 +389,7 @@ namespace StardewMods
 
             batch.End();
             batch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise);
+            oldTool = Game1.player.CurrentItem;
         }
 
 
@@ -472,7 +479,7 @@ namespace StardewMods
                     {
                         if (Game1.player.team.SpecialOrderRuleActive("LEGENDARY_FAMILY")) fishHere.Add(898);//crimson jr
                         if ((legendaryMode == 1 || (legendaryMode == 0 && !Game1.player.fishCaught.ContainsKey(159)))
-                            && (Game1.currentSeason.Equals("summer") || magicBait))
+                            && (Game1.currentSeason.Equals("summer", StringComparison.Ordinal) || magicBait))
                         {
                             fishHere.Add(159);//crimsonfish
                         }
@@ -494,7 +501,7 @@ namespace StardewMods
                     {
                         if (Game1.player.team.SpecialOrderRuleActive("LEGENDARY_FAMILY")) fishHere.Add(902);//glacier jr
                         if ((legendaryMode == 1 || (legendaryMode == 0 && !Game1.player.fishCaught.ContainsKey(775)))
-                            && (Game1.currentSeason.Equals("winter") || magicBait))
+                            && (Game1.currentSeason.Equals("winter", StringComparison.Ordinal) || magicBait))
                         {
                             fishHere.Add(775);//glacierfish
                         }
@@ -506,7 +513,7 @@ namespace StardewMods
                     {
                         if (Game1.player.team.SpecialOrderRuleActive("LEGENDARY_FAMILY")) fishHere.Add(900);//legend jr
                         if ((legendaryMode == 1 || (legendaryMode == 0 && !Game1.player.fishCaught.ContainsKey(163)))
-                            && (Game1.currentSeason.Equals("spring") || magicBait))
+                            && (Game1.currentSeason.Equals("spring", StringComparison.Ordinal) || magicBait))
                         {
                             fishHere.Add(163);//legend
                         }
@@ -535,7 +542,7 @@ namespace StardewMods
                     {
                         if (Game1.player.team.SpecialOrderRuleActive("LEGENDARY_FAMILY")) fishHere.Add(899);//ms angler
                         if ((legendaryMode == 1 || (legendaryMode == 0 && !Game1.player.fishCaught.ContainsKey(160)))
-                            && (Game1.currentSeason.Equals("fall") || magicBait))
+                            && (Game1.currentSeason.Equals("fall", StringComparison.Ordinal) || magicBait))
                         {
                             fishHere.Add(160);//mr angler
                         }
@@ -556,7 +563,7 @@ namespace StardewMods
                     }
                     break;
                 default:
-                    if (locationName.StartsWith("UndergroundMine"))
+                    if (locationName.StartsWith("UndergroundMine", StringComparison.Ordinal))
                     {
                         switch ((Game1.player.currentLocation as StardewValley.Locations.MineShaft).mineLevel)
                         {
@@ -585,7 +592,8 @@ namespace StardewMods
         private void AddGenericFishToList(string locationName, int fishingLocation)         //From GameLocation.cs getFish()
         {
             bool magicBait = Game1.player.currentLocation.IsUsingMagicBait(Game1.player);
-            if (locationName.Equals("BeachNightMarket")) locationName = "Beach";
+            if (locationName.StartsWith("UndergroundMine", StringComparison.Ordinal)) return;
+            if (locationName.Equals("BeachNightMarket", StringComparison.Ordinal)) locationName = "Beach";
 
             string[] rawFishData;
             if (!magicBait) rawFishData = locationData[locationName].Split('/')[4 + Utility.getSeasonNumber(Game1.currentSeason)].Split(' '); //fish by season
@@ -621,14 +629,14 @@ namespace StardewMods
                         }
                     }
                 }
-                if (!specificFishData[7].Equals("both"))
+                if (!specificFishData[7].Equals("both", StringComparison.Ordinal))
                 {
-                    if (specificFishData[7].Equals("rainy") && !Game1.IsRainingHere(Game1.player.currentLocation)) fail = true;
-                    else if (specificFishData[7].Equals("sunny") && Game1.IsRainingHere(Game1.player.currentLocation)) fail = true;
+                    if (specificFishData[7].Equals("rainy", StringComparison.Ordinal) && !Game1.IsRainingHere(Game1.player.currentLocation)) fail = true;
+                    else if (specificFishData[7].Equals("sunny", StringComparison.Ordinal) && Game1.IsRainingHere(Game1.player.currentLocation)) fail = true;
                 }
                 if (magicBait) fail = false; //I guess magic bait check comes at this exact point because it overrides all conditions except rod and level?
 
-                bool beginnersRod = Game1.player != null && Game1.player.CurrentTool != null && Game1.player.CurrentTool is StardewValley.Tools.FishingRod && (int)Game1.player.CurrentTool.upgradeLevel == 1;
+                bool beginnersRod = Game1.player != null && Game1.player.CurrentItem != null && Game1.player.CurrentItem is FishingRod && (int)Game1.player.CurrentTool.upgradeLevel == 1;
 
                 if (Convert.ToInt32(specificFishData[1]) >= 50 && beginnersRod) fail = true;
                 if (Game1.player.FishingLevel < Convert.ToInt32(specificFishData[12])) fail = true;
@@ -648,15 +656,16 @@ namespace StardewMods
 
         private void AddCrabPotFish()
         {
+            fishHere = new List<int>();
             bool ocean = Game1.player.currentLocation is StardewValley.Locations.Beach;
             foreach (var fish in fishData)
             {
                 if (!fish.Value.Contains("trap")) continue;
 
                 string[] rawSplit = fish.Value.Split('/');
-                if ((rawSplit[4].Equals("ocean") && ocean) || (rawSplit[4].Equals("freshwater") && !ocean))
+                if ((rawSplit[4].Equals("ocean", StringComparison.Ordinal) && ocean) || (rawSplit[4].Equals("freshwater", StringComparison.Ordinal) && !ocean))
                 {
-                    fishHere.Add(fish.Key);
+                    if (!fishHere.Contains(fish.Key)) fishHere.Add(fish.Key);
                 }
             }
         }
