@@ -640,10 +640,10 @@ namespace StardewMods
             int freq = (isMinigame) ? 1 : extraCheckFrequency; //minigame lowers frequency
             for (int i = 0; i < freq; i++)
             {
-                int f = Helper.Reflection.GetMethod(Game1.player.currentLocation, "getFish").Invoke<StardewValley.Object>(0, -1, 10, Game1.player, 100, Game1.player.getTileLocation(), null).ParentSheetIndex;
+                int f = Helper.Reflection.GetMethod(Game1.player.currentLocation, "getFish").Invoke<StardewValley.Object>(0, 1, 10, Game1.player, 100, Game1.player.getTileLocation(), null).ParentSheetIndex;
                 if ((f < 167 || f > 172) && !fishHere.Contains(f)) fishHere.Add(f);
             }
-            fishHere.Sort();//must be sorted to avoid list icon jumps
+            fishHere.Sort();//must be sorted to avoid constant list icon jumps
         }
 
         private void AddCrabPotFish()
