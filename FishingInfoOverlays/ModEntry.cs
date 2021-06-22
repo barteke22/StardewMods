@@ -181,12 +181,13 @@ namespace StardewMods
                 {
                     if (miniMode == 0) //Full minigame
                     {
-                        //rod+bar textture cut to only cover the minigame bar
-                        batch.Draw(Game1.mouseCursors, Utility.ModifyCoordinatesForUIScale(new Vector2(miniXPositionOnScreen + 126, miniYPositionOnScreen + 300) + miniEverythingShake),
-                            new Rectangle(658, 2000, 15, 145), Color.White * miniScale, 0f, new Vector2(18.5f, 74f) * miniScale, Utility.ModifyCoordinateForUIScale(4f * miniScale), SpriteEffects.None, 0.01f);
-
                         if (miniScale == 1f)
                         {
+                            //rod+bar textture cut to only cover the minigame bar
+                            batch.Draw(Game1.mouseCursors, Utility.ModifyCoordinatesForUIScale(new Vector2(miniXPositionOnScreen + 126, miniYPositionOnScreen + 300) + miniEverythingShake),
+                                new Rectangle(658, 2000, 15, 145), Color.White * miniScale, 0f, new Vector2(18.5f, 74f) * miniScale, Utility.ModifyCoordinateForUIScale(4f * miniScale), SpriteEffects.None, 0.01f);
+
+                        
                             //green moving bar player controls
                             batch.Draw(Game1.mouseCursors, Utility.ModifyCoordinatesForUIScale(new Vector2(miniXPositionOnScreen + 64, miniYPositionOnScreen + 12 + (int)miniBobberBarPos) + miniBarShake + miniEverythingShake),
                                 new Rectangle(682, 2078, 9, 2), miniBobberInBar ? Color.White : (Color.White * 0.25f * ((float)Math.Round(Math.Sin(Game1.currentGameTime.TotalGameTime.TotalMilliseconds / 100.0), 2) + 2f)), 0f, Vector2.Zero, Utility.ModifyCoordinateForUIScale(4f), SpriteEffects.None, 0.89f);
@@ -204,12 +205,12 @@ namespace StardewMods
                             }
                         }
                     }
-                    else batch.Draw(Game1.mouseCursors, Utility.ModifyCoordinatesForUIScale(new Vector2(miniXPositionOnScreen + 82, (miniYPositionOnScreen + 36) + miniFishPos) + miniFishShake + miniEverythingShake),
+                    else if (miniScale == 1f) batch.Draw(Game1.mouseCursors, Utility.ModifyCoordinatesForUIScale(new Vector2(miniXPositionOnScreen + 82, (miniYPositionOnScreen + 36) + miniFishPos) + miniFishShake + miniEverythingShake),
                         new Rectangle(614 + (FishingRod.isFishBossFish(miniFish) ? 20 : 0), 1840, 20, 20), Color.Black, 0f, new Vector2(10f, 10f),
                         Utility.ModifyCoordinateForUIScale(2.05f), SpriteEffects.None, 0.9f);//Simple minigame
 
                     source = GameLocation.getSourceRectForObject(miniFish);
-                    batch.Draw(Game1.objectSpriteSheet, Utility.ModifyCoordinatesForUIScale(new Vector2(miniXPositionOnScreen + 82, (miniYPositionOnScreen + 36) + miniFishPos) + miniFishShake + miniEverythingShake),
+                    if (miniScale == 1f) batch.Draw(Game1.objectSpriteSheet, Utility.ModifyCoordinatesForUIScale(new Vector2(miniXPositionOnScreen + 82, (miniYPositionOnScreen + 36) + miniFishPos) + miniFishShake + miniEverythingShake),
                         source, (!uncaughtDark || who.fishCaught.ContainsKey(miniFish)) ? Color.White : Color.DarkSlateGray, 0f, new Vector2(9.5f, 9f),
                         Utility.ModifyCoordinateForUIScale(3f), SpriteEffects.FlipHorizontally, 1f);
                 }
@@ -419,6 +420,7 @@ namespace StardewMods
                 miniFish = Helper.Reflection.GetField<int>(bar, "whichFish").GetValue();
                 if (miniMode < 2)
                 {
+                    miniScale = Helper.Reflection.GetField<float>(bar, "scale").GetValue();
                     miniFishPos = Helper.Reflection.GetField<Single>(bar, "bobberPosition").GetValue();
                     miniXPositionOnScreen = Helper.Reflection.GetField<int>(bar, "xPositionOnScreen").GetValue();
                     miniYPositionOnScreen = Helper.Reflection.GetField<int>(bar, "yPositionOnScreen").GetValue();
@@ -429,7 +431,6 @@ namespace StardewMods
                 {
                     miniBarShake = Helper.Reflection.GetField<Vector2>(bar, "barShake").GetValue();
                     miniTreasureShake = Helper.Reflection.GetField<Vector2>(bar, "treasureShake").GetValue();
-                    miniScale = Helper.Reflection.GetField<float>(bar, "scale").GetValue();
                     miniBobberInBar = Helper.Reflection.GetField<bool>(bar, "bobberInBar").GetValue();
                     miniBobberBarPos = Helper.Reflection.GetField<float>(bar, "bobberBarPos").GetValue();
                     miniBobberBarHeight = Helper.Reflection.GetField<int>(bar, "bobberBarHeight").GetValue();
