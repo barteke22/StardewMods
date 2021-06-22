@@ -1,6 +1,6 @@
 {
 	"GenericMC.barLabel": "Preview Bar (Location)",
-	"GenericMC.barDescription": "The bar that shows location info when holding a Fishing Rod (bait/tackle/trash/fish here), or Crab Pot (trash/fish here). You can hover over the variable names for more info. Hitting F5 will update saved changes without restarting, if you hold a fishing rod you can even see the results update while in this menu: Save + F5.",
+	"GenericMC.barDescription": "The bar that shows location info when holding a Fishing Rod (bait/tackle/trash/fish here), or Crab Pot (trash/crustaceans here). You can hover over the variable names for more info. Hitting F5 will update saved changes without restarting, if you hold a fishing rod you can even see the results update while in this menu: Save + F5.",
 	
 	"GenericMC.barIconMode": "Icon Mode",
 	"GenericMC.barIconModeDesc": "The direction in which the bait/tackle/trash/fish icons will travel, before being split into rows/columns.",
@@ -35,7 +35,7 @@
 	"GenericMC.barShowTrashDesc": "Enables an icon that shows trash in valid fishing locations. Trash is almost always available, so this icon can be pointless.",
 	
 	"GenericMC.barLegendaryMode": "Legendary Fish Mode",
-	"GenericMC.barLegendaryModeDesc": "IGNORED if Extra Check Frequency above 0, because it doesn't rely on hardcoded data (should be accurate for any mods). OTHERWISE:\nThe basic vanilla Legendary Fish are hardcoded to only be obtainable once, the preview won't show them afterwards. If you have a mod that changes this behaviour it's unlikely the preview will understand that. You can leave them as vanilla, set them to always show (under vanilla conditions), or Disable to never show (if your mod changes the conditions).",
+	"GenericMC.barLegendaryModeDesc": "IGNORED if Extra Check Frequency above 0, because it doesn't rely on hardcoded data (should be accurate for any mods).\nOTHERWISE: The basic vanilla Legendary Fish are hardcoded to only be obtainable once, the preview won't show them afterwards. If you have a mod that changes this behaviour it's unlikely the preview will understand that. You can leave them as vanilla, set them to always show (under vanilla conditions), or Disable to never show (if your mod changes the conditions).",
 	"GenericMC.barLegendaryModeVanilla": "Vanilla",
 	"GenericMC.barLegendaryModeAlways": "Always Show",
 	
