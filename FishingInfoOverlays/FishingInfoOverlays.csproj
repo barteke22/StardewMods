@@ -55,7 +55,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="i18n\PL.json" />
+    <None Include="i18n\pt.json" />
     <None Include="i18n\default.json" />
     <None Include="Manifest.json" />
     <None Include="packages.config" />
