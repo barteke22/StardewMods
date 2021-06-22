@@ -161,13 +161,13 @@ namespace StardewMods
         private void OnOneSecondUpdateTicked(object sender, RenderedHudEventArgs e)
         {
             who = Game1.player;
-            if (!dayStarted || Game1.eventUp || who.CurrentItem == null || 
+            if (!dayStarted || Game1.eventUp || who.CurrentItem == null ||
                 !((who.CurrentItem is FishingRod) || (who.CurrentItem.Name.Equals("Crab Pot", StringComparison.Ordinal)) && barCrabEnabled))
             {
                 oldTool = null;
                 return;//code stop conditions
             }
-            
+
             SpriteFont font = Game1.smallFont;                                                          //UI INIT
             Rectangle source = GameLocation.getSourceRectForObject(who.CurrentItem.ParentSheetIndex);      //for average icon size
             SpriteBatch batch = Game1.spriteBatch;
@@ -179,15 +179,15 @@ namespace StardewMods
             {
                 if (miniMode < 2)
                 {
-                    if (miniMode == 0) //Full minigame
+                    if (miniScale == 1f)//scale when moving elements appear
                     {
-                        if (miniScale == 1f)
+                        if (miniMode == 0) //Full minigame
                         {
                             //rod+bar textture cut to only cover the minigame bar
                             batch.Draw(Game1.mouseCursors, Utility.ModifyCoordinatesForUIScale(new Vector2(miniXPositionOnScreen + 126, miniYPositionOnScreen + 300) + miniEverythingShake),
                                 new Rectangle(658, 2000, 15, 145), Color.White * miniScale, 0f, new Vector2(18.5f, 74f) * miniScale, Utility.ModifyCoordinateForUIScale(4f * miniScale), SpriteEffects.None, 0.01f);
 
-                        
+
                             //green moving bar player controls
                             batch.Draw(Game1.mouseCursors, Utility.ModifyCoordinatesForUIScale(new Vector2(miniXPositionOnScreen + 64, miniYPositionOnScreen + 12 + (int)miniBobberBarPos) + miniBarShake + miniEverythingShake),
                                 new Rectangle(682, 2078, 9, 2), miniBobberInBar ? Color.White : (Color.White * 0.25f * ((float)Math.Round(Math.Sin(Game1.currentGameTime.TotalGameTime.TotalMilliseconds / 100.0), 2) + 2f)), 0f, Vector2.Zero, Utility.ModifyCoordinateForUIScale(4f), SpriteEffects.None, 0.89f);
@@ -204,15 +204,15 @@ namespace StardewMods
                                 batch.Draw(Game1.staminaRect, new Rectangle((int)Utility.ModifyCoordinateForUIScale(miniXPositionOnScreen + 64), (int)Utility.ModifyCoordinateForUIScale(miniYPositionOnScreen + 12 + (int)miniTreasurePosition), (int)Utility.ModifyCoordinateForUIScale((miniTreasureCatchLevel * 40f)), (int)Utility.ModifyCoordinateForUIScale(8)), null, Color.Orange, 0f, Vector2.Zero, SpriteEffects.None, 0.9f);
                             }
                         }
-                    }
-                    else if (miniScale == 1f) batch.Draw(Game1.mouseCursors, Utility.ModifyCoordinatesForUIScale(new Vector2(miniXPositionOnScreen + 82, (miniYPositionOnScreen + 36) + miniFishPos) + miniFishShake + miniEverythingShake),
-                        new Rectangle(614 + (FishingRod.isFishBossFish(miniFish) ? 20 : 0), 1840, 20, 20), Color.Black, 0f, new Vector2(10f, 10f),
-                        Utility.ModifyCoordinateForUIScale(2.05f), SpriteEffects.None, 0.9f);//Simple minigame
+                        else batch.Draw(Game1.mouseCursors, Utility.ModifyCoordinatesForUIScale(new Vector2(miniXPositionOnScreen + 82, (miniYPositionOnScreen + 36) + miniFishPos) + miniFishShake + miniEverythingShake),
+                            new Rectangle(614 + (FishingRod.isFishBossFish(miniFish) ? 20 : 0), 1840, 20, 20), Color.Black, 0f, new Vector2(10f, 10f),
+                            Utility.ModifyCoordinateForUIScale(2.05f), SpriteEffects.None, 0.9f);//Simple minigame
 
-                    source = GameLocation.getSourceRectForObject(miniFish);
-                    if (miniScale == 1f) batch.Draw(Game1.objectSpriteSheet, Utility.ModifyCoordinatesForUIScale(new Vector2(miniXPositionOnScreen + 82, (miniYPositionOnScreen + 36) + miniFishPos) + miniFishShake + miniEverythingShake),
-                        source, (!uncaughtDark || who.fishCaught.ContainsKey(miniFish)) ? Color.White : Color.DarkSlateGray, 0f, new Vector2(9.5f, 9f),
-                        Utility.ModifyCoordinateForUIScale(3f), SpriteEffects.FlipHorizontally, 1f);
+                        source = GameLocation.getSourceRectForObject(miniFish);
+                        batch.Draw(Game1.objectSpriteSheet, Utility.ModifyCoordinatesForUIScale(new Vector2(miniXPositionOnScreen + 82, (miniYPositionOnScreen + 36) + miniFishPos) + miniFishShake + miniEverythingShake),
+                            source, (!uncaughtDark || who.fishCaught.ContainsKey(miniFish)) ? Color.White : Color.DarkSlateGray, 0f, new Vector2(9.5f, 9f),
+                            Utility.ModifyCoordinateForUIScale(3f), SpriteEffects.FlipHorizontally, 1f);
+                    }
                 }
             }
 
@@ -291,7 +291,7 @@ namespace StardewMods
                         iconCount++;
                     }
 
-                    
+
 
                     string locationName = who.currentLocation.Name;    //LOCATION FISH PREVIEW                 //this.Monitor.Log("\n", LogLevel.Debug);
                     //this.Monitor.Log(locationName, LogLevel.Debug);
