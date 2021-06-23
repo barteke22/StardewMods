@@ -184,8 +184,8 @@ namespace StardewMods
                 if (miniMode == 0) //Full minigame
                 {
                     //rod+bar textture cut to only cover the minigame bar
-                    batch.Draw(Game1.mouseCursors, Utility.ModifyCoordinatesForUIScale(new Vector2(miniXPositionOnScreen + 126, miniYPositionOnScreen + 300) + miniEverythingShake),
-                        new Rectangle(658, 2000, 15, 145), Color.White * miniScale, 0f, new Vector2(18.5f, 74f) * miniScale, Utility.ModifyCoordinateForUIScale(4f * miniScale), SpriteEffects.None, 0.01f);
+                    batch.Draw(Game1.mouseCursors, Utility.ModifyCoordinatesForUIScale(new Vector2(miniXPositionOnScreen + 126, miniYPositionOnScreen + 292) + miniEverythingShake),
+                        new Rectangle(658, 1998, 15, 149), Color.White * miniScale, 0f, new Vector2(18.5f, 74f) * miniScale, Utility.ModifyCoordinateForUIScale(4f * miniScale), SpriteEffects.None, 0.01f);
 
                     //green moving bar player controls
                     batch.Draw(Game1.mouseCursors, Utility.ModifyCoordinatesForUIScale(new Vector2(miniXPositionOnScreen + 64, miniYPositionOnScreen + 12 + (int)miniBobberBarPos) + miniBarShake + miniEverythingShake),
@@ -266,7 +266,7 @@ namespace StardewMods
 
 
                 bool foundWater = false;
-                if (who.currentLocation.canFishHere())
+                if (who.currentLocation.canFishHere())      //water nearby check
                 {
                     if (scanRadius > 0)
                     {
@@ -298,7 +298,7 @@ namespace StardewMods
                         batch.Draw(Game1.objectSpriteSheet, boxBottomLeft + new Vector2(2 * barScale, -5 * barScale), source, Color.White, 0f, Vector2.Zero, 1.9f * barScale, SpriteEffects.None, 0.99f);
                         if (iconMode == 2)
                         {
-                            string trashLocalizedName = (new StardewValley.Object(168, 1).Name.Equals("Trash", StringComparison.Ordinal)) ? new StardewValley.Object(168, 1).DisplayName : "Trash";
+                            string trashLocalizedName = new StardewValley.Object(168, 1).DisplayName;
                             if (backgroundMode == 0)
                             {
                                 batch.DrawString(font, trashLocalizedName, boxBottomLeft + new Vector2(source.Width * iconScale, 0), Color.Black, 0f, new Vector2(1, -2), 1f * barScale, SpriteEffects.None, 0.9f); //textbg
