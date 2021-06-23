@@ -382,8 +382,8 @@ namespace StardewMods
                             else                                                                                        //Item
                             {
                                 if (!uncaughtDark || who.fishCaught.ContainsKey(fish)) fishNameLocalized = new StardewValley.Object(fish, 1).DisplayName;
-                                int f = who.currentLocation.getFish(0, 1, 10, who, 100, new Vector2(0,0), null).parentSheetIndex;
-                                if (fishData.ContainsKey(fish)) fishNameLocalized = (Convert.ToDouble(fishData[fish].Split('/')[10]) * 100).ToString(" 0") + "% " + fishNameLocalized;
+                                
+                                //if (fishData.ContainsKey(fish)) fishNameLocalized = (Convert.ToDouble(fishData[fish].Split('/')[10]) * 100).ToString(" 0") + "% " + fishNameLocalized;
 
                                 source = GameLocation.getSourceRectForObject(fish);
                                 batch.Draw(Game1.objectSpriteSheet, boxBottomLeft, source, (!uncaughtDark || who.fishCaught.ContainsKey(fish))
