@@ -58,6 +58,7 @@ namespace StardewMods
         private int maxIconsPerRow = 0;
         private int backgroundMode = 0;
         private int extraCheckFrequency = 0;
+        private int scanRadius = 0;
         private bool showTackles = true;
         private bool showTrash = true;
         private bool uncaughtDark = true;
@@ -116,6 +117,8 @@ namespace StardewMods
                     new string[] { translate.Get("GenericMC.barLegendaryModeVanilla"), translate.Get("GenericMC.barLegendaryModeAlways"), translate.Get("GenericMC.Disabled") });
                 GenericMC.RegisterClampedOption(ModManifest, translate.Get("GenericMC.barExtraCheckFrequency"), translate.Get("GenericMC.barExtraCheckFrequencyDesc"),
                     () => config.BarExtraCheckFrequency, (int val) => config.BarExtraCheckFrequency = val, 0, 200);
+                GenericMC.RegisterClampedOption(ModManifest, translate.Get("GenericMC.barScanRadius"), translate.Get("GenericMC.barScanRadiusDesc"),
+                    () => config.BarScanRadius, (int val) => config.BarScanRadius = val, 0, 50);
                 GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.barCrabPotEnabled"), translate.Get("GenericMC.barCrabPotEnabledDesc"),
                     () => config.BarCrabPotEnabled, (bool val) => config.BarCrabPotEnabled = val);
                 GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.barUncaughtDarker"), translate.Get("GenericMC.barUncaughtDarkerDesc"),
@@ -262,7 +265,30 @@ namespace StardewMods
                 }
 
 
+                bool foundWater = false;
                 if (who.currentLocation.canFishHere())
+                {
+                    if (scanRadius > 0)
+                    {
+                        Vector2 scanTopLeft = who.getTileLocation() - new Vector2(scanRadius + 1);
+                        Vector2 scanBottomRight = who.getTileLocation() + new Vector2(scanRadius + 2);
+                        for (int x = (int)scanTopLeft.X; x < (int)scanBottomRight.X; x++)
+                        {
+                            for (int y = (int)scanTopLeft.Y; y < (int)scanBottomRight.Y; y++)
+                            {
+                                if (who.currentLocation.isTileFishable(x, y))
+                                {
+                                    foundWater = true;
+                                    break;
+                                }
+                            }
+                            if (foundWater) break;
+                        }
+                    }
+                    else foundWater = true;
+                }
+
+                if (foundWater)
                 {
                     if (showTrash && (who.CurrentItem is FishingRod || (barCrabEnabled && !(who.currentLocation is MineShaft) && !(who.currentLocation is VolcanoDungeon) && !who.professions.Contains(11)))) //TRASH PREVIEW
                     {
@@ -691,6 +717,7 @@ namespace StardewMods
                 showTrash = config.BarShowTrash;                                                            //config: Whether it should show trash icons.
                 legendaryMode = config.BarLegendaryMode;                                                    //config: Whether player has a mod that allow recatching legendaries. 0=Vanilla, 1=Van+Always, 2=Never
                 extraCheckFrequency = config.BarExtraCheckFrequency;                                        //config: 0-200: Bad performance dynamic check to see if there's modded/hardcoded fish
+                scanRadius = config.BarScanRadius;                                                          //config: 0: Only checks if can fish, 1-50: also checks if there's water within X tiles around player.
                 uncaughtDark = config.UncaughtFishAreDark;                                                  //config: Whether uncaught fish are displayed as ??? and use dark icons
                 barCrabEnabled = config.BarCrabPotEnabled;                                                  //config: If bait/tackle/bait preview is enabled when holding a fishing rod
 

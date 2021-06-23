@@ -14,6 +14,7 @@ namespace StardewMods
 		public bool BarShowBaitAndTackleInfo { get; set; } = true;
 		public bool BarShowTrash { get; set; } = true;
 		public int BarExtraCheckFrequency { get; set; } = 50;
+		public int BarScanRadius { get; set; } = 20;
 		public int BarLegendaryMode { get; set; } = 0;
 		public string Comment_BarLegendaryMode { get; set; } = "Legendary Fish are hardcoded same as vanilla 1.5, you can use that behaviour or: " +
 			"Above BarLegendaryMode values: 0= Vanilla, 1= Vanilla + Always show (if you have a mod that lets you re-catch them), 2= Never show.";

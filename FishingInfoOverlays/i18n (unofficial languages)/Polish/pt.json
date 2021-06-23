@@ -42,6 +42,9 @@
 	"GenericMC.barExtraCheckFrequency": "Częstotliwość Ekstra Testów",
 	"GenericMC.barExtraCheckFrequencyDesc": "Testy intensywnej wydajności które symulują łowienie w tym miejscu. Im wyższa liczba, tym więcej testuw (tym większa dokładność i mniej migotania ikon). Powinno być najdokładniejszą metodą (szczegulnie jeśli masz inne mody), ale wysokie numery mogą spowolnić grę.",
 
+	"GenericMC.barScanRadius": "Radius skanowania",
+	"GenericMC.barScanRadiusDesc": "Jeśli 0 Pasek Info tylko sprawdza czy można tu łowić (niezbyt dokładne). Powyżej 0 skanuje X kafelek wokół gracza, i pokazuje info o rybach tylko gdy znalaziono wodę.",
+
 	"GenericMC.barCrabPotEnabled": "Pasek Pułapkek na Kraby Włączony",
 	"GenericMC.barCrabPotEnabledDesc": "Sprawia że Pasek Info również działa gdy trzymasz pułapke na kraby.",
 
