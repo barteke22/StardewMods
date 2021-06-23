@@ -163,14 +163,24 @@ namespace StardewMods
 
         private void OnOneSecondUpdateTicked(object sender, RenderedHudEventArgs e)
         {
-            who = Game1.player;
+            who = new Farmer();                                     //workaround for preventing player from getting special items
+            who.mailReceived.CopyFrom(Game1.player.mailReceived);
+            if (!who.mailReceived.Contains("CalderaPainting")) who.mailReceived.Add("CalderaPainting");
+            who.currentLocation = Game1.player.currentLocation;
+            who.setTileLocation(Game1.player.getTileLocation());
+            who.FishingLevel = Game1.player.FishingLevel;
+            who.CurrentTool = Game1.player.CurrentTool;
+            foreach (var item in Game1.player.fishCaught) who.fishCaught.Add(item);
+            who.secretNotesSeen.CopyFrom(Game1.player.secretNotesSeen);
+
+
             if (!dayStarted || Game1.eventUp || who.CurrentItem == null ||
                 !((who.CurrentItem is FishingRod) || (who.CurrentItem.Name.Equals("Crab Pot", StringComparison.Ordinal)) && barCrabEnabled))
             {
                 oldTool = null;
                 return;//code stop conditions
             }
-
+            
             SpriteFont font = Game1.smallFont;                                                          //UI INIT
             Rectangle source = GameLocation.getSourceRectForObject(who.CurrentItem.ParentSheetIndex);      //for average icon size
             SpriteBatch batch = Game1.spriteBatch;
@@ -317,7 +327,7 @@ namespace StardewMods
 
                     string locationName = who.currentLocation.Name;    //LOCATION FISH PREVIEW                 //this.Monitor.Log("\n", LogLevel.Debug);
                     //this.Monitor.Log(locationName, LogLevel.Debug);
-                    if (who.currentLocation is MineShaft && who.CurrentItem.Name.Equals("Crab Pot", StringComparison.Ordinal))//crab pot
+                    if (who.currentLocation is Railroad || who.currentLocation is IslandFarmCave || (who.currentLocation is MineShaft && who.CurrentItem.Name.Equals("Crab Pot", StringComparison.Ordinal)))//crab pot
                     {
                         if (who.currentLocation is MineShaft)
                         {
@@ -372,6 +382,8 @@ namespace StardewMods
                             else                                                                                        //Item
                             {
                                 if (!uncaughtDark || who.fishCaught.ContainsKey(fish)) fishNameLocalized = new StardewValley.Object(fish, 1).DisplayName;
+                                int f = who.currentLocation.getFish(0, 1, 10, who, 100, new Vector2(0,0), null).parentSheetIndex;
+                                if (fishData.ContainsKey(fish)) fishNameLocalized = (Convert.ToDouble(fishData[fish].Split('/')[10]) * 100).ToString(" 0") + "% " + fishNameLocalized;
 
                                 source = GameLocation.getSourceRectForObject(fish);
                                 batch.Draw(Game1.objectSpriteSheet, boxBottomLeft, source, (!uncaughtDark || who.fishCaught.ContainsKey(fish))
@@ -676,13 +688,23 @@ namespace StardewMods
         }
         private void AddFishToListDynamic()                                                  //very performance intensive check for fish fish available in this area - simulates fishing
         {
-            int freq = (isMinigame) ? 1 : extraCheckFrequency; //minigame lowers frequency
-            for (int i = 0; i < freq; i++)
+            if (!(who.currentLocation is IslandSouthEast && who.getTileLocation().X >= 17 && who.getTileLocation().X <= 21 && who.getTileLocation().Y >= 19 && who.getTileLocation().Y <= 23))
             {
-                int f = Helper.Reflection.GetMethod(who.currentLocation, "getFish").Invoke<StardewValley.Object>(0, 1, 10, who, 100, who.getTileLocation(), who.currentLocation.Name).ParentSheetIndex;
-                if ((f < 167 || f > 172) && !fishHere.Contains(f)) fishHere.Add(f);
+                int freq = (isMinigame) ? 1 : extraCheckFrequency; //minigame lowers frequency
+                for (int i = 0; i < freq; i++)
+                {
+                    bool caughtIridiumKrobus = Game1.player.mailReceived.Contains("caughtIridiumKrobus"); //workaround for preventing player from getting something
+                    int nuts = 0;
+                    if (Game1.player.team.limitedNutDrops.ContainsKey("IslandFishing")) nuts = Game1.player.team.limitedNutDrops["IslandFishing"];
+
+                    int f = Helper.Reflection.GetMethod(who.currentLocation, "getFish").Invoke<StardewValley.Object>(0, 1, 10, who, 100, who.getTileLocation(), who.currentLocation.Name).ParentSheetIndex;
+                    if ((f < 167 || f > 172) && !fishHere.Contains(f)) fishHere.Add(f);
+
+                    if (!caughtIridiumKrobus && Game1.player.mailReceived.Contains("caughtIridiumKrobus")) Game1.player.mailReceived.Remove("caughtIridiumKrobus");
+                    if (Game1.player.team.limitedNutDrops.ContainsKey("IslandFishing") && Game1.player.team.limitedNutDrops["IslandFishing"] != nuts) Game1.player.team.limitedNutDrops["IslandFishing"] = nuts;
+                }
+                //fishHere.Sort();//must be sorted to avoid constant list icon jumps
             }
-            fishHere.Sort();//must be sorted to avoid constant list icon jumps
         }
 
         private void AddCrabPotFish()
