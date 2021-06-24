@@ -21,9 +21,11 @@ namespace StardewMods
         private Dictionary<string, string> locationData;
         private Dictionary<int, string> fishData;
         private List<int> fishHere;
+        private Dictionary<int, int> fishChances;
         private Texture2D background;
         private string oldLoc = "";
         private Item oldTool = null;
+        private int oldBait = 0;
         private int oldZone = 0;
         private int oldTime = 0;
 
@@ -59,10 +61,10 @@ namespace StardewMods
         private int backgroundMode = 0;
         private int extraCheckFrequency = 0;
         private int scanRadius = 0;
+        private bool showPercentage = true;
         private bool showTackles = true;
         private bool showTrash = true;
         private bool uncaughtDark = true;
-        private int legendaryMode = 0;
 
 
         public override void Entry(IModHelper helper)
@@ -111,12 +113,8 @@ namespace StardewMods
                     () => config.BarShowBaitAndTackleInfo, (bool val) => config.BarShowBaitAndTackleInfo = val);
                 GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.barShowTrash"), translate.Get("GenericMC.barShowTrashDesc"),
                     () => config.BarShowTrash, (bool val) => config.BarShowTrash = val);
-                GenericMC.RegisterChoiceOption(ModManifest, translate.Get("GenericMC.barLegendaryMode"), translate.Get("GenericMC.barLegendaryModeDesc"),
-                    () => (config.BarLegendaryMode == 0) ? translate.Get("GenericMC.barLegendaryModeVanilla") : (config.BarLegendaryMode == 1) ? translate.Get("GenericMC.barLegendaryModeAlways") : translate.Get("GenericMC.Disabled"),
-                    (string val) => config.BarLegendaryMode = Int32.Parse((val.Equals(translate.Get("GenericMC.barLegendaryModeVanilla"), StringComparison.Ordinal)) ? "0" : (val.Equals(translate.Get("GenericMC.barLegendaryModeAlways"), StringComparison.Ordinal)) ? "1" : "2"),
-                    new string[] { translate.Get("GenericMC.barLegendaryModeVanilla"), translate.Get("GenericMC.barLegendaryModeAlways"), translate.Get("GenericMC.Disabled") });
                 GenericMC.RegisterClampedOption(ModManifest, translate.Get("GenericMC.barExtraCheckFrequency"), translate.Get("GenericMC.barExtraCheckFrequencyDesc"),
-                    () => config.BarExtraCheckFrequency, (int val) => config.BarExtraCheckFrequency = val, 0, 200);
+                    () => config.BarExtraCheckFrequency, (int val) => config.BarExtraCheckFrequency = val, 1, 200);
                 GenericMC.RegisterClampedOption(ModManifest, translate.Get("GenericMC.barScanRadius"), translate.Get("GenericMC.barScanRadiusDesc"),
                     () => config.BarScanRadius, (int val) => config.BarScanRadius = val, 0, 50);
                 GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.barCrabPotEnabled"), translate.Get("GenericMC.barCrabPotEnabledDesc"),
@@ -346,18 +344,24 @@ namespace StardewMods
                     {
                         if (!isMinigame)//don't reset main list while minigame to prevent lag
                         {
-                            if (oldTime != Game1.timeOfDay || oldTool != who.CurrentItem || !oldLoc.Equals(who.currentLocation.Name, StringComparison.Ordinal) || oldZone != who.currentLocation.getFishingLocation(who.getTileLocation()))
+                            if (oldTime != Game1.timeOfDay || oldTool != who.CurrentItem || !oldLoc.Equals(who.currentLocation.Name, StringComparison.Ordinal) || oldZone != who.currentLocation.getFishingLocation(who.getTileLocation()) || oldBait != (who.CurrentItem as FishingRod).getBaitAttachmentIndex())
                             {
                                 oldLoc = who.currentLocation.Name;
+                                oldBait = (who.CurrentItem as FishingRod).getBaitAttachmentIndex();
                                 oldTime = Game1.timeOfDay;
                                 oldZone = who.currentLocation.getFishingLocation(who.getTileLocation());
                                 fishHere = new List<int>();
+                                fishHere.Add(168);
+                                fishChances = new Dictionary<int, int>();
+                                fishChances.Add(-1, 0);
+                                fishChances.Add(168, 0);
 
-                                if (extraCheckFrequency == 0) AddHardcodedFishToList(locationName);
-                                else AddGenericFishToList(locationName, who.currentLocation.getFishingLocation(who.getTileLocation()));
+                                //if (extraCheckFrequency == 0) AddHardcodedFishToList(locationName); else 
+                                AddGenericFishToList(locationName, who.currentLocation.getFishingLocation(who.getTileLocation()));
                             }
                         }
-                        if (extraCheckFrequency > 0) AddFishToListDynamic();
+                        //if (extraCheckFrequency > 0)
+                        AddFishToListDynamic();
                     }
                     else AddCrabPotFish();
                     //for (int i = 0; i < 20; i++)    //TEST ITEM INSERT
@@ -383,8 +387,6 @@ namespace StardewMods
                             {
                                 if (!uncaughtDark || who.fishCaught.ContainsKey(fish)) fishNameLocalized = new StardewValley.Object(fish, 1).DisplayName;
                                 
-                                //if (fishData.ContainsKey(fish)) fishNameLocalized = (Convert.ToDouble(fishData[fish].Split('/')[10]) * 100).ToString(" 0") + "% " + fishNameLocalized;
-
                                 source = GameLocation.getSourceRectForObject(fish);
                                 batch.Draw(Game1.objectSpriteSheet, boxBottomLeft, source, (!uncaughtDark || who.fishCaught.ContainsKey(fish))
                                     ? Color.White : Color.DarkSlateGray, 0f, Vector2.Zero, 1.9f * barScale, SpriteEffects.None, 1f);//icon
@@ -404,6 +406,8 @@ namespace StardewMods
                             }
                             else                    //Vertical Preview
                             {
+                                fishNameLocalized = Math.Round((float)fishChances[fish] / (float)fishChances[-1] * 100) + "% " + fishNameLocalized;
+
                                 if (iconMode == 2)  // + text
                                 {
                                     if (backgroundMode == 0)
@@ -477,161 +481,6 @@ namespace StardewMods
         }
 
 
-        private void AddHardcodedFishToList(string locationName)                            //From all "locationName".cs getFish(), ignored if dynamic used
-        {
-            bool magicBait = who.currentLocation.IsUsingMagicBait(who);
-            int fishingLocation = who.currentLocation.getFishingLocation(who.getTileLocation());
-
-            switch (locationName)
-            {
-                case "Farm":
-                    switch (Game1.whichFarm)
-                    {
-                        case 1:                                     //Riverland Farm
-                            AddGenericFishToList("Forest", 1);
-                            AddGenericFishToList("Town", 1);
-                            break;
-                        case 2:                                     //Forest Farm
-                            fishHere.Add(734);//woodskip
-                            AddGenericFishToList("Forest", 1);
-                            break;
-                        case 3:                                     //Hill-top Farm
-                            AddGenericFishToList("Forest", 0);
-                            break;
-                        case 4:                                     //Mountain Farm
-                            AddGenericFishToList("Mountain", -1);
-                            break;
-                        case 5:                                     //FourCourners Farm
-                            AddGenericFishToList("Forest", 1);
-                            break;
-                        case 6:                                     //Beach Farm
-                            fishHere.Add(152);//seaweed
-                            fishHere.Add(723);//oyster
-                            fishHere.Add(393);//coral
-                            fishHere.Add(719);//mussel
-                            fishHere.Add(718);//cockle
-                            AddGenericFishToList("Beach", -1);
-                            break;
-                        default:                                    //Other Farms
-                            AddGenericFishToList(locationName, fishingLocation);
-                            break;
-                    }
-                    break;
-                case "Beach":
-                    if (legendaryMode != 2 && who.FishingLevel >= 5)//avoiding tile check for mod compatibility
-                    {
-                        if (who.team.SpecialOrderRuleActive("LEGENDARY_FAMILY")) fishHere.Add(898);//crimson jr
-                        if ((legendaryMode == 1 || (legendaryMode == 0 && !who.fishCaught.ContainsKey(159)))
-                            && (Game1.currentSeason.Equals("summer", StringComparison.Ordinal) || magicBait))
-                        {
-                            fishHere.Add(159);//crimsonfish
-                        }
-                    }
-                    if (magicBait)
-                    {
-                        fishHere.Add(798);//midnight squid
-                        fishHere.Add(799);//spook fish
-                        fishHere.Add(800);//blobfish
-                    }
-                    AddGenericFishToList(locationName, fishingLocation);
-                    break;
-                case "Caldera":
-                    fishHere.Add(162);//lava eel
-                    AddGenericFishToList(locationName, fishingLocation);
-                    break;
-                case "Forest":
-                    if (legendaryMode != 2 && who.FishingLevel >= 6)//avoiding tile check for mod compatibility
-                    {
-                        if (who.team.SpecialOrderRuleActive("LEGENDARY_FAMILY")) fishHere.Add(902);//glacier jr
-                        if ((legendaryMode == 1 || (legendaryMode == 0 && !who.fishCaught.ContainsKey(775)))
-                            && (Game1.currentSeason.Equals("winter", StringComparison.Ordinal) || magicBait))
-                        {
-                            fishHere.Add(775);//glacierfish
-                        }
-                    }
-                    AddGenericFishToList(locationName, fishingLocation);
-                    break;
-                case "Mountains":
-                    if (legendaryMode != 2 && (who.team.SpecialOrderRuleActive("LEGENDARY_FAMILY") || Game1.isRaining || magicBait) && who.FishingLevel >= 10)//avoiding tile check for mod compatibility
-                    {
-                        if (who.team.SpecialOrderRuleActive("LEGENDARY_FAMILY")) fishHere.Add(900);//legend jr
-                        if ((legendaryMode == 1 || (legendaryMode == 0 && !who.fishCaught.ContainsKey(163)))
-                            && (Game1.currentSeason.Equals("spring", StringComparison.Ordinal) || magicBait))
-                        {
-                            fishHere.Add(163);//legend
-                        }
-                    }
-                    AddGenericFishToList(locationName, fishingLocation);
-                    break;
-                case "Sewer":
-                    if (legendaryMode != 2)//avoiding tile check for mod compatibility
-                    {
-                        if (who.team.SpecialOrderRuleActive("LEGENDARY_FAMILY")) fishHere.Add(901);//radioactive carp
-                        if (legendaryMode == 1 || (legendaryMode == 0 && !who.fishCaught.ContainsKey(682))) fishHere.Add(163);//mutant carp
-                    }
-                    AddGenericFishToList(locationName, fishingLocation);
-                    break;
-                case "Submarine":
-                    fishHere.Add(800);//blobfish
-                    fishHere.Add(799);//spook fish
-                    fishHere.Add(798);//midnight squid
-                    fishHere.Add(154);//sea cucumber
-                    fishHere.Add(155);//super cucumber
-                    fishHere.Add(149);//octopus
-                    fishHere.Add(152);//seaweed
-                    break;
-                case "Town":
-                    if (legendaryMode != 2 && who.FishingLevel >= 3)//avoiding tile check for mod compatibility
-                    {
-                        if (who.team.SpecialOrderRuleActive("LEGENDARY_FAMILY")) fishHere.Add(899);//ms angler
-                        if ((legendaryMode == 1 || (legendaryMode == 0 && !who.fishCaught.ContainsKey(160)))
-                            && (Game1.currentSeason.Equals("fall", StringComparison.Ordinal) || magicBait))
-                        {
-                            fishHere.Add(160);//mr angler
-                        }
-                    }
-                    AddGenericFishToList(locationName, fishingLocation);
-                    break;
-                case "ExteriorMuseum":
-                    if (modFound_StardewAquarium)
-                    {
-                        var JsonAssets = Helper.ModRegistry.GetApi<IJsonAssetsApi>("spacechase0.JsonAssets");
-                        int PufferChickID = JsonAssets.GetObjectId("Pufferchick");
-                        if ((legendaryMode == 1 || (legendaryMode == 0 && !who.fishCaught.ContainsKey(PufferChickID)))
-                            && (who.fishCaught.ContainsKey(128) && who.stats.ChickenEggsLayed > 0))
-                        {
-                            fishHere.Add(PufferChickID);//pufferchick
-                        }
-                        AddGenericFishToList(locationName, fishingLocation);
-                    }
-                    break;
-                default:
-                    if (who.currentLocation is MineShaft)
-                    {
-                        switch ((who.currentLocation as MineShaft).mineLevel)
-                        {
-                            case 20:
-                                fishHere.Add(156);//ghostfish
-                                fishHere.Add(158);//stonefish
-                                fishHere.Add(157);//white algae
-                                fishHere.Add(153);//green algae
-                                break;
-                            case 60:
-                                fishHere.Add(156);//ghostfish
-                                fishHere.Add(161);//ice pip
-                                fishHere.Add(157);//white algae
-                                fishHere.Add(153);//green algae
-                                break;
-                            case 100:
-                                fishHere.Add(162);//lava eel
-                                break;
-                        }
-                    }
-                    else AddGenericFishToList(locationName, fishingLocation);
-                    break;
-            }
-
-        }
         private void AddGenericFishToList(string locationName, int fishingLocation)         //From GameLocation.cs getFish()
         {
             bool magicBait = who.currentLocation.IsUsingMagicBait(who);
@@ -658,7 +507,8 @@ namespace StardewMods
             for (int i = 0; i < keys.Length; i++)
             {
                 bool fail = true;
-                string[] specificFishData = fishData[Convert.ToInt32(keys[i])].Split('/');
+                int key = Convert.ToInt32(keys[i]);
+                string[] specificFishData = fishData[key].Split('/');
                 string[] timeSpans = specificFishData[5].Split(' ');
                 int location = Convert.ToInt32(rawFishDataWithLocation[keys[i]]);
                 if (location == -1 || fishingLocation == location)
@@ -683,7 +533,11 @@ namespace StardewMods
 
                 if (Convert.ToInt32(specificFishData[1]) >= 50 && beginnersRod) fail = true;
                 if (who.FishingLevel < Convert.ToInt32(specificFishData[12])) fail = true;
-                if (!fail && !fishHere.Contains(Int32.Parse(keys[i]))) fishHere.Add(Int32.Parse(keys[i]));
+                if (!fail && !fishHere.Contains(key))
+                {
+                    fishHere.Add(key);
+                    if (!fishChances.ContainsKey(key)) fishChances.Add(key, 0);
+                }
             }
         }
         private void AddFishToListDynamic()                                                  //very performance intensive check for fish fish available in this area - simulates fishing
@@ -697,8 +551,18 @@ namespace StardewMods
                     int nuts = 0;
                     if (Game1.player.team.limitedNutDrops.ContainsKey("IslandFishing")) nuts = Game1.player.team.limitedNutDrops["IslandFishing"];
 
-                    int f = Helper.Reflection.GetMethod(who.currentLocation, "getFish").Invoke<StardewValley.Object>(0, 1, 10, who, 100, who.getTileLocation(), who.currentLocation.Name).ParentSheetIndex;
-                    if ((f < 167 || f > 172) && !fishHere.Contains(f)) fishHere.Add(f);
+                    int f = Helper.Reflection.GetMethod(who.currentLocation, "getFish").Invoke<StardewValley.Object>(0, 1, 5, who, 100, who.getTileLocation(), who.currentLocation.Name).ParentSheetIndex;
+                    if (showPercentage && fishChances[-1] < 10000) {
+                        if (f >= 167 && f <= 172) fishChances[168]++;
+                        else if (!fishHere.Contains(f))
+                        {
+                            fishHere.Add(f);
+                            fishChances.Add(f, 1);
+                        }
+                        else fishChances[f]++;
+                        fishChances[-1]++;
+                    } 
+                    else if ((f < 167 || f > 172) && !fishHere.Contains(f)) fishHere.Add(f);
 
                     if (!caughtIridiumKrobus && Game1.player.mailReceived.Contains("caughtIridiumKrobus")) Game1.player.mailReceived.Remove("caughtIridiumKrobus");
                     if (Game1.player.team.limitedNutDrops.ContainsKey("IslandFishing") && Game1.player.team.limitedNutDrops["IslandFishing"] != nuts) Game1.player.team.limitedNutDrops["IslandFishing"] = nuts;
@@ -737,7 +601,6 @@ namespace StardewMods
                 backgroundMode = config.BarBackgroundMode;                                                  //config: 0=Circles (dynamic), 1=Rectangle (single), 2=Off
                 showTackles = config.BarShowBaitAndTackleInfo;                                              //config: Whether it should show Bait and Tackle info.
                 showTrash = config.BarShowTrash;                                                            //config: Whether it should show trash icons.
-                legendaryMode = config.BarLegendaryMode;                                                    //config: Whether player has a mod that allow recatching legendaries. 0=Vanilla, 1=Van+Always, 2=Never
                 extraCheckFrequency = config.BarExtraCheckFrequency;                                        //config: 0-200: Bad performance dynamic check to see if there's modded/hardcoded fish
                 scanRadius = config.BarScanRadius;                                                          //config: 0: Only checks if can fish, 1-50: also checks if there's water within X tiles around player.
                 uncaughtDark = config.UncaughtFishAreDark;                                                  //config: Whether uncaught fish are displayed as ??? and use dark icons

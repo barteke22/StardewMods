@@ -15,9 +15,6 @@ namespace StardewMods
 		public bool BarShowTrash { get; set; } = true;
 		public int BarExtraCheckFrequency { get; set; } = 50;
 		public int BarScanRadius { get; set; } = 20;
-		public int BarLegendaryMode { get; set; } = 0;
-		public string Comment_BarLegendaryMode { get; set; } = "Legendary Fish are hardcoded same as vanilla 1.5, you can use that behaviour or: " +
-			"Above BarLegendaryMode values: 0= Vanilla, 1= Vanilla + Always show (if you have a mod that lets you re-catch them), 2= Never show.";
 		public bool BarCrabPotEnabled { get; set; } = true;
 		public bool UncaughtFishAreDark { get; set; } = true;
 		public int MinigamePreviewMode { get; set; } = 0;

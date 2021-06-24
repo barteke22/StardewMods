@@ -34,11 +34,6 @@
 	"GenericMC.barShowTrash": "Pokaż Śmieci",
 	"GenericMC.barShowTrashDesc": "Włącza ikonę pokazującą śmieci na Pasku Info. Śmieci są tam prawie zawsze, więc ta ikona może być sensu.",
 
-	"GenericMC.barLegendaryMode": "Tryb Legendarnych Ryb",
-	"GenericMC.barLegendaryModeDesc": "IGNOROWANY jeśli Częstotliwość Ekstra Testów jest powyżej 0, gdyż wtedy nie opiera się na danych zakodowanych (powinień być dokładny dla innych modów).\nINACZEJ: Podstawowe legendarne ryby są zakodowane aby można je było złapać tylko raz, podgląd nie wyświetli ich później. Jeśli masz mod który to zmienia, jest mało prawdopodobne że podgląd to zrozumie. Możesz zostawić podstawową logikę, ustawić je tak aby zawsze były wyświetlane (w warunkach postawowej logiki), lub Wyłącz: Aby nigdy się nie pokazywały (jeśli inny mod zmienia warunki).",
-	"GenericMC.barLegendaryModeVanilla": "Podstawowa Logika",
-	"GenericMC.barLegendaryModeAlways": "Podstawowa + Zawsze pokazuj",
-
 	"GenericMC.barExtraCheckFrequency": "Częstotliwość Ekstra Testów",
 	"GenericMC.barExtraCheckFrequencyDesc": "Testy intensywnej wydajności które symulują łowienie w tym miejscu. Im wyższa liczba, tym więcej testuw (tym większa dokładność i mniej migotania ikon). Powinno być najdokładniejszą metodą (szczegulnie jeśli masz inne mody), ale wysokie numery mogą spowolnić grę.",
 
