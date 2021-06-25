@@ -31,8 +31,8 @@
 	"GenericMC.barShowBaitTackle": "Pokaż przynętę i spławik",
 	"GenericMC.barShowBaitTackleDesc": "Włącza ikony, które pokazują status przynęty i spławika twojej wędki (jeśli je ma).",
 
-	"GenericMC.barShowTrash": "Pokaż Śmieci",
-	"GenericMC.barShowTrashDesc": "Włącza ikonę pokazującą śmieci na Pasku Info. Śmieci są tam prawie zawsze, więc ta ikona może być sensu.",
+	"GenericMC.barShowPercentages": "Pokaż Procenty",
+	"GenericMC.barShowPercentagesDesc": "Pokazuje symulowaną szansę złapania danej ryby na jej ikonie. Dokładność zależy od Częstotliwości Ekstra Testów.",
 
 	"GenericMC.barExtraCheckFrequency": "Częstotliwość Ekstra Testów",
 	"GenericMC.barExtraCheckFrequencyDesc": "Testy intensywnej wydajności które symulują łowienie w tym miejscu. Im wyższa liczba, tym więcej testuw (tym większa dokładność i mniej migotania ikon). Powinno być najdokładniejszą metodą (szczegulnie jeśli masz inne mody), ale wysokie numery mogą spowolnić grę.",

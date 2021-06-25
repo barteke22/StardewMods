@@ -29,7 +29,6 @@ namespace StardewMods
         private int oldZone = 0;
         private int oldTime = 0;
 
-        private bool modFound_StardewAquarium;
 
         private bool isMinigame = false;    //minigame fish preview data, Reflection
         private int miniFish;
@@ -61,22 +60,19 @@ namespace StardewMods
         private int backgroundMode = 0;
         private int extraCheckFrequency = 0;
         private int scanRadius = 0;
-        private bool showPercentage = true;
         private bool showTackles = true;
-        private bool showTrash = true;
+        private bool showPercentages = true;
         private bool uncaughtDark = true;
 
 
         public override void Entry(IModHelper helper)
         {
-            modFound_StardewAquarium = helper.ModRegistry.IsLoaded("Cherry.StardewAquarium");//only needed for the hardcoded setting
-
             config = Helper.ReadConfig<ModConfig>();
             translate = Helper.Translation;
 
             helper.Events.Input.ButtonPressed += this.OnButtonPressed;
             helper.Events.GameLoop.DayStarted += this.OnDayStarted;
-            helper.Events.Display.RenderedHud += this.OnOneSecondUpdateTicked;
+            helper.Events.Display.RenderedHud += this.RenderedHud;
             helper.Events.Display.MenuChanged += this.OnMenuChanged;
             helper.Events.Display.RenderedActiveMenu += this.OnRenderMenu;
             helper.Events.GameLoop.GameLaunched += this.GenericModConfigMenuIntegration;
@@ -111,8 +107,8 @@ namespace StardewMods
                     new string[] { translate.Get("GenericMC.barBackgroundModeCircles"), translate.Get("GenericMC.barBackgroundModeRect"), translate.Get("GenericMC.Disabled") });
                 GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.barShowBaitTackle"), translate.Get("GenericMC.barShowBaitTackleDesc"),
                     () => config.BarShowBaitAndTackleInfo, (bool val) => config.BarShowBaitAndTackleInfo = val);
-                GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.barShowTrash"), translate.Get("GenericMC.barShowTrashDesc"),
-                    () => config.BarShowTrash, (bool val) => config.BarShowTrash = val);
+                GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.barShowPercentages"), translate.Get("GenericMC.barShowPercentagesDesc"),
+                    () => config.BarShowPercentages, (bool val) => config.BarShowPercentages = val);
                 GenericMC.RegisterClampedOption(ModManifest, translate.Get("GenericMC.barExtraCheckFrequency"), translate.Get("GenericMC.barExtraCheckFrequencyDesc"),
                     () => config.BarExtraCheckFrequency, (int val) => config.BarExtraCheckFrequency = val, 1, 200);
                 GenericMC.RegisterClampedOption(ModManifest, translate.Get("GenericMC.barScanRadius"), translate.Get("GenericMC.barScanRadiusDesc"),
@@ -159,26 +155,30 @@ namespace StardewMods
          *  Dark preview (???) if fish not caught. DONE
          */
 
-        private void OnOneSecondUpdateTicked(object sender, RenderedHudEventArgs e)
+        private void RenderedHud(object sender, RenderedHudEventArgs e)
         {
-            who = new Farmer();                                     //workaround for preventing player from getting special items
-            who.mailReceived.CopyFrom(Game1.player.mailReceived);
-            if (!who.mailReceived.Contains("CalderaPainting")) who.mailReceived.Add("CalderaPainting");
-            who.currentLocation = Game1.player.currentLocation;
-            who.setTileLocation(Game1.player.getTileLocation());
-            who.FishingLevel = Game1.player.FishingLevel;
-            who.CurrentTool = Game1.player.CurrentTool;
-            foreach (var item in Game1.player.fishCaught) who.fishCaught.Add(item);
-            who.secretNotesSeen.CopyFrom(Game1.player.secretNotesSeen);
-
-
+            who = Game1.player;
             if (!dayStarted || Game1.eventUp || who.CurrentItem == null ||
-                !((who.CurrentItem is FishingRod) || (who.CurrentItem.Name.Equals("Crab Pot", StringComparison.Ordinal)) && barCrabEnabled))
+                !((who.CurrentItem is FishingRod) || (who.CurrentItem.Name.Equals("Crab Pot", StringComparison.Ordinal) && barCrabEnabled)))
             {
                 oldTool = null;
                 return;//code stop conditions
             }
-            
+
+            if (Game1.player.CurrentItem is FishingRod)  //workaround for preventing player from getting special items
+            {
+                who = new Farmer();
+                who.mailReceived.CopyFrom(Game1.player.mailReceived);
+                who.mailReceived.Add("CalderaPainting");
+                who.currentLocation = Game1.player.currentLocation;
+                who.setTileLocation(Game1.player.getTileLocation());
+                who.FishingLevel = Game1.player.FishingLevel;
+                who.CurrentTool = Game1.player.CurrentTool;
+                who.LuckLevel = Game1.player.LuckLevel;
+                foreach (var item in Game1.player.fishCaught) who.fishCaught.Add(item);
+                who.secretNotesSeen.CopyFrom(Game1.player.secretNotesSeen);
+            }
+
             SpriteFont font = Game1.smallFont;                                                          //UI INIT
             Rectangle source = GameLocation.getSourceRectForObject(who.CurrentItem.ParentSheetIndex);      //for average icon size
             SpriteBatch batch = Game1.spriteBatch;
@@ -245,9 +245,9 @@ namespace StardewMods
 
                         int baitCount = (who.CurrentItem as FishingRod).attachments[0].Stack;
                         batch.Draw(Game1.objectSpriteSheet, boxBottomLeft, source, Color.White, 0f, Vector2.Zero, 1.9f * barScale, SpriteEffects.None, 0.9f);
-                        Utility.drawTinyDigits(baitCount, batch, boxBottomLeft + new Vector2((source.Height * iconScale) - Utility.getWidthOfTinyDigitString(baitCount, 2f * barScale), 18 * barScale), 2f * barScale, 1f, Color.AntiqueWhite);
+                        Utility.drawTinyDigits(baitCount, batch, boxBottomLeft + new Vector2((source.Height * iconScale) - Utility.getWidthOfTinyDigitString(baitCount, 2f * barScale), (showPercentages ? 28 * barScale : 18) * barScale), 2f * barScale, 1f, Color.AntiqueWhite);
 
-                        if (iconMode == 1) boxBottomLeft += new Vector2(0, source.Height * iconScale);
+                        if (iconMode == 1) boxBottomLeft += new Vector2(0, (source.Height * iconScale) + (showPercentages ? 10 * barScale : 0));
                         else boxBottomLeft += new Vector2(source.Height * iconScale, 0);
                         iconCount++;
                     }
@@ -258,16 +258,16 @@ namespace StardewMods
 
                         int tackleCount = FishingRod.maxTackleUses - (who.CurrentItem as FishingRod).attachments[1].uses;
                         batch.Draw(Game1.objectSpriteSheet, boxBottomLeft, source, Color.White, 0f, Vector2.Zero, 1.9f * barScale, SpriteEffects.None, 0.9f);
-                        Utility.drawTinyDigits(tackleCount, batch, boxBottomLeft + new Vector2((source.Height * iconScale) - Utility.getWidthOfTinyDigitString(tackleCount, 2f * barScale), 18 * barScale), 2f * barScale, 1f, Color.AntiqueWhite);
+                        Utility.drawTinyDigits(tackleCount, batch, boxBottomLeft + new Vector2((source.Height * iconScale) - Utility.getWidthOfTinyDigitString(tackleCount, 2f * barScale), (showPercentages ? 28 * barScale : 18) * barScale), 2f * barScale, 1f, Color.AntiqueWhite);
 
-                        if (iconMode == 1) boxBottomLeft += new Vector2(0, source.Height * iconScale);
+                        if (iconMode == 1) boxBottomLeft += new Vector2(0, (source.Height * iconScale) + (showPercentages ? 10 * barScale : 0));
                         else boxBottomLeft += new Vector2(source.Height * iconScale, 0);
                         iconCount++;
                     }
                     if (iconMode == 2 && (bait + tackle) > -1)
                     {
-                        boxBottomLeft = boxTopLeft + new Vector2(0, source.Height * iconScale);
-                        boxHeight += (source.Width * iconScale);
+                        boxBottomLeft = boxTopLeft + new Vector2(0, (source.Height * iconScale) + (showPercentages ? 10 * barScale : 0));
+                        boxHeight += (source.Width * iconScale) + (showPercentages ? 10 * barScale : 0);
                         if (bait > 0 && tackle > 0) iconCount--;
                     }
                 }
@@ -298,31 +298,6 @@ namespace StardewMods
 
                 if (foundWater)
                 {
-                    if (showTrash && (who.CurrentItem is FishingRod || (barCrabEnabled && !(who.currentLocation is MineShaft) && !(who.currentLocation is VolcanoDungeon) && !who.professions.Contains(11)))) //TRASH PREVIEW
-                    {
-                        source = GameLocation.getSourceRectForObject(168);
-                        if (backgroundMode == 0) AddBackground(batch, boxTopLeft, boxBottomLeft, iconCount, source, iconScale, boxWidth, boxHeight);
-
-                        batch.Draw(Game1.objectSpriteSheet, boxBottomLeft + new Vector2(2 * barScale, -5 * barScale), source, Color.White, 0f, Vector2.Zero, 1.9f * barScale, SpriteEffects.None, 0.99f);
-                        if (iconMode == 2)
-                        {
-                            string trashLocalizedName = new StardewValley.Object(168, 1).DisplayName;
-                            if (backgroundMode == 0)
-                            {
-                                batch.DrawString(font, trashLocalizedName, boxBottomLeft + new Vector2(source.Width * iconScale, 0), Color.Black, 0f, new Vector2(1, -2), 1f * barScale, SpriteEffects.None, 0.9f); //textbg
-                                batch.DrawString(font, trashLocalizedName, boxBottomLeft + new Vector2(source.Width * iconScale, 0), Color.Black, 0f, new Vector2(-1, -4), 1f * barScale, SpriteEffects.None, 0.9f); //textbg
-                            }
-                            batch.DrawString(font, trashLocalizedName, boxBottomLeft + new Vector2(source.Width * iconScale, 0), Color.White, 0f, new Vector2(0, -3), 1f * barScale, SpriteEffects.None, 1f); //text
-                            boxWidth = Math.Max(boxWidth, boxBottomLeft.X + (font.MeasureString(trashLocalizedName).X * barScale) + (source.Width * iconScale));
-                        }
-                        if (iconMode == 0) boxBottomLeft += new Vector2(source.Height * iconScale, 0);
-                        else boxBottomLeft += new Vector2(0, source.Height * iconScale);
-                        boxHeight += (source.Width * iconScale);
-                        iconCount++;
-                    }
-
-
-
                     string locationName = who.currentLocation.Name;    //LOCATION FISH PREVIEW                 //this.Monitor.Log("\n", LogLevel.Debug);
                     //this.Monitor.Log(locationName, LogLevel.Debug);
                     if (who.currentLocation is Railroad || who.currentLocation is IslandFarmCave || (who.currentLocation is MineShaft && who.CurrentItem.Name.Equals("Crab Pot", StringComparison.Ordinal)))//crab pot
@@ -350,17 +325,12 @@ namespace StardewMods
                                 oldBait = (who.CurrentItem as FishingRod).getBaitAttachmentIndex();
                                 oldTime = Game1.timeOfDay;
                                 oldZone = who.currentLocation.getFishingLocation(who.getTileLocation());
-                                fishHere = new List<int>();
-                                fishHere.Add(168);
-                                fishChances = new Dictionary<int, int>();
-                                fishChances.Add(-1, 0);
-                                fishChances.Add(168, 0);
+                                fishHere = new List<int> { 168 };
+                                fishChances = new Dictionary<int, int> { { -1, 0 }, { 168, 0 } };
 
-                                //if (extraCheckFrequency == 0) AddHardcodedFishToList(locationName); else 
                                 AddGenericFishToList(locationName, who.currentLocation.getFishingLocation(who.getTileLocation()));
                             }
                         }
-                        //if (extraCheckFrequency > 0)
                         AddFishToListDynamic();
                     }
                     else AddCrabPotFish();
@@ -373,25 +343,39 @@ namespace StardewMods
                     {
                         if (iconCount < maxIcons)
                         {
+                            bool caught = (!uncaughtDark || who.fishCaught.ContainsKey(fish));
+                            if (fish == 168)
+                            {
+                                if (!(who.CurrentItem is FishingRod) && who.professions.Contains(11)) continue;
+                                caught = true;
+                            }
                             iconCount++;
                             string fishNameLocalized = "???";
 
                             if (new StardewValley.Object(fish, 1).Name.Equals("Error Item", StringComparison.Ordinal))  //Furniture
                             {
-                                if (!uncaughtDark || who.fishCaught.ContainsKey(fish)) fishNameLocalized = new StardewValley.Objects.Furniture(fish, Vector2.Zero).DisplayName;
+                                if (caught) fishNameLocalized = new StardewValley.Objects.Furniture(fish, Vector2.Zero).DisplayName;
 
-                                batch.Draw(StardewValley.Objects.Furniture.furnitureTexture, boxBottomLeft, new StardewValley.Objects.Furniture(fish, Vector2.Zero).defaultSourceRect, (!uncaughtDark || who.fishCaught.ContainsKey(fish))
-                                    ? Color.White : Color.DarkSlateGray, 0f, Vector2.Zero, 0.95f * barScale, SpriteEffects.None, 1f);//icon
+                                batch.Draw(StardewValley.Objects.Furniture.furnitureTexture, boxBottomLeft, new StardewValley.Objects.Furniture(fish, Vector2.Zero).defaultSourceRect,
+                                    (caught) ? Color.White : Color.DarkSlateGray, 0f, Vector2.Zero, 0.95f * barScale, SpriteEffects.None, 0.98f);//icon
                             }
                             else                                                                                        //Item
                             {
-                                if (!uncaughtDark || who.fishCaught.ContainsKey(fish)) fishNameLocalized = new StardewValley.Object(fish, 1).DisplayName;
-                                
+                                if (caught) fishNameLocalized = new StardewValley.Object(fish, 1).DisplayName;
+
                                 source = GameLocation.getSourceRectForObject(fish);
-                                batch.Draw(Game1.objectSpriteSheet, boxBottomLeft, source, (!uncaughtDark || who.fishCaught.ContainsKey(fish))
-                                    ? Color.White : Color.DarkSlateGray, 0f, Vector2.Zero, 1.9f * barScale, SpriteEffects.None, 1f);//icon
+                                if (fish == 168) batch.Draw(Game1.objectSpriteSheet, boxBottomLeft + new Vector2(2 * barScale, -5 * barScale), source, (caught) ? Color.White : Color.DarkSlateGray,
+                                    0f, Vector2.Zero, 1.9f * barScale, SpriteEffects.None, 0.98f);//icon trash
+                                else batch.Draw(Game1.objectSpriteSheet, boxBottomLeft, source, (caught) ? Color.White : Color.DarkSlateGray,
+                                    0f, Vector2.Zero, 1.9f * barScale, SpriteEffects.None, 0.98f);//icon
                             }
 
+                            if (showPercentages)
+                            {
+                                int percent = (int)Math.Round((float)fishChances[fish] / (float)fishChances[-1] * 100);
+                                batch.DrawString(font, percent + "%", boxBottomLeft + new Vector2((source.Width * iconScale) - ((font.MeasureString(percent + "%").X + 10) * 0.5f * barScale), 28 * barScale),
+                                    (caught) ? Color.White : Color.DarkGray, 0f, Vector2.Zero, 0.5f * barScale, SpriteEffects.None, 1f);//%
+                            }
 
                             if (fish == miniFish && miniMode < 3) batch.Draw(background, new Rectangle((int)boxBottomLeft.X - 3, (int)boxBottomLeft.Y - 3, (int)(source.Height * iconScale) + 3, (int)(source.Height * iconScale) + 3),
                                 null, Color.GreenYellow, 0f, Vector2.Zero, SpriteEffects.None, 0.9f);//minigame outline
@@ -401,13 +385,11 @@ namespace StardewMods
 
                             if (iconMode == 0)      //Horizontal Preview
                             {
-                                if (iconCount % maxIconsPerRow == 0) boxBottomLeft = new Vector2(boxTopLeft.X, boxBottomLeft.Y + (source.Height * iconScale)); //row switch
+                                if (iconCount % maxIconsPerRow == 0) boxBottomLeft = new Vector2(boxTopLeft.X, boxBottomLeft.Y + (source.Height * iconScale) + (showPercentages ? 10 * barScale : 0)); //row switch
                                 else boxBottomLeft += new Vector2(source.Height * iconScale, 0);
                             }
                             else                    //Vertical Preview
                             {
-                                fishNameLocalized = Math.Round((float)fishChances[fish] / (float)fishChances[-1] * 100) + "% " + fishNameLocalized;
-
                                 if (iconMode == 2)  // + text
                                 {
                                     if (backgroundMode == 0)
@@ -415,18 +397,17 @@ namespace StardewMods
                                         batch.DrawString(font, fishNameLocalized, boxBottomLeft + new Vector2(source.Width * iconScale, 0), Color.Black, 0f, new Vector2(1, -2), 1f * barScale, SpriteEffects.None, 0.9f); //textbg
                                         batch.DrawString(font, fishNameLocalized, boxBottomLeft + new Vector2(source.Width * iconScale, 0), Color.Black, 0f, new Vector2(-1, -4), 1f * barScale, SpriteEffects.None, 0.9f); //textbg
                                     }
-                                    batch.DrawString(font, fishNameLocalized, boxBottomLeft + new Vector2(source.Width * iconScale, 0), (!uncaughtDark || who.fishCaught.ContainsKey(fish))
-                                        ? Color.White : Color.DarkGray, 0f, new Vector2(0, -3), 1f * barScale, SpriteEffects.None, 1f); //text
+                                    batch.DrawString(font, fishNameLocalized, boxBottomLeft + new Vector2(source.Width * iconScale, 0), (caught) ? Color.White : Color.DarkGray, 0f, new Vector2(0, -3), 1f * barScale, SpriteEffects.None, 0.98f); //text
                                     boxWidth = Math.Max(boxWidth, boxBottomLeft.X + (font.MeasureString(fishNameLocalized).X * barScale) + (source.Width * iconScale));
                                 }
 
                                 if (iconCount % maxIconsPerRow == 0) //row switch
                                 {
-                                    if (iconMode == 2) boxBottomLeft = new Vector2(boxWidth + (20 * barScale), boxTopLeft.Y);
+                                    if (iconMode == 2) boxBottomLeft = new Vector2(boxWidth + (22 * barScale), boxTopLeft.Y);
                                     else boxBottomLeft = new Vector2(boxBottomLeft.X + (source.Height * iconScale), boxTopLeft.Y);
                                 }
-                                else boxBottomLeft += new Vector2(0, (source.Height * iconScale));
-                                if (iconMode == 2 && iconCount <= maxIconsPerRow) boxHeight += (source.Width * iconScale);
+                                else boxBottomLeft += new Vector2(0, (source.Height * iconScale) + (showPercentages ? 10 * barScale : 0));
+                                if (iconMode == 2 && iconCount <= maxIconsPerRow) boxHeight += (source.Width * iconScale) + (showPercentages ? 10 * barScale : 0);
                             }
                         }
                     }
@@ -552,7 +533,8 @@ namespace StardewMods
                     if (Game1.player.team.limitedNutDrops.ContainsKey("IslandFishing")) nuts = Game1.player.team.limitedNutDrops["IslandFishing"];
 
                     int f = Helper.Reflection.GetMethod(who.currentLocation, "getFish").Invoke<StardewValley.Object>(0, 1, 5, who, 100, who.getTileLocation(), who.currentLocation.Name).ParentSheetIndex;
-                    if (showPercentage && fishChances[-1] < 10000) {
+                    if (showPercentages && fishChances[-1] < 100001)
+                    {
                         if (f >= 167 && f <= 172) fishChances[168]++;
                         else if (!fishHere.Contains(f))
                         {
@@ -561,20 +543,19 @@ namespace StardewMods
                         }
                         else fishChances[f]++;
                         fishChances[-1]++;
-                    } 
+                    }
                     else if ((f < 167 || f > 172) && !fishHere.Contains(f)) fishHere.Add(f);
 
                     if (!caughtIridiumKrobus && Game1.player.mailReceived.Contains("caughtIridiumKrobus")) Game1.player.mailReceived.Remove("caughtIridiumKrobus");
                     if (Game1.player.team.limitedNutDrops.ContainsKey("IslandFishing") && Game1.player.team.limitedNutDrops["IslandFishing"] != nuts) Game1.player.team.limitedNutDrops["IslandFishing"] = nuts;
                 }
-                //fishHere.Sort();//must be sorted to avoid constant list icon jumps
             }
         }
 
         private void AddCrabPotFish()
         {
-            fishHere = new List<int>();
-            bool ocean = who.currentLocation is StardewValley.Locations.Beach;
+            fishHere = new List<int> { 168 };
+            bool ocean = who.currentLocation is Beach;
             foreach (var fish in fishData)
             {
                 if (!fish.Value.Contains("trap")) continue;
@@ -600,7 +581,7 @@ namespace StardewMods
                 maxIconsPerRow = config.BarMaxIconsPerRow;                                                  //config: ^How many per row/column.
                 backgroundMode = config.BarBackgroundMode;                                                  //config: 0=Circles (dynamic), 1=Rectangle (single), 2=Off
                 showTackles = config.BarShowBaitAndTackleInfo;                                              //config: Whether it should show Bait and Tackle info.
-                showTrash = config.BarShowTrash;                                                            //config: Whether it should show trash icons.
+                showPercentages = config.BarShowPercentages;                                                //config: Whether it should show catch percentages.
                 extraCheckFrequency = config.BarExtraCheckFrequency;                                        //config: 0-200: Bad performance dynamic check to see if there's modded/hardcoded fish
                 scanRadius = config.BarScanRadius;                                                          //config: 0: Only checks if can fish, 1-50: also checks if there's water within X tiles around player.
                 uncaughtDark = config.UncaughtFishAreDark;                                                  //config: Whether uncaught fish are displayed as ??? and use dark icons
@@ -622,17 +603,17 @@ namespace StardewMods
         {
             if (backgroundMode == 0)
             {
-                batch.Draw(background, new Rectangle((int)boxBottomLeft.X - 1, (int)boxBottomLeft.Y - 1, (int)(source.Height * iconScale) + 1, (int)(source.Height * iconScale) + 1),
-                    null, new Color(0, 0, 0, 0.4F), 0f, Vector2.Zero, SpriteEffects.None, 0.5f);
+                batch.Draw(background, new Rectangle((int)boxBottomLeft.X - 1, (int)boxBottomLeft.Y - 1, (int)(source.Height * iconScale) + 1, (int)((source.Height * iconScale) + 1 + (showPercentages ? 10 * barScale : 0))),
+                    null, new Color(0, 0, 0, 0.5f), 0f, Vector2.Zero, SpriteEffects.None, 0.5f);
             }
             else if (backgroundMode == 1)
             {
                 if (iconMode == 0) batch.Draw(background, new Rectangle((int)boxTopLeft.X - 2, (int)boxTopLeft.Y - 2, (int)(source.Width * iconScale * Math.Min(iconCount, maxIconsPerRow)) + 5,
-               (int)(source.Width * iconScale * Math.Ceiling(iconCount / (maxIconsPerRow * 1.0))) + 5), null, new Color(0, 0, 0, 0.4F), 0f, Vector2.Zero, SpriteEffects.None, 0.5f);
+               (int)(((source.Width * iconScale) + (showPercentages ? 10 * barScale : 0)) * Math.Ceiling(iconCount / (maxIconsPerRow * 1.0))) + 5), null, new Color(0, 0, 0, 0.5f), 0f, Vector2.Zero, SpriteEffects.None, 0.5f);
                 else if (iconMode == 1) batch.Draw(background, new Rectangle((int)boxTopLeft.X - 2, (int)boxTopLeft.Y - 2, (int)(source.Width * iconScale * Math.Ceiling(iconCount / (maxIconsPerRow * 1.0))) + 5,
-                    (int)(source.Width * iconScale * Math.Min(iconCount, maxIconsPerRow)) + 5), null, new Color(0, 0, 0, 0.4F), 0f, Vector2.Zero, SpriteEffects.None, 0.5f);
+                    (int)(((source.Width * iconScale) + (showPercentages ? 10 * barScale : 0)) * Math.Min(iconCount, maxIconsPerRow)) + 5), null, new Color(0, 0, 0, 0.5f), 0f, Vector2.Zero, SpriteEffects.None, 0.5f);
                 else if (iconMode == 2) batch.Draw(background, new Rectangle((int)boxTopLeft.X - 2, (int)boxTopLeft.Y - 2, (int)(boxWidth - boxTopLeft.X + 6), (int)boxHeight + 4),
-                    null, new Color(0, 0, 0, 0.4F), 0f, Vector2.Zero, SpriteEffects.None, 0.5f);
+                    null, new Color(0, 0, 0, 0.5f), 0f, Vector2.Zero, SpriteEffects.None, 0.5f);
             }
         }
 

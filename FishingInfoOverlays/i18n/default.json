@@ -31,8 +31,8 @@
 	"GenericMC.barShowBaitTackle": "Show Bait and Tackle Icons",
 	"GenericMC.barShowBaitTackleDesc": "Enables icons that show how much bait and tackle durability your current fishing rod has (if any).",
 
-	"GenericMC.barShowTrash": "Show Trash",
-	"GenericMC.barShowTrashDesc": "Enables an icon that shows trash in valid fishing locations. Trash is almost always available, so this icon can be pointless.",
+	"GenericMC.barShowPercentages": "Show Percentages",
+	"GenericMC.barShowPercentagesDesc": "Shows simulated percentage chance of catching each fish on its icon. Accuracy based on Extra Check Frequency.",
 
 	"GenericMC.barExtraCheckFrequency": "Extra Check Frequency",
 	"GenericMC.barExtraCheckFrequencyDesc": "Performance intensive check that simulates fishing in current location. The higher the number, the more attempts (more accuracy and less flickering). Should be the most accurate, but can tank performance.",
