@@ -32,7 +32,12 @@
 	"GenericMC.barShowBaitTackleDesc": "Enables icons that show how much bait and tackle durability your current fishing rod has (if any).",
 
 	"GenericMC.barShowPercentages": "Show Percentages",
-	"GenericMC.barShowPercentagesDesc": "Shows simulated percentage chance of catching each fish on its icon. Accuracy based on Extra Check Frequency.",
+	"GenericMC.barShowPercentagesDesc": "Shows simulated percentage chance of catching each fish under its icon. Relies heavily on Extra Check Frequency, the higher the better.",
+
+	"GenericMC.barSortMode": "Sorting Mode",
+	"GenericMC.barSortModeDesc": "Sorting by Name arranges icons alphabetically.\nSorting by Catch Chance (%) relies heavily on Extra Check Frequency, the higher the better, but will still likely cause icon jumping.\nWithout sorting, the order is: Trash, by ID, and extras.",
+	"GenericMC.barSortModeName": "Name",
+	"GenericMC.barSortModeChance": "Catch Chance",
 
 	"GenericMC.barExtraCheckFrequency": "Extra Check Frequency",
 	"GenericMC.barExtraCheckFrequencyDesc": "Performance intensive check that simulates fishing in current location. The higher the number, the more attempts (more accuracy and less flickering). Should be the most accurate, but can tank performance.",

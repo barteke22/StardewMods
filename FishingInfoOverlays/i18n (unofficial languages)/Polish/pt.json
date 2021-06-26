@@ -32,7 +32,12 @@
 	"GenericMC.barShowBaitTackleDesc": "Włącza ikony, które pokazują status przynęty i spławika twojej wędki (jeśli je ma).",
 
 	"GenericMC.barShowPercentages": "Pokaż Procenty",
-	"GenericMC.barShowPercentagesDesc": "Pokazuje symulowaną szansę złapania danej ryby na jej ikonie. Dokładność zależy od Częstotliwości Ekstra Testów.",
+	"GenericMC.barShowPercentagesDesc": "Pokazuje symulowaną szansę złapania danej ryby pod jej ikoną. Dokładność bardzo zależy od Częstotliwości Ekstra Testów, im większa tym lepiej.",
+
+	"GenericMC.barSortMode": "Tryb Sortowania",
+	"GenericMC.barSortModeDesc": "Sortowanie według Nazwy aranżuje ikony alfabetycznie.\nSortowanie według Szansy Złapania bardzo zależy od Częstotliwości Ekstra Testów, im większa tym lepiej, lecz i tak rachej będzie powodować skakanie ikon.\nBez sortowania ikony mają daną kolejność: Śmieci, według ID, i ekstra.",
+	"GenericMC.barSortModeName": "Nazwa",
+	"GenericMC.barSortModeChance": "Szansa Złapania",
 
 	"GenericMC.barExtraCheckFrequency": "Częstotliwość Ekstra Testów",
 	"GenericMC.barExtraCheckFrequencyDesc": "Testy intensywnej wydajności które symulują łowienie w tym miejscu. Im wyższa liczba, tym więcej testuw (tym większa dokładność i mniej migotania ikon). Powinno być najdokładniejszą metodą (szczegulnie jeśli masz inne mody), ale wysokie numery mogą spowolnić grę.",

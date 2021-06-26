@@ -13,7 +13,9 @@ namespace StardewMods
 		public string Comment_BarBackgroundMode { get; set; } = "Above BarBackgroundMode values: 0= Circles (behind each icon), 1= Rectangle (behind everything), 2= Off";
 		public bool BarShowBaitAndTackleInfo { get; set; } = true;
 		public bool BarShowPercentages { get; set; } = true;
-		public int BarExtraCheckFrequency { get; set; } = 50;
+		public int BarSortMode { get; set; } = 0;
+		public string Comment_BarSortMode { get; set; } = "Above BarSortMode values: 0= Sort Icons by Name (text mode only), 1= Sort icons by catch chance (Extra Check Frequency based), 2= Off";
+		public int BarExtraCheckFrequency { get; set; } = 100;
 		public int BarScanRadius { get; set; } = 20;
 		public bool BarCrabPotEnabled { get; set; } = true;
 		public bool UncaughtFishAreDark { get; set; } = true;
