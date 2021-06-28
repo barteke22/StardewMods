@@ -378,7 +378,8 @@ namespace StardewMods
 
                             if (showPercentages)
                             {
-                                int percent = (int)Math.Round((float)fishChancesSlow[fish] / (float)fishChancesSlow[-1] * 100);
+                                int percent = 1;
+                                if (fishChancesSlow.ContainsKey(fish)) percent = (int)Math.Round((float)fishChancesSlow[fish] / (float)fishChancesSlow[-1] * 100);
                                 batch.DrawString(font, percent + "%", boxBottomLeft + new Vector2((source.Width * iconScale) - ((font.MeasureString(percent + "%").X + 8) * 0.5f * barScale), 28 * barScale),
                                     (caught) ? Color.White : Color.DarkGray, 0f, Vector2.Zero, 0.5f * barScale, SpriteEffects.None, 1f);//%
                             }
