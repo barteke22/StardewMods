@@ -1,0 +1,10 @@
+﻿{
+  "Name": "Fishing Minigames",
+  "Author": "barteke22 (Here Fishy by aedenthorn)",
+  "Version": "0.4.0",
+  "Description": "Alternative fishing minigames, including Here Fishy Fishy.",
+  "UniqueID": "barteke22.FishingMinigames",
+  "EntryDll": "FishingMinigames.dll",
+  "MinimumApiVersion": "3.10.0",
+  "UpdateKeys": ["Nexus:6586"]
+}
