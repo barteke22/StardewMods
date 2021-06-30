@@ -47,10 +47,11 @@ namespace FishingMinigames
 
 
         private static int startMinigameStyle = 1;
-        private static bool startMinigame;
+
         private static int endMinigameStyle = 1;
         private static int endMinigameStage;
         private static int endMinigameTimer;
+        private static bool endMinigameAnimate;
         private static int endMinigameScore;
 
 
@@ -85,23 +86,16 @@ namespace FishingMinigames
         private void Input_ButtonPressed(object sender, ButtonPressedEventArgs e)  //this.Monitor.Log(locationName, LogLevel.Debug);
         {
             who = Game1.player;
-
+            if (e.Button == SButton.Z)
+            {
+                
+            }
 
             if (endMinigameStage == 2)
             {
                 who.freezePause = 25;
                 if (endMinigameStyle == 1 && e.Button == Game1.options.useToolButton[0].ToSButton() || (Game1.options.useToolButton.Length > 1 && e.Button == Game1.options.useToolButton[1].ToSButton()))
                 {
-                    who.completelyStopAnimatingOrDoingAction();
-                    List<FarmerSprite.AnimationFrame> animationFrames = new List<FarmerSprite.AnimationFrame>(){
-                        new FarmerSprite.AnimationFrame(94, 500, false, false, null, false).AddFrameAction(delegate (Farmer f) { f.jitterStrength = 2f; }) };
-                    who.FarmerSprite.setCurrentAnimation(animationFrames.ToArray());
-                    who.FarmerSprite.PauseForSingleAnimation = true;
-                    who.FarmerSprite.loop = true;
-                    who.FarmerSprite.loopThisAnimation = true;
-                    who.Sprite.currentFrame = 94;
-
-
                     if (endMinigameTimer < 20)
                     {
                         endMinigameStage = 10;
@@ -109,6 +103,7 @@ namespace FishingMinigames
                     }
                     else endMinigameStage = 9;
                 }
+                _ = CatchFishAfterMinigame(who);
             }
             else
             {
@@ -220,9 +215,11 @@ namespace FishingMinigames
                             endMinigameStage = 8;
                         }
                     }
+                    else if (endMinigameAnimate) Game1.drawTool(who);
                 }
             }
 
+            
 
             if (canPerfect)
             {
@@ -251,10 +248,9 @@ namespace FishingMinigames
 
 
 
-            if (endMinigameStyle > 0)
-            {
-                endMinigameStage = 1;
-            }
+            if (endMinigameStyle > 0) endMinigameStage = 1;
+            else await CatchFishAfterMinigame(who);
+
             await HereFishyFlyingAnimation(who, x, y);
         }
 
@@ -446,6 +442,36 @@ namespace FishingMinigames
 
             if (fishData == null) context.Monitor.Log(item.DisplayName + ", Quality: " + fishQuality, LogLevel.Debug);
             else context.Monitor.Log(item.DisplayName + ", Size: " + fishData[3] + "-" + fishData[4] + " (" + fishSize + "), Quality: " + fishQuality, LogLevel.Debug);
+        }
+
+        private async static Task CatchFishAfterMinigame(Farmer who) //move quality etc here
+        {
+            if (endMinigameStyle > 0) {
+                who.completelyStopAnimatingOrDoingAction();
+                endMinigameAnimate = true;
+                (who.CurrentTool as FishingRod).setTimingCastAnimation(who);
+                switch (oldFacingDirection)
+                {
+                    case 0:
+                        who.FarmerSprite.animateOnce(295, 1f, 1);
+                        who.CurrentTool.Update(0, 0, who);
+                        break;
+                    case 1:
+                        who.FarmerSprite.animateOnce(296, 1f, 1);
+                        who.CurrentTool.Update(1, 0, who);
+                        break;
+                    case 2:
+                        who.FarmerSprite.animateOnce(297, 1f, 1);
+                        who.CurrentTool.Update(2, 0, who);
+                        break;
+                    case 3:
+                        who.FarmerSprite.animateOnce(298, 1f, 1);
+                        who.CurrentTool.Update(3, 0, who);
+                        break;
+                }
+                await Task.Delay(300);
+                endMinigameAnimate = false;
+            }
         }
 
         //fish flying from xy to player
