@@ -20,6 +20,7 @@ namespace FishingMinigames
     public class ModEntry : Mod, IAssetEditor
     {
         public static ModEntry context;
+        ITranslationHelper translate;
 
         private static SoundEffect fishySound;
         private static List<TemporaryAnimatedSprite> animations = new List<TemporaryAnimatedSprite>();
@@ -42,11 +43,14 @@ namespace FishingMinigames
         private static int clearWaterDistance;
         private static Object item;
 
+        private static SButton rodButton1;
+        private static SButton rodButton2;
+
         private static bool hereFishying;
         private static bool itemIsInstantCatch;
         private static int oldFacingDirection;
         private static int oldGameTimeInterval;
-        private static bool winter8festival;
+        private static int fishingFestivalMinigame;//0=none, 1=fall16, 2=winter8
 
         private static int startMinigameStage;
         private static int endMinigameStage;
@@ -54,16 +58,15 @@ namespace FishingMinigames
         private static bool endMinigameAnimate;
 
         //config values
-        public static ModConfig Config;
-        private static bool overrideToolUse = true;
-        private static int minigameDamage = 1;
-        private static int startMinigameStyle = 1;
-        private static int endMinigameStyle = 1;
-        private static int festivalMode = 2;
-        private static int minigameDifficulty = 1;//?
-        private static string voiceOldData = "1f/0f";
-        private static float voiceVolume = 1f;
-        private static float voicePitch = 0f;
+        public static ModConfig config;
+        private static bool overrideToolUse;
+        private static float minigameDamage;
+        private static int startMinigameStyle;
+        private static int endMinigameStyle;
+        private static int festivalMode;
+        private static int minigameDifficulty;//?
+        private static float voiceVolume;
+        private static float voicePitch;
 
 
 
@@ -79,17 +82,54 @@ namespace FishingMinigames
             context = this;
             UpdateConfig();
 
-            try
+            helper.Events.Display.RenderedWorld += Display_RenderedWorld;
+            helper.Events.GameLoop.UpdateTicking += GameLoop_UpdateTicking;
+            helper.Events.Input.ButtonPressed += Input_ButtonPressed;
+            helper.Events.GameLoop.GameLaunched += GenericModConfigMenuIntegration;
+        }
+
+
+        private void GenericModConfigMenuIntegration(object sender, GameLaunchedEventArgs e)     //Generic Mod Config Menu API
+        {
+            translate = context.Helper.Translation;
+            var GenericMC = Helper.ModRegistry.GetApi<GenericModConfigMenuAPI>("spacechase0.GenericModConfigMenu");
+            if (GenericMC != null)
             {
-                fishySound = SoundEffect.FromStream(new FileStream(Path.Combine(Helper.DirectoryPath, "assets", "fishy.wav"), FileMode.Open));
+                GenericMC.RegisterModConfig(ModManifest, () => config = new ModConfig(), () => Helper.WriteConfig(config));
+                GenericMC.SetDefaultIngameOptinValue(ModManifest, true);
+                GenericMC.RegisterLabel(ModManifest, translate.Get("GenericMC.MainLabel"), ""); //All of these strings are stored in the traslation files.
+                GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.MainDesc"));
+                GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.MainDesc2") + "\n");
+                GenericMC.RegisterClampedOption(ModManifest, translate.Get("GenericMC.Volume"), translate.Get("GenericMC.VolumeDesc"),
+                    () => config.VoiceVolume, (int val) => config.VoiceVolume = val, 0, 100);
+                GenericMC.RegisterClampedOption(ModManifest, translate.Get("GenericMC.Pitch"), translate.Get("GenericMC.PitchDesc"),
+                    () => config.VoicePitch, (int val) => config.VoicePitch = val, -100, 100);
+                GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.OverrideToolButton"), translate.Get("GenericMC.OverrideToolButtonDesc"),
+                    () => config.OverrideToolUseButton, (bool val) => config.OverrideToolUseButton = val);
+
+                GenericMC.RegisterChoiceOption(ModManifest, translate.Get("GenericMC.StartMinigameStyle"), translate.Get("GenericMC.StartMinigameStyleDesc"),
+                    () => (config.StartMinigameStyle == 0) ? translate.Get("GenericMC.Disabled") : (config.StartMinigameStyle == 1) ? translate.Get("GenericMC.StartMinigameStyle1") : (config.StartMinigameStyle == 2) ? translate.Get("GenericMC.StartMinigameStyle2") : translate.Get("GenericMC.StartMinigameStyle3"),
+                    (string val) => config.StartMinigameStyle = Int32.Parse((val.Equals(translate.Get("GenericMC.Disabled"), StringComparison.Ordinal)) ? "0" : (val.Equals(translate.Get("GenericMC.StartMinigameStyle1"), StringComparison.Ordinal)) ? "1" : (val.Equals(translate.Get("GenericMC.StartMinigameStyle2"), StringComparison.Ordinal)) ? "2" : "3"),
+                    new string[] { translate.Get("GenericMC.Disabled"), translate.Get("GenericMC.StartMinigameStyle1"), translate.Get("GenericMC.StartMinigameStyle2"), translate.Get("GenericMC.StartMinigameStyle3") });//small 'hack' so options appear as name strings, while config.json stores them as integers
+
+                GenericMC.RegisterChoiceOption(ModManifest, translate.Get("GenericMC.EndMinigameStyle"), translate.Get("GenericMC.EndMinigameStyleDesc"),
+                    () => (config.EndMinigameStyle == 0) ? translate.Get("GenericMC.Disabled") : (config.EndMinigameStyle == 1) ? translate.Get("GenericMC.EndMinigameStyle1") : (config.EndMinigameStyle == 2) ? translate.Get("GenericMC.EndMinigameStyle2") : translate.Get("GenericMC.EndMinigameStyle3"),
+                    (string val) => config.EndMinigameStyle = Int32.Parse((val.Equals(translate.Get("GenericMC.Disabled"), StringComparison.Ordinal)) ? "0" : (val.Equals(translate.Get("GenericMC.EndMinigameStyle1"), StringComparison.Ordinal)) ? "1" : (val.Equals(translate.Get("GenericMC.EndMinigameStyle2"), StringComparison.Ordinal)) ? "2" : "3"),
+                    new string[] { translate.Get("GenericMC.Disabled"), translate.Get("GenericMC.EndMinigameStyle1"), translate.Get("GenericMC.EndMinigameStyle2"), translate.Get("GenericMC.EndMinigameStyle3") });
+
+                GenericMC.RegisterClampedOption(ModManifest, translate.Get("GenericMC.EndDamage"), translate.Get("GenericMC.EndDamageDesc"),
+                    () => config.EndMinigameDamage, (float val) => config.EndMinigameDamage = val, 0f, 2f);
+                GenericMC.RegisterClampedOption(ModManifest, translate.Get("GenericMC.Difficulty"), translate.Get("GenericMC.DifficultyDesc"),
+                    () => config.MinigameDifficulty, (int val) => config.MinigameDifficulty = val, -5, 5);
+
+                GenericMC.RegisterLabel(ModManifest, "", "");
+                GenericMC.RegisterLabel(ModManifest, translate.Get("GenericMC.FestivalLabel"), "");
+                GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.FestivalDesc"));
+                GenericMC.RegisterChoiceOption(ModManifest, translate.Get("GenericMC.FestivalMode"), "",
+                    () => (config.FestivalMode == 0) ? translate.Get("GenericMC.FestivalModeVanilla") : (config.FestivalMode == 1) ? translate.Get("GenericMC.FestivalModeSimple") : translate.Get("GenericMC.FestivalModePerfectOnly"),
+                    (string val) => config.FestivalMode = Int32.Parse((val.Equals(translate.Get("GenericMC.FestivalModeVanilla"), StringComparison.Ordinal)) ? "0" : (val.Equals(translate.Get("GenericMC.FestivalModeSimple"), StringComparison.Ordinal)) ? "1" : "2"),
+                    new string[] { translate.Get("GenericMC.FestivalModeVanilla"), translate.Get("GenericMC.FestivalModeSimple"), translate.Get("GenericMC.FestivalModePerfectOnly") });
             }
-            catch (Exception ex)
-            {
-                context.Monitor.Log($"error loading fishy.wav: {ex}");
-            }
-            Helper.Events.Display.RenderedWorld += Display_RenderedWorld;
-            Helper.Events.GameLoop.UpdateTicking += GameLoop_UpdateTicking;
-            Helper.Events.Input.ButtonPressed += Input_ButtonPressed;
         }
 
 
@@ -98,15 +138,15 @@ namespace FishingMinigames
             if (!Context.IsWorldReady || Game1.menuUp) return;
 
             who = Game1.player;
-            if (e.Button == SButton.Z)
+            if (e.Button == SButton.F5)
             {
-
+                UpdateConfig();
             }
 
             if (endMinigameStage == 2)
             {
                 Game1.freezeControls = true;
-                if (endMinigameStyle == 1 && e.Button == Game1.options.useToolButton[0].ToSButton() || (Game1.options.useToolButton.Length > 1 && e.Button == Game1.options.useToolButton[1].ToSButton()))
+                if (endMinigameStyle == 1 && (e.Button == rodButton1 || e.Button == rodButton2))
                 {
                     if (endMinigameStage == 2 && endMinigameTimer < 20) endMinigameStage = 10;
                     else endMinigameStage = 9;
@@ -117,26 +157,17 @@ namespace FishingMinigames
             }
             else
             {
-                if (Context.IsWorldReady && Context.CanPlayerMove && who.CurrentTool is FishingRod)
+                if (Context.IsWorldReady && Context.CanPlayerMove && who.CurrentTool is FishingRod && (e.Button == rodButton1 || e.Button == rodButton2))
                 {
-                    if (e.Button != Game1.options.useToolButton[0].ToSButton() && (Game1.options.useToolButton.Length > 1 && e.Button != Game1.options.useToolButton[1].ToSButton())) return;
-
-                    if ((Game1.isFestival() && Game1.currentMinigame is StardewValley.Minigames.FishingGame))//fall festival minigame skip
+                    if (Game1.isFestival() && (fishingFestivalMinigame == 0 || festivalMode == 0)) return;
+                    if (fishingFestivalMinigame == 1)
                     {
-                        if (festivalMode == 0) return;//vanilla fall festival
                         FestivalGameSkip(who, e);
                         return;
                     }
 
                     if (!hereFishying)
                     {
-                        winter8festival = false;
-                        if (Game1.isFestival())
-                        {
-                            winter8festival = context.Helper.Reflection.GetField<Dictionary<string, string>>(Game1.CurrentEvent, "festivalData").GetValue()["file"].Equals("winter8");
-                            if (festivalMode == 0 && winter8festival) return;//vanilla winter festival
-                        }
-
                         who.freezePause = 1; //stops fishing rod
                         try
                         {
@@ -154,7 +185,7 @@ namespace FishingMinigames
                         }
                         catch
                         {
-                            context.Monitor.Log($"error getting water tile");
+                            context.Monitor.Log($"error getting water tile", LogLevel.Error);
                         }
                     }
                 }
@@ -163,6 +194,29 @@ namespace FishingMinigames
 
         private void GameLoop_UpdateTicking(object sender, UpdateTickingEventArgs e) //adds item to inv
         {
+            if (Game1.isFestival())
+            {
+                fishingFestivalMinigame = 0;
+                string data = context.Helper.Reflection.GetField<Dictionary<string, string>>(Game1.CurrentEvent, "festivalData").GetValue()["file"];
+                if (data != null)
+                {
+                    who = Game1.player;
+                    int timer = 0;
+                    if (data.Equals("fall16") && Game1.currentMinigame is StardewValley.Minigames.FishingGame)
+                    {
+                        timer = context.Helper.Reflection.GetField<int>(Game1.currentMinigame as StardewValley.Minigames.FishingGame, "gameEndTimer").GetValue();
+                        if (timer < 100000 && timer >= 500) fishingFestivalMinigame = 1;
+                    }
+                    else if (data.Equals("winter8"))
+                    {
+                        timer = Game1.CurrentEvent.festivalTimer;
+                        if (timer < 120000 && timer >= 500) fishingFestivalMinigame = 2;
+                    }
+                    if (timer <= 500 && fishingFestivalMinigame > 0 && festivalMode > 0) _ = EmergencyCancel(who);
+                }
+                context.Monitor.Log(fishingFestivalMinigame.ToString(), LogLevel.Debug);
+            }
+
             for (int i = animations.Count - 1; i >= 0; i--)
             {
                 if (endMinigameStage != 2 && animations[i].update(Game1.currentGameTime))
@@ -252,7 +306,7 @@ namespace FishingMinigames
 
         private async static void HereFishyFishy(Farmer who, int x, int y)
         {
-            if (winter8festival) await FestivalCancelRod(who);
+            if (fishingFestivalMinigame == 2) await FestivalCancelRod(who);
             else if (who.IsLocalPlayer)
             {
                 float oldStamina = who.Stamina;
@@ -261,14 +315,14 @@ namespace FishingMinigames
             }
 
             oldGameTimeInterval = Game1.gameTimeInterval;
-            if (!Game1.IsMultiplayer) Game1.gameTimeInterval = 0;
+            if (!Game1.IsMultiplayer && !Game1.isFestival()) Game1.gameTimeInterval = 0;
             startMinigameStage = 0;
             endMinigameStage = 0;
 
             CatchFish(who, x, y);
 
 
-            if (!fromFishPond && !winter8festival && startMinigameStyle > 0)
+            if (!fromFishPond && fishingFestivalMinigame != 2 && startMinigameStyle > 0)
             {
                 //startMinigameStage = 1;
                 //await MINIGAME                    TODO
@@ -356,7 +410,7 @@ namespace FishingMinigames
             {
                 item = who.currentLocation.tryToCreateUnseenSecretNote(who);
             }
-            if (!winter8festival && !(item is Furniture) && !fromFishPond && who.team.specialOrders != null)
+            if (fishingFestivalMinigame != 2 && !(item is Furniture) && !fromFishPond && who.team.specialOrders != null)
             {
                 foreach (SpecialOrder order in who.team.specialOrders)
                 {
@@ -472,11 +526,10 @@ namespace FishingMinigames
                 if (fishQuality > 2) fishQuality = 4;
 
 
-                caughtDoubleFish = !bossFish && rod.getBaitAttachmentIndex() == 774 && !fromFishPond && Game1.random.NextDouble() < 0.1 + who.DailyLuck / 2.0 - reduction - 0.5f;
-                context.Monitor.Log(reduction + "", LogLevel.Debug);
+                caughtDoubleFish = fishingFestivalMinigame != 2 && !bossFish && rod.getBaitAttachmentIndex() == 774 && !fromFishPond && Game1.random.NextDouble() < 0.1 + who.DailyLuck / 2.0 - reduction - 0.5f;
 
 
-                if (who.IsLocalPlayer && !winter8festival)
+                if (who.IsLocalPlayer && fishingFestivalMinigame != 2)
                 {
                     int experience = Math.Max(1, (fishQuality + 1) * 3 + difficulty / 3);
                     if (bossFish) experience *= 5;
@@ -485,18 +538,18 @@ namespace FishingMinigames
                     else if (perfect) experience += (int)((float)experience * 1.4f);
 
                     who.gainExperience(1, experience);
-                    if (minigameDamage > 0 && endMinigameStyle > 0 && endMinigameStage == 8) who.takeDamage((10 + (difficulty / 10) + (int)(fishSize / 5) - who.FishingLevel) * minigameDamage, true, null);
+                    if (minigameDamage > 0 && endMinigameStyle > 0 && endMinigameStage == 8) who.takeDamage((int)((10 + (difficulty / 10) + (int)(fishSize / 5) - who.FishingLevel) * minigameDamage), true, null);
                 }
 
 
-                treasureCaught = !winter8festival && who.fishCaught != null && who.fishCaught.Count() > 1 && Game1.random.NextDouble() < FishingRod.baseChanceForTreasure + (double)who.LuckLevel * 0.005 + ((rod.getBaitAttachmentIndex() == 703) ? FishingRod.baseChanceForTreasure : 0.0) + ((rod.getBobberAttachmentIndex() == 693) ? (FishingRod.baseChanceForTreasure / 3.0) : 0.0) + who.DailyLuck / 2.0 + ((who.professions.Contains(9) ? FishingRod.baseChanceForTreasure : 0.0) - reduction - 0.5f);
+                treasureCaught = fishingFestivalMinigame != 2 && who.fishCaught != null && who.fishCaught.Count() > 1 && Game1.random.NextDouble() < FishingRod.baseChanceForTreasure + (double)who.LuckLevel * 0.005 + ((rod.getBaitAttachmentIndex() == 703) ? FishingRod.baseChanceForTreasure : 0.0) + ((rod.getBobberAttachmentIndex() == 693) ? (FishingRod.baseChanceForTreasure / 3.0) : 0.0) + who.DailyLuck / 2.0 + ((who.professions.Contains(9) ? FishingRod.baseChanceForTreasure : 0.0) - reduction - 0.5f);
                 item.Quality = fishQuality;
                 if (caughtDoubleFish) item.Stack = 2;
             }
-            else if (who.IsLocalPlayer && !winter8festival)
+            else if (who.IsLocalPlayer && fishingFestivalMinigame != 2)
             {
                 who.gainExperience(1, 3);
-                if (!fromFishPond && minigameDamage > 0 && endMinigameStyle > 0 && endMinigameStage == 8) who.takeDamage((16 - who.FishingLevel) * minigameDamage, true, null);
+                if (!fromFishPond && minigameDamage > 0 && endMinigameStyle > 0 && endMinigameStage == 8) who.takeDamage((int)((16 - who.FishingLevel) * minigameDamage), true, null);
             }
         }
 
@@ -505,7 +558,7 @@ namespace FishingMinigames
         {
             Game1.freezeControls = true;
             hereFishying = true;
-            if (fishySound != null) fishySound.Play();
+            if (fishySound != null) fishySound.Play(voiceVolume, voicePitch, 0);
 
             who.completelyStopAnimatingOrDoingAction();
             who.jitterStrength = 2f;
@@ -598,7 +651,7 @@ namespace FishingMinigames
 
         public async static void PlayerCaughtFishEndFunction(int extraData)
         {
-            if (winter8festival) await FestivalCancelRod(who);
+            if (fishingFestivalMinigame == 2) await FestivalCancelRod(who);
 
             await CatchFishAfterMinigame(who);
 
@@ -644,7 +697,7 @@ namespace FishingMinigames
             who.armOffset = Vector2.Zero;
 
 
-            if (winter8festival)
+            if (fishingFestivalMinigame == 2)
             {
                 if (!itemIsInstantCatch)
                 {
@@ -685,7 +738,7 @@ namespace FishingMinigames
 
             Game1.freezeControls = false;
 
-            if (!Game1.IsMultiplayer) Game1.gameTimeInterval = oldGameTimeInterval;
+            if (!Game1.IsMultiplayer && !Game1.isFestival()) Game1.gameTimeInterval = oldGameTimeInterval;
             hereFishying = false;
             fishCaught = true;
         }
@@ -724,7 +777,7 @@ namespace FishingMinigames
             if (!hereFishying)
             {
                 hereFishying = true;
-                if (fishySound != null) fishySound.Play();
+                if (fishySound != null) fishySound.Play(voiceVolume, voicePitch, 0);
                 who.synchronizedJump(8f);
                 await Task.Delay(Game1.random.Next(2000, 3000));
 
@@ -742,17 +795,19 @@ namespace FishingMinigames
             who.FacingDirection = direction;
             Game1.freezeControls = false;
 
-            if (button.IsDown(Game1.options.useToolButton[0].ToSButton()) || (Game1.options.useToolButton.Length > 1 && button.IsDown(Game1.options.useToolButton[1].ToSButton()))) FestivalGameSkip(who, button);
+            if ((button.IsDown(rodButton1) || button.IsDown(rodButton2)) && fishingFestivalMinigame == 1) FestivalGameSkip(who, button);
             return;
         }
 
         private async static Task FestivalCancelRod(Farmer who)
         {
+            FishingRod rod = (who.CurrentTool as FishingRod);
             for (int i = 0; i < 25; i++)
             {
-                (who.CurrentTool as FishingRod).castingEndFunction(-1);
-                (who.CurrentTool as FishingRod).doneFishing(who);
-                (who.CurrentTool as FishingRod).resetState();
+                if (fishingFestivalMinigame == 0) return;
+                rod.castingEndFunction(-1);
+                rod.doneFishing(who);
+                rod.resetState();
                 who.UsingTool = false;
                 who.Halt();
                 who.forceCanMove();
@@ -760,6 +815,19 @@ namespace FishingMinigames
                 await Task.Delay(2);
             }
         }
+        private async static Task EmergencyCancel(Farmer who)
+        {
+            endMinigameStage = 5;
+            startMinigameStage = 0;
+            animations.Clear();
+            await Task.Delay(1000);
+            who.UsingTool = false;
+            who.Halt();
+            who.completelyStopAnimatingOrDoingAction();
+            hereFishying = false;
+            Game1.freezeControls = false;
+        }
+
 
 
         /// <summary>Get whether this instance can edit the given asset.</summary>
@@ -783,7 +851,7 @@ namespace FishingMinigames
             }
             else
             {
-                ITranslationHelper translate = context.Helper.Translation;
+                translate = context.Helper.Translation;
                 IDictionary<string, string> data = asset.AsDictionary<string, string>().Data;
                 foreach (string itemID in data.Keys.ToArray())
                 {
@@ -820,16 +888,50 @@ namespace FishingMinigames
 
         private static void UpdateConfig()
         {
-            Config = context.Helper.ReadConfig<ModConfig>();
-            overrideToolUse = true;//= Config.;
-            minigameDamage = 1;
-            startMinigameStyle = 1;
-            endMinigameStyle = 1;
-            festivalMode = 2;
-            minigameDifficulty = 1;//?
-            voiceOldData = "1f/0f";
-            voiceVolume = 1f;
-            voicePitch = 0f;
+            config = context.Helper.ReadConfig<ModConfig>();
+            voiceVolume = config.VoiceVolume / 100f;
+            voicePitch = config.VoicePitch / 100f;
+            overrideToolUse = config.OverrideToolUseButton;
+            startMinigameStyle = config.StartMinigameStyle;
+            endMinigameStyle = config.EndMinigameStyle;
+            minigameDamage = config.EndMinigameDamage;
+            minigameDifficulty = config.MinigameDifficulty;
+            festivalMode = config.FestivalMode;
+
+            try
+            {
+                fishySound = SoundEffect.FromStream(new FileStream(Path.Combine(context.Helper.DirectoryPath, "assets", "fishy.wav"), FileMode.Open));
+            }
+            catch (Exception ex)
+            {
+                context.Monitor.Log($"error loading fishy.wav: {ex}", LogLevel.Error);
+            }
+
+
+            if (!config.Voice_Test_Ignore_Me.Equals(config.VoiceVolume + "/" + config.VoicePitch, StringComparison.Ordinal))
+            { //play voice and save it if changed
+                config.Voice_Test_Ignore_Me = config.VoiceVolume + "/" + config.VoicePitch;
+                fishySound.Play(voiceVolume, voicePitch, 0f);
+                context.Helper.WriteConfig(config);
+            }
+
+            try
+            {
+                if (overrideToolUse)
+                {
+                    rodButton1 = Game1.options.useToolButton[0].ToSButton();
+                    rodButton2 = (Game1.options.useToolButton.Length > 1) ? Game1.options.useToolButton[1].ToSButton() : SButton.None;
+                }
+                else
+                {
+                    rodButton1 = Game1.options.actionButton[0].ToSButton();
+                    rodButton2 = (Game1.options.actionButton.Length > 1) ? Game1.options.actionButton[1].ToSButton() : SButton.None;
+                }
+            }
+            catch (Exception)
+            {
+                context.Monitor.Log("There's no assigned " + ((overrideToolUse) ? "Tool Use" : "Action") + " button!", LogLevel.Error);
+            }
         }
     }
 }

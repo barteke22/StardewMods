@@ -1,9 +1,45 @@
 {
-	"net.fishing": "Fishing Net",
-	"net.bamboo": "Bamboo Net",
-	"net.training": "Training Net",
-	"net.traningDesc": "It's a lot easier to use than other nets, but can only catch basic fish.",
-	"net.fiberglass": "Fiberglass Net",
-	"net.iridium": "Iridium Net",
-	"net.skill": "+{0} Fishing Net Efficiency",
+  "GenericMC.MainLabel": "Fishing Minigame Options",
+  "GenericMC.MainDesc": "Options for the alternative Fishing Minigames. Here you can pick your minigame style, or completely disable a minigame part. \n\nThe fish size and quality is determined by the combined score of Start and End minigames, depending on which ones are enabled.",
+  "GenericMC.MainDesc2": "Hover over the variable names for more info. Hitting F5 will update saved changes without restarting, and if you changed your voice settings it will also play a preview of your current voice: Save + F5.",
+  "GenericMC.Volume": "Voice Volume",
+  "GenericMC.VolumeDesc": "Allows fine tuning of the \"Here Fishy!\" volume. Press F5 after Saving to preview.",
+  "GenericMC.Pitch": "Voice Pitch",
+  "GenericMC.PitchDesc": "Changes the pitch of your \"Here Fishy!\" voice. Starts randomized for multiplayer diversity. Press F5 after Saving to preview.",
+  "GenericMC.OverrideToolButton": "Override Tool Use Button(s)",
+  "GenericMC.OverrideToolButtonDesc": "Ticked: The vanilla minigame is supressed completely, these ones trigger instead. \nUnticked: Will instead use the Action Button(s) for both triggering this fishing and any minigame \"clicks\", allowing you to play the vanilla minigame with the regular button(s).",
+
+  "GenericMC.StartMinigameStyle": "Minigame Style (Start)",
+  "GenericMC.StartMinigameStyleDesc": "This minigame determines whether you catch the fish at all (non-fish catches skip this part), and contributes to total score. \nDDR Arrows: The classic rhythm game where you match arrow directions with your Movement buttons as they reach a specific area. \n??? \n???",
+  "GenericMC.StartMinigameStyle1": "DDR Arrows",
+  "GenericMC.StartMinigameStyle2": "todo",
+  "GenericMC.StartMinigameStyle3": "todo",
+
+  "GenericMC.EndMinigameStyle": "Minigame Style (End)",
+  "GenericMC.EndMinigameStyleDesc": "This minigame determines whether you take damage (if failed) when scooping up any fishable item/fish, and contributes to total score. \nMinigame Button: At the right time, press the button you use for fishing. \nMatching Arrow:  At the right time, match the direction of the displayed arrow with your Movement buttons. \nMatching Key:    At the right time, press the displayed button. Keyboard only, will use a letter from the fish/item name.",
+  "GenericMC.EndMinigameStyle1": "Minigame Button",
+  "GenericMC.EndMinigameStyle2": "Matching Arrow",
+  "GenericMC.EndMinigameStyle3": "Matching Key",
+
+  "GenericMC.EndDamage": "Minigame Damage (End)",
+  "GenericMC.EndDamageDesc": "If you fail the end minigame, you'll get damaged based on the fish/item difficulty, size, and this multiplier. This is a straight up multiplier, so 0 means no damage, less than 1 means less, more means more.",
+  "GenericMC.Difficulty": "Minigame Difficulty (Both) - WIP",
+  "GenericMC.DifficultyDesc": "todo",
+
+  "GenericMC.FestivalLabel": "Festival Minigames",
+  "GenericMC.FestivalDesc": "This only matters for Fall 16 and Winter 8 festivals, as they have fishing minigames that happen inside events. Meaning that the animation mode and fishing override can't be fully hijacked, so it doesn't work/is janky. So here are the options for those. \n\nVanilla: Use the regular fishing minigame for both festivals. OTHERWISE: \n\nFall 16: Click (or hold for auto) rod-use button to catch a fish with random delay between attempts. \nWinter 8 (Simple): Only does the End Minigame (if enabled), any non-trash counts. \nWinter 8 (Perfect Only): Only does the End Minigame (if enabled), only perfect catch fish count (better balance).",
+  "GenericMC.FestivalMode": "Festival Mode",
+  "GenericMC.FestivalModeVanilla": "Vanilla",
+  "GenericMC.FestivalModeSimple": "Simple",
+  "GenericMC.FestivalModePerfectOnly": "Perfect Only",
+
+  "GenericMC.Disabled": "Disabled",
+
+  "net.fishing": "Fishing Net",
+  "net.bamboo": "Bamboo Net",
+  "net.training": "Training Net",
+  "net.traningDesc": "It's a lot easier to use than other nets, but can only catch basic fish.",
+  "net.fiberglass": "Fiberglass Net",
+  "net.iridium": "Iridium Net",
+  "net.skill": "+{0} Fishing Net Efficiency"
 }

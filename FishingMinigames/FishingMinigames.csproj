@@ -50,7 +50,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="APIs.cs" />
     <Compile Include="ModConfig.cs" />
+    <None Include="i18n %28unofficial languages%29\Polish\pt.json" />
     <None Include="i18n\default.json" />
     <None Include="ModEntry.cs.old" />
     <Compile Include="ModEntry.cs" />
