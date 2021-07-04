@@ -1,5 +1,4 @@
-﻿using Harmony;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
@@ -7,14 +6,12 @@ using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.BellsAndWhistles;
 using StardewValley.Buildings;
-using StardewValley.Menus;
 using StardewValley.Objects;
 using StardewValley.Tools;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Object = StardewValley.Object;
 
@@ -24,13 +21,14 @@ namespace FishingMinigames
     {
         public static ModEntry context;
 
-        public static ModConfig Config;
         private static SoundEffect fishySound;
         private static List<TemporaryAnimatedSprite> animations = new List<TemporaryAnimatedSprite>();
         private static SparklingText sparklingText;
         private static bool caughtDoubleFish;
         private static Farmer who;
         private static int whichFish;
+        private static int minFishSize;
+        private static int maxFishSize;
         private static float fishSize;
         private static bool recordSize;
         private static bool perfect;
@@ -48,16 +46,25 @@ namespace FishingMinigames
         private static bool itemIsInstantCatch;
         private static int oldFacingDirection;
         private static int oldGameTimeInterval;
+        private static bool winter8festival;
 
-        private static int minigameDamage = 1;
-
-        private static int startMinigameStyle = 1;
         private static int startMinigameStage;
-
-        private static int endMinigameStyle = 1;
         private static int endMinigameStage;
         private static int endMinigameTimer;
         private static bool endMinigameAnimate;
+
+        //config values
+        public static ModConfig Config;
+        private static bool overrideToolUse = true;
+        private static int minigameDamage = 1;
+        private static int startMinigameStyle = 1;
+        private static int endMinigameStyle = 1;
+        private static int festivalMode = 2;
+        private static int minigameDifficulty = 1;//?
+        private static string voiceOldData = "1f/0f";
+        private static float voiceVolume = 1f;
+        private static float voicePitch = 0f;
+
 
 
 
@@ -70,9 +77,7 @@ namespace FishingMinigames
         public override void Entry(IModHelper helper)
         {
             context = this;
-            Config = Helper.ReadConfig<ModConfig>();
-            if (!Config.EnableMod)
-                return;
+            UpdateConfig();
 
             try
             {
@@ -90,6 +95,8 @@ namespace FishingMinigames
 
         private void Input_ButtonPressed(object sender, ButtonPressedEventArgs e)  //this.Monitor.Log(locationName, LogLevel.Debug);
         {
+            if (!Context.IsWorldReady || Game1.menuUp) return;
+
             who = Game1.player;
             if (e.Button == SButton.Z)
             {
@@ -101,7 +108,7 @@ namespace FishingMinigames
                 Game1.freezeControls = true;
                 if (endMinigameStyle == 1 && e.Button == Game1.options.useToolButton[0].ToSButton() || (Game1.options.useToolButton.Length > 1 && e.Button == Game1.options.useToolButton[1].ToSButton()))
                 {
-                    if (endMinigameTimer < 20) endMinigameStage = 10;
+                    if (endMinigameStage == 2 && endMinigameTimer < 20) endMinigameStage = 10;
                     else endMinigameStage = 9;
 
                     animations.Clear();
@@ -110,28 +117,45 @@ namespace FishingMinigames
             }
             else
             {
-                if (!hereFishying && Context.IsWorldReady && Context.CanPlayerMove && (who.CurrentTool is FishingRod))
+                if (Context.IsWorldReady && Context.CanPlayerMove && who.CurrentTool is FishingRod)
                 {
                     if (e.Button != Game1.options.useToolButton[0].ToSButton() && (Game1.options.useToolButton.Length > 1 && e.Button != Game1.options.useToolButton[1].ToSButton())) return;
-                    who.freezePause = 1; //stops fishing rod
-                    try
+
+                    if ((Game1.isFestival() && Game1.currentMinigame is StardewValley.Minigames.FishingGame))//fall festival minigame skip
                     {
-                        endMinigameStage = 0;
-                        perfect = false;
-                        Vector2 mouse = Game1.currentCursorTile;
-                        oldFacingDirection = who.getGeneralDirectionTowards(new Vector2(mouse.X * 64, mouse.Y * 64));
-                        who.faceDirection(oldFacingDirection);
-
-
-                        if (who.currentLocation.canFishHere() && who.currentLocation.isTileFishable((int)mouse.X, (int)mouse.Y))
-                        {
-                            context.Monitor.Log($"here fishy fishy {mouse.X},{mouse.Y}");
-                            HereFishyFishy(who, (int)mouse.X * 64, (int)mouse.Y * 64);
-                        }
+                        if (festivalMode == 0) return;//vanilla fall festival
+                        FestivalGameSkip(who, e);
+                        return;
                     }
-                    catch
+
+                    if (!hereFishying)
                     {
-                        context.Monitor.Log($"error getting water tile");
+                        winter8festival = false;
+                        if (Game1.isFestival())
+                        {
+                            winter8festival = context.Helper.Reflection.GetField<Dictionary<string, string>>(Game1.CurrentEvent, "festivalData").GetValue()["file"].Equals("winter8");
+                            if (festivalMode == 0 && winter8festival) return;//vanilla winter festival
+                        }
+
+                        who.freezePause = 1; //stops fishing rod
+                        try
+                        {
+                            perfect = false;
+                            Vector2 mouse = Game1.currentCursorTile;
+                            oldFacingDirection = who.getGeneralDirectionTowards(new Vector2(mouse.X * 64, mouse.Y * 64));
+                            who.faceDirection(oldFacingDirection);
+
+
+                            if (who.currentLocation.canFishHere() && who.currentLocation.isTileFishable((int)mouse.X, (int)mouse.Y))
+                            {
+                                context.Monitor.Log($"here fishy fishy {mouse.X},{mouse.Y}");
+                                HereFishyFishy(who, (int)mouse.X * 64, (int)mouse.Y * 64);
+                            }
+                        }
+                        catch
+                        {
+                            context.Monitor.Log($"error getting water tile");
+                        }
                     }
                 }
             }
@@ -159,15 +183,21 @@ namespace FishingMinigames
 
         private void Display_RenderedWorld(object sender, RenderedWorldEventArgs e)
         {
+            who = Game1.player;
+            if (!Game1.eventUp && !Game1.menuUp && !hereFishying && who.CurrentItem is FishingRod)
+            {
+                Vector2 mouse = new Vector2((Game1.getMouseX()) / 64, (Game1.getMouseY()) / 64);
+                Texture2D tile = Game1.content.Load<Texture2D>("LooseSprites\\buildingPlacementTiles");
+                e.SpriteBatch.Draw(tile, mouse * 64, Game1.getSourceRectForStandardTileSheet(tile, (who.currentLocation.isTileFishable((int)Game1.currentCursorTile.X, (int)Game1.currentCursorTile.Y)) ? 0 : 1), new Color(255, 255, 255, 0.5f), 0f, Vector2.Zero, 1f, SpriteEffects.None, 1f);
+            }
             for (int i = animations.Count - 1; i >= 0; i--)
             {
                 animations[i].draw(e.SpriteBatch, false, 0, 0, 1f);
                 if (endMinigameStage > 0 && i == 0)
                 {
-                    who = Game1.player;
                     if (endMinigameStage == 1)
                     {
-                        Rectangle area = new Rectangle((int)who.Position.X - 80, (int)who.Position.Y - 185, 160, 210);
+                        Rectangle area = new Rectangle((int)who.Position.X - 70, (int)who.Position.Y - 185, 140, 205);
                         if (area.Contains((int)animations[0].Position.X, (int)animations[0].Position.Y))
                         {
                             endMinigameStage = 2;
@@ -222,20 +252,37 @@ namespace FishingMinigames
 
         private async static void HereFishyFishy(Farmer who, int x, int y)
         {
+            if (winter8festival) await FestivalCancelRod(who);
+            else if (who.IsLocalPlayer)
+            {
+                float oldStamina = who.Stamina;
+                who.Stamina -= 8f - (float)who.FishingLevel * 0.1f;
+                who.checkForExhaustion(oldStamina);
+            }
+
             oldGameTimeInterval = Game1.gameTimeInterval;
             if (!Game1.IsMultiplayer) Game1.gameTimeInterval = 0;
-
-            await HereFishyStartingAnimation(who);
-
-
-
+            startMinigameStage = 0;
+            endMinigameStage = 0;
 
             CatchFish(who, x, y);
 
 
+            if (!fromFishPond && !winter8festival && startMinigameStyle > 0)
+            {
+                //startMinigameStage = 1;
+                //await MINIGAME                    TODO
+            }
+
+            if (startMinigameStage == 5)
+            {
+                AnnounceAndEmote(who);
+                return;
+            }
+            else await HereFishyStartingAnimation(who);
 
 
-            if (endMinigameStyle > 0) endMinigameStage = 1;
+            if (!fromFishPond && endMinigameStyle > 0) endMinigameStage = 1;
 
             await HereFishyFlyingAnimation(who, x, y);
         }
@@ -279,6 +326,12 @@ namespace FishingMinigames
                 whichFish = item.ParentSheetIndex;
             }
 
+            fishSize = 1f;
+            fishQuality = 0;
+            difficulty = 0;
+            minFishSize = 0;
+            maxFishSize = 0;
+
             Dictionary<int, string> data = Game1.content.Load<Dictionary<int, string>>("Data\\Fish");
             string[] fishData = null;
             if (data.ContainsKey(whichFish)) fishData = data[whichFish].Split('/');
@@ -288,8 +341,7 @@ namespace FishingMinigames
             if (item is Furniture) itemIsInstantCatch = true;
             else if (Utility.IsNormalObjectAtParentSheetIndex(item, whichFish) && data.ContainsKey(whichFish))
             {
-                difficulty = -1;
-                if (!int.TryParse(fishData[1], out difficulty)) itemIsInstantCatch = true;
+                if (!int.TryParse(fishData[1], out difficulty) && !int.TryParse(fishData[3], out minFishSize) && !int.TryParse(fishData[4], out maxFishSize)) itemIsInstantCatch = true;
             }
             else itemIsInstantCatch = true;
 
@@ -304,18 +356,37 @@ namespace FishingMinigames
             {
                 item = who.currentLocation.tryToCreateUnseenSecretNote(who);
             }
-            if (!Game1.isFestival() && !(item is Furniture) && !fromFishPond && who.team.specialOrders != null)
+            if (!winter8festival && !(item is Furniture) && !fromFishPond && who.team.specialOrders != null)
             {
                 foreach (SpecialOrder order in who.team.specialOrders)
                 {
                     order.onFishCaught?.Invoke(who, item);
                 }
             }
+
+
+            //sizes
+            fishSize *= Math.Min((float)clearWaterDistance / 5f, 1f);
+            int minimumSizeContribution = 1 + who.FishingLevel / 2;
+            fishSize *= (float)Game1.random.Next(minimumSizeContribution, Math.Max(6, minimumSizeContribution)) / 5f;
+
+            if (rod.getBaitAttachmentIndex() != -1) fishSize *= 1.2f;
+            fishSize *= 1f + (float)Game1.random.Next(-10, 11) / 100f;
+            fishSize = Math.Max(0f, Math.Min(1f, fishSize));
+
+
+            fishSize = (int)((float)minFishSize + (float)(maxFishSize - minFishSize) * fishSize);
+            fishSize++;
+
+            if (rod.Name.Equals("Training Rod", StringComparison.Ordinal)) fishSize = minFishSize;
+
+
+            bossFish = FishingRod.isFishBossFish(whichFish);
         }
 
         private async static Task CatchFishAfterMinigame(Farmer who)
         {
-            if (endMinigameStyle > 0 && endMinigameStage > 8)
+            if (!fromFishPond && endMinigameStyle > 0 && endMinigameStage > 8)
             {
                 if (endMinigameStage == 10) canPerfect = true;
                 who.completelyStopAnimatingOrDoingAction();
@@ -346,123 +417,87 @@ namespace FishingMinigames
 
 
 
-            //data calculations: size, quality, double, exp, treasure
+            //data calculations: quality, double, exp, treasure
             FishingRod rod = who.CurrentTool as FishingRod;
-            Dictionary<int, string> data = Game1.content.Load<Dictionary<int, string>>("Data\\Fish");
-            string[] fishData = null;
-            if (data.ContainsKey(whichFish)) fishData = data[whichFish].Split('/');
 
-            fishSize = 1f;
-            fishQuality = 0;
+            treasureCaught = false;
             float reduction = 0f;
+
             if (!itemIsInstantCatch)
             {
-                fishSize *= Math.Min((float)clearWaterDistance / 5f, 1f);
-                int minimumSizeContribution = 1 + who.FishingLevel / 2;
-                fishSize *= (float)Game1.random.Next(minimumSizeContribution, Math.Max(6, minimumSizeContribution)) / 5f;
-
-                if (rod.getBaitAttachmentIndex() != -1) fishSize *= 1.2f;
-                fishSize *= 1f + (float)Game1.random.Next(-10, 11) / 100f;
-                fishSize = Math.Max(0f, Math.Min(1f, fishSize));
-
-                if (fishData != null)
+                if (rod.Name.Equals("Training Rod", StringComparison.Ordinal))
                 {
-                    int minFishSize = int.Parse(fishData[3]);
-                    int maxFishSize = int.Parse(fishData[4]);
-                    fishSize = (int)((float)minFishSize + (float)(maxFishSize - minFishSize) * fishSize);
-                    fishSize++;
-
-                    fishQuality = (fishSize * (0.9 + (who.FishingLevel / 5.0)) < 0.33) ? 0 : ((fishSize * (0.9 + (who.FishingLevel / 5.0)) < 0.66) ? 1 : 2);
+                    fishQuality = 0;
+                    fishSize = minFishSize;
+                }
+                else
+                {
+                    fishQuality = (fishSize * (0.9 + (who.FishingLevel / 5.0)) < 0.33) ? 0 : ((fishSize * (0.9 + (who.FishingLevel / 5.0)) < 0.66) ? 1 : 2);//init quality
                     if (rod.getBobberAttachmentIndex() == 877) fishQuality++;
 
-
-
-                    if (rod.Name.Equals("Training Rod", StringComparison.Ordinal))
+                    if (startMinigameStyle > 0 && endMinigameStyle > 0) //minigame score reductions
                     {
-                        fishQuality = 0;
-                        fishSize = minFishSize;
+                        if (startMinigameStage == 10) reduction -= 0.4f;
+                        else if (startMinigameStage == 9) reduction += 0.3f;
+                        else if (startMinigameStage == 8) reduction += 0.5f;
+                        else if (startMinigameStage == 7) reduction += 0.7f;
+                        else if (startMinigameStage == 6) reduction += 0.8f;
+                        if (endMinigameStage == 10) reduction -= 0.4f;
+                        else if (endMinigameStage == 9) reduction += 0.6f;
+                        else if (endMinigameStage == 8) reduction += 0.8f;
+                    }
+                    else if (startMinigameStyle > 0)
+                    {
+                        if (startMinigameStage == 10) reduction -= 1f;
+                        else if (startMinigameStage == 9) reduction += 0f;
+                        else if (startMinigameStage < 9) reduction += 1f;
+                        else if (startMinigameStage == 6) reduction += 2f;
+                    }
+                    else if (endMinigameStyle > 0)
+                    {
+                        if (endMinigameStage == 10) reduction -= 1f;
+                        else if (endMinigameStage == 9) reduction += (Game1.random.Next(0, 2) == 0) ? 0f : 1f;
+                        else if (endMinigameStage < 8) reduction += 2f;
                     }
                     else
                     {
-                        if (startMinigameStyle > 0 && endMinigameStyle > 0) //minigame score reductions
-                        {
-                            if (startMinigameStage == 10) reduction -= 0.4f;
-                            else if (startMinigameStage == 9) reduction += 0.3f;
-                            else if (startMinigameStage == 8) reduction += 0.5f;
-                            else if (startMinigameStage == 7) reduction += 0.7f;
-                            else if (startMinigameStage == 6) reduction += 0.8f;
-                            if (endMinigameStage == 10) reduction -= 0.4f;
-                            else if (endMinigameStage == 9) reduction += 0.6f;
-                            else if (endMinigameStage == 8) reduction += 0.8f;
-                        }
-                        else if (startMinigameStyle > 0)
-                        {
-                            if (startMinigameStage == 10) reduction -= 1f;
-                            else if (startMinigameStage == 9) reduction += 0f;
-                            else if (startMinigameStage < 9) reduction += 1f;
-                            else if (startMinigameStage == 6) reduction += 2f;
-                        }
-                        else if (endMinigameStyle > 0)
-                        {
-                            if (endMinigameStage == 10) reduction -= 1f;
-                            else if (endMinigameStage == 9) reduction += (Game1.random.Next(0, 2) == 0) ? 0f : 1f;
-                            else if (endMinigameStage < 8) reduction += 2f;
-                        }
-                        else
-                        {
-                            if (perfect) fishQuality++;
-                        }
-                        fishSize -= (int)Math.Round(reduction * 2);
-                        fishQuality -= (int)Math.Round(reduction);
+                        if (perfect) fishQuality++;
                     }
+                    fishSize -= (int)Math.Round(reduction * 2);
+                    fishQuality -= (int)Math.Round(reduction);
 
-                    if (fishQuality < 0) fishQuality = 0;
-                    if (fishQuality > 2) fishQuality = 4;
                 }
 
-                bossFish = FishingRod.isFishBossFish(whichFish);
-                caughtDoubleFish = !bossFish && rod.getBaitAttachmentIndex() == 774 && !fromFishPond && Game1.random.NextDouble() < 0.1 + who.DailyLuck / 2.0 - reduction;
+                if (fishQuality < 0) fishQuality = 0;
+                if (fishQuality > 2) fishQuality = 4;
+
+
+                caughtDoubleFish = !bossFish && rod.getBaitAttachmentIndex() == 774 && !fromFishPond && Game1.random.NextDouble() < 0.1 + who.DailyLuck / 2.0 - reduction - 0.5f;
                 context.Monitor.Log(reduction + "", LogLevel.Debug);
 
 
-                if (who.IsLocalPlayer)
+                if (who.IsLocalPlayer && !winter8festival)
                 {
-                    if (fishData != null && int.TryParse(fishData[1], out difficulty)) ;
-                    else difficulty = 0;
-
                     int experience = Math.Max(1, (fishQuality + 1) * 3 + difficulty / 3);
                     if (bossFish) experience *= 5;
 
-                    if (startMinigameStyle + endMinigameStyle > 0) experience += (int)(experience - reduction);
+                    if (startMinigameStyle + endMinigameStyle > 0) experience += (int)(experience - reduction - 0.5f);
                     else if (perfect) experience += (int)((float)experience * 1.4f);
 
                     who.gainExperience(1, experience);
                     if (minigameDamage > 0 && endMinigameStyle > 0 && endMinigameStage == 8) who.takeDamage((10 + (difficulty / 10) + (int)(fishSize / 5) - who.FishingLevel) * minigameDamage, true, null);
                 }
-            }
-            else if (who.IsLocalPlayer)
-            {
-                difficulty = 0;
-                who.gainExperience(1, 3);
-                if (minigameDamage > 0 && endMinigameStyle > 0 && endMinigameStage == 8) who.takeDamage((16 - who.FishingLevel) * minigameDamage, true, null);
-            }
 
 
-            treasureCaught = false;
-            if (!itemIsInstantCatch)
-            {
-                treasureCaught =  !Game1.isFestival() && who.fishCaught != null && who.fishCaught.Count() > 1 && Game1.random.NextDouble() < FishingRod.baseChanceForTreasure + (double)who.LuckLevel * 0.005 + ((rod.getBaitAttachmentIndex() == 703) ? FishingRod.baseChanceForTreasure : 0.0) + ((rod.getBobberAttachmentIndex() == 693) ? (FishingRod.baseChanceForTreasure / 3.0) : 0.0) + who.DailyLuck / 2.0 + ((who.professions.Contains(9) ? FishingRod.baseChanceForTreasure : 0.0) - reduction);
-            }
-
-
-            if (!itemIsInstantCatch)
-            {
+                treasureCaught = !winter8festival && who.fishCaught != null && who.fishCaught.Count() > 1 && Game1.random.NextDouble() < FishingRod.baseChanceForTreasure + (double)who.LuckLevel * 0.005 + ((rod.getBaitAttachmentIndex() == 703) ? FishingRod.baseChanceForTreasure : 0.0) + ((rod.getBobberAttachmentIndex() == 693) ? (FishingRod.baseChanceForTreasure / 3.0) : 0.0) + who.DailyLuck / 2.0 + ((who.professions.Contains(9) ? FishingRod.baseChanceForTreasure : 0.0) - reduction - 0.5f);
                 item.Quality = fishQuality;
                 if (caughtDoubleFish) item.Stack = 2;
             }
-
-            if (fishData == null) context.Monitor.Log(item.DisplayName + ", Quality: " + fishQuality, LogLevel.Debug);
-            else context.Monitor.Log(item.DisplayName + ", Size: " + fishData[3] + "-" + fishData[4] + " (" + fishSize + "), Quality: " + fishQuality, LogLevel.Debug);
+            else if (who.IsLocalPlayer && !winter8festival)
+            {
+                who.gainExperience(1, 3);
+                if (!fromFishPond && minigameDamage > 0 && endMinigameStyle > 0 && endMinigameStage == 8) who.takeDamage((16 - who.FishingLevel) * minigameDamage, true, null);
+            }
         }
 
         //fish flying from xy to player
@@ -470,10 +505,8 @@ namespace FishingMinigames
         {
             Game1.freezeControls = true;
             hereFishying = true;
-            if (fishySound != null)
-            {
-                fishySound.Play();
-            }
+            if (fishySound != null) fishySound.Play();
+
             who.completelyStopAnimatingOrDoingAction();
             who.jitterStrength = 2f;
             List<FarmerSprite.AnimationFrame> animationFrames = new List<FarmerSprite.AnimationFrame>(){
@@ -510,7 +543,7 @@ namespace FishingMinigames
         //fish flying from xy to player
         private async static Task HereFishyFlyingAnimation(Farmer who, int x, int y)
         {
-            if (itemIsInstantCatch) //angory fish emote workaround
+            if (itemIsInstantCatch && !fromFishPond) //angory fish emote workaround
             {
                 int interval = 200;
                 Vector2 position = new Vector2(x, y - 32);
@@ -565,50 +598,60 @@ namespace FishingMinigames
 
         public async static void PlayerCaughtFishEndFunction(int extraData)
         {
+            if (winter8festival) await FestivalCancelRod(who);
+
             await CatchFishAfterMinigame(who);
 
-            if (endMinigameStage > 8) await Task.Delay(300);
-            else if (endMinigameStage == 8)
+            if (!fromFishPond)
             {
-                animations.Add(new TemporaryAnimatedSprite(10, who.Position - new Vector2(0, 100), Color.Blue));
-                await Task.Delay(100);
-
-            }
-
-            recordSize = who.caughtFish(whichFish, (int)fishSize, false, caughtDoubleFish ? 2 : 1);
-            if (FishingRod.isFishBossFish(whichFish))
-            {
-                Game1.showGlobalMessage(Game1.content.LoadString("Strings\\StringsFromCSFiles:FishingRod.cs.14068"));
-                string name = Game1.objectInformation[whichFish].Split('/')[4];
-
-                //context.Helper.Reflection.GetField<Multiplayer>(Game1.game1, "multiplayer").GetValue().globalChatInfoMessage("CaughtLegendaryFish", new string[] { who.Name, name }); //multiplayer class is not protected
-                if (Game1.IsMultiplayer || Game1.multiplayerMode != 0)
+                if (endMinigameStage > 8) await Task.Delay(300);
+                else if (endMinigameStage == 8)
                 {
-                    if (Game1.IsClient) Game1.client.sendMessage(15, "CaughtLegendaryFish", new string[] { who.Name, name });
-                    else if (Game1.IsServer)
+                    animations.Add(new TemporaryAnimatedSprite(10, who.Position - new Vector2(0, 100), Color.Blue));
+                    await Task.Delay(100);
+                }
+
+                recordSize = who.caughtFish(whichFish, (int)fishSize, false, caughtDoubleFish ? 2 : 1);
+                if (FishingRod.isFishBossFish(whichFish))
+                {
+                    Game1.showGlobalMessage(Game1.content.LoadString("Strings\\StringsFromCSFiles:FishingRod.cs.14068"));
+                    string name = Game1.objectInformation[whichFish].Split('/')[4];
+
+                    //context.Helper.Reflection.GetField<Multiplayer>(Game1.game1, "multiplayer").GetValue().globalChatInfoMessage("CaughtLegendaryFish", new string[] { who.Name, name }); //multiplayer class is not protected
+                    if (Game1.IsMultiplayer || Game1.multiplayerMode != 0)
                     {
-                        foreach (long id in Game1.otherFarmers.Keys)
+                        if (Game1.IsClient) Game1.client.sendMessage(15, "CaughtLegendaryFish", new string[] { who.Name, name });
+                        else if (Game1.IsServer)
                         {
-                            Game1.server.sendMessage(id, 15, who, "CaughtLegendaryFish", new string[] { who.Name, name });
+                            foreach (long id in Game1.otherFarmers.Keys)
+                            {
+                                Game1.server.sendMessage(id, 15, who, "CaughtLegendaryFish", new string[] { who.Name, name });
+                            }
                         }
                     }
                 }
-            }
-            else if (recordSize)
-            {
-                sparklingText = new SparklingText(Game1.dialogueFont, Game1.content.LoadString("Strings\\StringsFromCSFiles:FishingRod.cs.14069"), Color.LimeGreen, Color.Azure, false, 0.1, 2500, -1, 500, 1f);
-                who.currentLocation.localSound("newRecord");
-            }
+                else if (recordSize)
+                {
+                    sparklingText = new SparklingText(Game1.dialogueFont, Game1.content.LoadString("Strings\\StringsFromCSFiles:FishingRod.cs.14069"), Color.LimeGreen, Color.Azure, false, 0.1, 2500, -1, 500, 1f);
+                    who.currentLocation.localSound("newRecord");
+                }
 
-
-            AnnounceAndEmote(who);
+                AnnounceAndEmote(who);
+            }
 
             context.Monitor.Log($"caught fish end");
             who.Halt();
             who.armOffset = Vector2.Zero;
 
 
-            if (!Game1.isFestival()) //adding items + chest
+            if (winter8festival)
+            {
+                if (!itemIsInstantCatch)
+                {
+                    if (festivalMode == 1 || endMinigameStage == 10) Game1.CurrentEvent.caughtFish(whichFish, 10, who);
+                }
+            }
+            else//adding items + chest
             {
                 FishingRod rod = who.CurrentTool as FishingRod;
                 context.Helper.Reflection.GetField<Farmer>(rod, "lastUser").SetValue(who);
@@ -625,7 +668,7 @@ namespace FishingMinigames
                 }
                 else
                 {
-                    await Task.Delay(500);
+                    await Task.Delay(1000);
                     who.currentLocation.localSound("openChest");
                     animations.Add(new TemporaryAnimatedSprite("LooseSprites\\Cursors", new Rectangle(64, 1920, 32, 32), 200f, 4, 0, who.Position + new Vector2(-32f, -228f), flicker: false, flipped: false, (float)who.getStandingY() / 10000f + 0.001f, 0f, Color.White, 4f, 0f, 0f, 0f)
                     {
@@ -672,8 +715,51 @@ namespace FishingMinigames
         }
 
 
+        private async static void FestivalGameSkip(Farmer who, ButtonPressedEventArgs button)
+        {
+            int direction = who.FacingDirection;
+            Game1.freezeControls = true;
+            await FestivalCancelRod(who);
 
+            if (!hereFishying)
+            {
+                hereFishying = true;
+                if (fishySound != null) fishySound.Play();
+                who.synchronizedJump(8f);
+                await Task.Delay(Game1.random.Next(2000, 3000));
 
+                Event ev = Game1.CurrentEvent;
+                //if (context.Helper.Reflection.GetField<Dictionary<string, string>>(ev, "festivalData").GetValue()["file"].Equals("fall16"))
+                //{
+                ev.caughtFish(137, Game1.random.Next(0, 20), who);
+                if (Game1.random.Next(0, 5) == 0) ev.perfectFishing();
+                //}
+                //else ev.caughtFish(147, Game1.random.Next(0, 20), who);
+
+                await Task.Delay(Game1.random.Next(2500, 4500));
+                hereFishying = false;
+            }
+            who.FacingDirection = direction;
+            Game1.freezeControls = false;
+
+            if (button.IsDown(Game1.options.useToolButton[0].ToSButton()) || (Game1.options.useToolButton.Length > 1 && button.IsDown(Game1.options.useToolButton[1].ToSButton()))) FestivalGameSkip(who, button);
+            return;
+        }
+
+        private async static Task FestivalCancelRod(Farmer who)
+        {
+            for (int i = 0; i < 25; i++)
+            {
+                (who.CurrentTool as FishingRod).castingEndFunction(-1);
+                (who.CurrentTool as FishingRod).doneFishing(who);
+                (who.CurrentTool as FishingRod).resetState();
+                who.UsingTool = false;
+                who.Halt();
+                who.forceCanMove();
+                who.FacingDirection = oldFacingDirection;
+                await Task.Delay(2);
+            }
+        }
 
 
         /// <summary>Get whether this instance can edit the given asset.</summary>
@@ -682,10 +768,11 @@ namespace FishingMinigames
             if (asset.AssetNameEquals("TileSheets/tools") || asset.AssetNameEquals("Strings/StringsFromCSFiles")) return true;
             return false;
         }
-        /// <summary>Edits the asset if if CanEdit</summary>
+        /// <summary>Edits the asset if CanEdit</summary>
         public void Edit<T>(IAssetData asset)
         {
-            if (asset.AssetNameEquals("TileSheets/tools")) {
+            if (asset.AssetNameEquals("TileSheets/tools"))
+            {
                 var editor = asset.AsImage();
 
                 Texture2D sourceImage = context.Helper.Content.Load<Texture2D>("assets/rod_sprites.png", ContentSource.ModFolder);
@@ -728,6 +815,21 @@ namespace FishingMinigames
                     }
                 }
             }
+        }
+
+
+        private static void UpdateConfig()
+        {
+            Config = context.Helper.ReadConfig<ModConfig>();
+            overrideToolUse = true;//= Config.;
+            minigameDamage = 1;
+            startMinigameStyle = 1;
+            endMinigameStyle = 1;
+            festivalMode = 2;
+            minigameDifficulty = 1;//?
+            voiceOldData = "1f/0f";
+            voiceVolume = 1f;
+            voicePitch = 0f;
         }
     }
 }

@@ -6,5 +6,5 @@
   "UniqueID": "barteke22.FishingMinigames",
   "EntryDll": "FishingMinigames.dll",
   "MinimumApiVersion": "3.10.0",
-  "UpdateKeys": ["Nexus:6586"]
+  "UpdateKeys": [ "Nexus:6586" ]
 }

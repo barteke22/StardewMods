@@ -1,9 +1,9 @@
 {
-	"net.fishing" : "Fishing Net",
-	"net.bamboo" : "Bamboo Net",
-	"net.training" : "Training Net",
-	"net.traningDesc" : "It's a lot easier to use than other nets, but can only catch basic fish.",
-	"net.fiberglass" : "Fiberglass Net",
-	"net.iridium" : "Iridium Net",
-	"net.skill" : "+{0} Fishing Net Efficiency",
+	"net.fishing": "Fishing Net",
+	"net.bamboo": "Bamboo Net",
+	"net.training": "Training Net",
+	"net.traningDesc": "It's a lot easier to use than other nets, but can only catch basic fish.",
+	"net.fiberglass": "Fiberglass Net",
+	"net.iridium": "Iridium Net",
+	"net.skill": "+{0} Fishing Net Efficiency",
 }
