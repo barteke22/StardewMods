@@ -96,11 +96,15 @@ namespace StardewMods
                 GenericMC.RegisterModConfig(ModManifest, () => config = new ModConfig(), () => Helper.WriteConfig(config));
                 GenericMC.SetDefaultIngameOptinValue(ModManifest, true);
                 GenericMC.RegisterLabel(ModManifest, translate.Get("GenericMC.barLabel"), ""); //All of these strings are stored in the traslation files.
-                GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.barDescription") + "\n");
+                GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.barDescription"));
+                if (Constants.TargetPlatform != GamePlatform.Android) GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.barDescriptionPC"));
+                else GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.barDescriptionOther"));
+
                 GenericMC.RegisterChoiceOption(ModManifest, translate.Get("GenericMC.barIconMode"), translate.Get("GenericMC.barIconModeDesc"),
                     () => (config.BarIconMode == 0) ? translate.Get("GenericMC.barIconModeHor") : (config.BarIconMode == 1) ? translate.Get("GenericMC.barIconModeVert") : (config.BarIconMode == 2) ? translate.Get("GenericMC.barIconModeVertText") : translate.Get("GenericMC.Disabled"),
                     (string val) => config.BarIconMode = Int32.Parse((val.Equals(translate.Get("GenericMC.barIconModeHor"), StringComparison.Ordinal)) ? "0" : (val.Equals(translate.Get("GenericMC.barIconModeVert"), StringComparison.Ordinal)) ? "1" : (!val.Equals(translate.Get("GenericMC.Disabled"), StringComparison.Ordinal)) ? "2" : "3"),
                     new string[] { translate.Get("GenericMC.barIconModeHor"), translate.Get("GenericMC.barIconModeVert"), translate.Get("GenericMC.barIconModeVertText"), translate.Get("GenericMC.Disabled") });//small 'hack' so options appear as name strings, while config.json stores them as integers
+                
                 GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.barPosX"), translate.Get("GenericMC.barPosXDesc"),
                      () => config.BarTopLeftLocationX, (int val) => config.BarTopLeftLocationX = Math.Max(0, val));
                 GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.barPosY"), translate.Get("GenericMC.barPosYDesc"),
@@ -111,18 +115,22 @@ namespace StardewMods
                    () => config.BarMaxIcons, (int val) => config.BarMaxIcons = (int)Math.Min(500, Math.Max(4, val)));
                 GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.barMaxIconsPerRow"), translate.Get("GenericMC.barMaxIconsPerRowDesc"),
                     () => config.BarMaxIconsPerRow, (int val) => config.BarMaxIconsPerRow = (int)Math.Min(500, Math.Max(4, val)));
+
                 GenericMC.RegisterChoiceOption(ModManifest, translate.Get("GenericMC.barBackgroundMode"), translate.Get("GenericMC.barBackgroundModeDesc"),
                     () => (config.BarBackgroundMode == 0) ? translate.Get("GenericMC.barBackgroundModeCircles") : (config.BarBackgroundMode == 1) ? translate.Get("GenericMC.barBackgroundModeRect") : translate.Get("GenericMC.Disabled"),
                     (string val) => config.BarBackgroundMode = Int32.Parse((val.Equals(translate.Get("GenericMC.barBackgroundModeCircles"), StringComparison.Ordinal)) ? "0" : (val.Equals(translate.Get("GenericMC.barBackgroundModeRect"), StringComparison.Ordinal)) ? "1" : "2"),
                     new string[] { translate.Get("GenericMC.barBackgroundModeCircles"), translate.Get("GenericMC.barBackgroundModeRect"), translate.Get("GenericMC.Disabled") });
+
                 GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.barShowBaitTackle"), translate.Get("GenericMC.barShowBaitTackleDesc"),
                     () => config.BarShowBaitAndTackleInfo, (bool val) => config.BarShowBaitAndTackleInfo = val);
                 GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.barShowPercentages"), translate.Get("GenericMC.barShowPercentagesDesc"),
                     () => config.BarShowPercentages, (bool val) => config.BarShowPercentages = val);
+
                 GenericMC.RegisterChoiceOption(ModManifest, translate.Get("GenericMC.barSortMode"), translate.Get("GenericMC.barSortModeDesc"),
                     () => (config.BarSortMode == 0) ? translate.Get("GenericMC.barSortModeName") : (config.BarSortMode == 1) ? translate.Get("GenericMC.barSortModeChance") : translate.Get("GenericMC.Disabled"),
                     (string val) => config.BarSortMode = Int32.Parse((val.Equals(translate.Get("GenericMC.barSortModeName"), StringComparison.Ordinal)) ? "0" : (val.Equals(translate.Get("GenericMC.barSortModeChance"), StringComparison.Ordinal)) ? "1" : "2"),
                     new string[] { translate.Get("GenericMC.barSortModeName"), translate.Get("GenericMC.barSortModeChance"), translate.Get("GenericMC.Disabled") });
+
                 GenericMC.RegisterClampedOption(ModManifest, translate.Get("GenericMC.barExtraCheckFrequency"), translate.Get("GenericMC.barExtraCheckFrequencyDesc"),
                     () => config.BarExtraCheckFrequency, (int val) => config.BarExtraCheckFrequency = val, 20, 220);
                 GenericMC.RegisterClampedOption(ModManifest, translate.Get("GenericMC.barScanRadius"), translate.Get("GenericMC.barScanRadiusDesc"),
@@ -131,6 +139,7 @@ namespace StardewMods
                     () => config.BarCrabPotEnabled, (bool val) => config.BarCrabPotEnabled = val);
                 GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.barUncaughtDarker"), translate.Get("GenericMC.barUncaughtDarkerDesc"),
                     () => config.UncaughtFishAreDark, (bool val) => config.UncaughtFishAreDark = val);
+
                 GenericMC.RegisterLabel(ModManifest, translate.Get("GenericMC.MinigameLabel"), "");
                 GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.MinigameDescription"));
                 GenericMC.RegisterChoiceOption(ModManifest, translate.Get("GenericMC.MinigameMode"), translate.Get("GenericMC.MinigameModeDesc"),
@@ -649,14 +658,11 @@ namespace StardewMods
                 uncaughtDark = config.UncaughtFishAreDark;                                                  //config: Whether uncaught fish are displayed as ??? and use dark icons
                 barCrabEnabled = config.BarCrabPotEnabled;                                                  //config: If bait/tackle/bait preview is enabled when holding a fishing rod
 
-                if (Context.IsMainPlayer)
-                {
-                    locationData = Game1.content.Load<Dictionary<string, string>>("Data\\Locations");   //gets location data (which fish are here)
-                    fishData = Game1.content.Load<Dictionary<int, string>>("Data\\Fish");               //gets fish data
+                locationData = Game1.content.Load<Dictionary<string, string>>("Data\\Locations");   //gets location data (which fish are here)
+                fishData = Game1.content.Load<Dictionary<int, string>>("Data\\Fish");               //gets fish data
 
-                    //locationData = Helper.Content.Load<Dictionary<string, string>>("Data\\Locations", ContentSource.GameContent);
-                    //fishData = Helper.Content.Load<Dictionary<int, string>>("Data\\Fish", ContentSource.GameContent);
-                }
+                //locationData = Helper.Content.Load<Dictionary<string, string>>("Data\\Locations", ContentSource.GameContent);
+                //fishData = Helper.Content.Load<Dictionary<int, string>>("Data\\Fish", ContentSource.GameContent);
 
                 if (backgroundMode == 0) background = WhiteCircle(17, 30);
                 else background = WhitePixel();

@@ -1,6 +1,8 @@
 {
 	"GenericMC.barLabel": "Preview Bar (Location)",
-	"GenericMC.barDescription": "The bar that shows location info when holding a Fishing Rod (bait/tackle/trash/fish here), or Crab Pot (trash/crustaceans here). You can hover over the variable names for more info. Hitting F5 will update saved changes without restarting, if you hold a fishing rod you can even see the results update while in this menu: Save + F5.",
+	"GenericMC.barDescription": "The bar that shows location info when holding a Fishing Rod (bait/tackle/trash/fish here), or Crab Pot (trash/crustaceans here). You can hover over the variable names for more info.",
+	"GenericMC.barDescriptionPC": "Hitting F5, sleeping, or reloading the save will update saved config changes without restarting. If you're holding a fishing rod you can even see the results update while in this menu: Save + F5.\n",
+	"GenericMC.barDescriptionOther": "Sleeping, or reloading the save will update saved config changes without restarting the game.\n",
 
 	"GenericMC.barIconMode": "Icon Mode",
 	"GenericMC.barIconModeDesc": "The direction in which the bait/tackle/trash/fish icons will travel, before being split into rows/columns.",

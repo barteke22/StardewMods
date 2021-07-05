@@ -1,6 +1,8 @@
 ﻿{
 	"GenericMC.barLabel": "Pasek Info (miejsce)",
-	"GenericMC.barDescription": "Pasek pokazujący informacje o miejscu przy trzymaniu wędki (przynęta/spławik/śmieci/ryby tutaj) lub pułapki na kraby (śmieci/skorupiaki tutaj). Możesz najechać kursorem na nazwę pozycji aby uzyskać więcej informacji o niej. Naciśnięcie F5 zaktualizuje zapisane zmiany bez ponownego uruchamiania gry. Jeśli trzymasz wędkę, możesz nawet zobaczyć resultat aktualizacji w tym menu: Zapisz, i naciśnij F5.",
+	"GenericMC.barDescription": "Pasek pokazujący informacje o miejscu przy trzymaniu wędki (przynęta/spławik/śmieci/ryby tutaj) lub pułapki na kraby (śmieci/skorupiaki tutaj). Możesz najechać kursorem na nazwę pozycji aby uzyskać więcej informacji o niej.",
+	"GenericMC.barDescriptionPC": "Naciśnięcie F5, spanie, lub przeładowanie stanu gry zaktualizuje zapisane tutaj zmiany bez restartowania gry. Jeśli trzymasz teraz wędkę, możesz nawet zobaczyć resultat aktualizacji w tym menu: Zapisz, i naciśnij F5.\n",
+	"GenericMC.barDescriptionOther": "Spanie, lub przeładowanie stanu gry zaktualizuje zapisane tutaj zmiany bez restartowania gry.\n",
 
 	"GenericMC.barIconMode": "Tryb ikon",
 	"GenericMC.barIconModeDesc": "Kierunek, w którym będą podróżować ikony przynęty/spławika/śmieci/ryb, zanim zostaną podzielone na rzędy/kolumny.",

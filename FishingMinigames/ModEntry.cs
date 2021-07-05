@@ -231,6 +231,7 @@ namespace FishingMinigames
             if (fishCaught)
             {
                 who.faceDirection(oldFacingDirection);
+                if (fishingFestivalMinigame == 0) context.Helper.Multiplayer.SendMessage(who.UniqueMultiplayerID, "FishCaught", modIDs: new[] { "barteke22.FishingInfoOverlays" });//update overlay
                 fishCaught = false;
             }
         }
@@ -321,7 +322,7 @@ namespace FishingMinigames
 
             CatchFish(who, x, y);
 
-
+            
             if (!fromFishPond && fishingFestivalMinigame != 2 && startMinigameStyle > 0)
             {
                 //startMinigameStage = 1;
@@ -664,6 +665,7 @@ namespace FishingMinigames
                     await Task.Delay(100);
                 }
 
+
                 recordSize = who.caughtFish(whichFish, (int)fishSize, false, caughtDoubleFish ? 2 : 1);
                 if (FishingRod.isFishBossFish(whichFish))
                 {
@@ -751,18 +753,22 @@ namespace FishingMinigames
                 if (startMinigameStage == 4) //for now 4 = cancel = X
                 {
                     who.doEmote(36);
+                    who.netDoEmote("x");
                 }
                 else if (startMinigameStage == 5) //for now 5 = fail = Angry
                 {
                     who.doEmote(12);
+                    who.netDoEmote("angry");
                 }
                 else if (endMinigameStage == 8) //8 = hit = Uh
                 {
                     who.doEmote(10);
+                    who.netDoEmote("angry");
                 }
                 else //otherwise = happy
                 {
                     who.doEmote(32);
+                    who.netDoEmote("happy");
                 }
             }
         }
