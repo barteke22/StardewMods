@@ -161,7 +161,7 @@ namespace StardewMods
         private void OnDayStarted(object sender, DayStartedEventArgs e)
         {
             dayStarted = false;
-            if (Context.IsMainPlayer) this.UpdateConfig();
+            this.UpdateConfig();
             dayStarted = true;
         }
 
