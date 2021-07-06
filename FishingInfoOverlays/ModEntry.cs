@@ -161,7 +161,7 @@ namespace StardewMods
         private void OnDayStarted(object sender, DayStartedEventArgs e)
         {
             dayStarted = false;
-            this.UpdateConfig();
+            if (!Context.IsSplitScreen) this.UpdateConfig();
             dayStarted = true;
         }
 
