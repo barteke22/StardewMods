@@ -1,10 +1,4 @@
-﻿using Microsoft.Xna.Framework;
-using Netcode;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using StardewModdingAPI.Utilities;
 
 namespace FishingMinigames
 {
@@ -13,7 +7,7 @@ namespace FishingMinigames
         public int VoiceVolume { get; set; } = 100;
         public int VoicePitch { get; set; }
         public string Voice_Test_Ignore_Me { get; set; }//internal for voice setting change check
-        public bool OverrideToolUseButton { get; set; } = true;
+        public string KeyBinds { get; set; } = "MouseLeft, Space, ControllerX";
         public int StartMinigameStyle { get; set; } = 1;
         public int EndMinigameStyle { get; set; } = 1;
         public float EndMinigameDamage { get; set; } = 1f;

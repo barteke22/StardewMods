@@ -55,6 +55,7 @@
     <None Include="i18n %28unofficial languages%29\Polish\pt.json" />
     <None Include="i18n\default.json" />
     <None Include="ModEntry.cs.old" />
+    <None Include="ModEntry.cs.FailedSplitScreen" />
     <Compile Include="ModEntry.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
