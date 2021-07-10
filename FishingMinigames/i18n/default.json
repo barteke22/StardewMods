@@ -4,10 +4,12 @@
   "GenericMC.MainDesc2": "The fish size and quality is determined by the combined score of Start and End minigames, depending on which ones are enabled.",
   "GenericMC.MainDescPC": "Hover over the variable names for more info. Hitting F5 will update saved changes without restarting.",
   "GenericMC.MainDescPC2": "If you changed your voice settings it will also play a preview of your current voice: Save + F5.",
+
   "GenericMC.Volume": "Voice Volume",
   "GenericMC.VolumeDesc": "Allows fine tuning of the \"Here Fishy!\" volume. Press F5 after Saving to preview.",
   "GenericMC.Pitch": "Voice Pitch",
   "GenericMC.PitchDesc": "Changes the pitch of your \"Here Fishy!\" voice. Starts randomized for multiplayer diversity. Press F5 after Saving to preview.",
+
   "GenericMC.KeyBinds": "Keybinds",
   "GenericMC.KeyBindsDesc": "Button(s) used to trigger the minigame. If the same as Tool Use buttons, the Vanilla Fishing Minigame will be overwritten by this. \nSupports Mouse, Keyboard and Controller. Individual keys are separated by commas, combos are separated by the + sign. \nExample of 3 keys: MouseRight, Shift + K, ControllerX \nFor key names, see: https://stardewcommunitywiki.com/Modding:Player_Guide/Key_Bindings",
 
@@ -18,15 +20,21 @@
   "GenericMC.StartMinigameStyle3": "todo",
 
   "GenericMC.EndMinigameStyle": "Minigame Style (End)",
-  "GenericMC.EndMinigameStyleDesc": "This minigame determines whether you take damage (if failed) when scooping up any fishable item/fish, and contributes to total score. \nMinigame Button: At the right time, press the button you use for fishing. \nMatching Arrow:  At the right time, match the direction of the displayed arrow with your Movement buttons. \nMatching Key:    At the right time, press the displayed button. Keyboard only, will use a letter from the fish/item name.",
+  "GenericMC.EndMinigameStyleDesc": "This minigame determines whether you take damage (if failed) when scooping up any fishable item/fish, and contributes to total score. \nMinigame Button: At the right time, press the button you use for fishing. \nMatching Arrow:  At the right time, match the direction of the displayed arrow with your Movement buttons. \nMatching Key:    At the right time, press the displayed button. Keyboard only, will use a letter from the fish/item name. Buttons might conflict with other mods. If you're getting arrows, set controller option to 'Force Off'.",
   "GenericMC.EndMinigameStyle1": "Minigame Button",
   "GenericMC.EndMinigameStyle2": "Matching Arrow",
-  "GenericMC.EndMinigameStyle3": "Matching Key",
+  "GenericMC.EndMinigameStyle3": "Matching Letter",
 
   "GenericMC.EndDamage": "Minigame Damage (End)",
   "GenericMC.EndDamageDesc": "If you fail the end minigame, you'll get damaged based on the fish/item difficulty, size, and this multiplier. This is a straight up multiplier, so 0 means no damage, less than 1 means less, more means more.",
-  "GenericMC.Difficulty": "Minigame Difficulty (Both) - WIP",
-  "GenericMC.DifficultyDesc": "todo",
+  "GenericMC.Difficulty": "Minigame Difficulty (Both)",
+  "GenericMC.DifficultyDesc": "Minigame difficulty (timers) is based on your equipment, fish difficulty and size. The negatives are multiplied by this number - the higher the harder.",
+
+  "GenericMC.ConvertToMetric": "Convert to Metric",
+  "GenericMC.ConvertToMetricDesc": "WARNING: If using together with 'Inches To Metric System' Mod, delete all fish data from its 'content.json' (line 4-74), or they'll be double converted. \nWARNING: This will convert fish sizes as they're caught, and previous records won't be reversed to inches if you disable this. \nDoes not affect Festival Minigames, or regular fishing minigame - as their mechanics are based on fish size. Will work with modded fish caught via this mod.",
+
+  "GenericMC.RealisticSizes": "Realistic Sizes",
+  "GenericMC.RealisticSizesDesc": "Enabled: The fish shown off at the end will have a realistic size VS player size, assuming the player holds them at a perspective that makes them a tiny bit bigger. Keep in mind that most of the time the fish are still pretty tiny, around hand size, with perspective making them 20% bigger.",
 
   "GenericMC.FestivalLabel": "Festival Minigames",
   "GenericMC.FestivalDesc": "This only matters for Fall 16 and Winter 8 festivals, as they have fishing minigames that happen inside events. Meaning that the animation mode and fishing override can't be fully hijacked, so it doesn't work/is janky. So here are the options for those. \n\nVanilla: Use the regular fishing minigame for both festivals. OTHERWISE: \n\nFall 16: Click (or hold for auto) rod-use button to catch a fish with random delay between attempts. \nWinter 8 (Simple): Only does the End Minigame (if enabled), any non-trash counts. \nWinter 8 (Perfect Only): Only does the End Minigame (if enabled), only perfect catch fish count (better balance).",
