@@ -1,9 +1,8 @@
 {
   "GenericMC.MainLabel": "Fishing Minigame Options",
-  "GenericMC.MainDesc": "Options for the alternative Fishing Minigames. Here you can pick your minigame style, or completely disable a minigame part.\n",
-  "GenericMC.MainDesc2": "The fish size and quality is determined by the combined score of Start and End minigames, depending on which ones are enabled.",
-  "GenericMC.MainDescPC": "Hover over the variable names for more info. Hitting F5 will update saved changes without restarting.",
-  "GenericMC.MainDescPC2": "If you changed your voice settings it will also play a preview of your current voice: Save + F5.",
+  "GenericMC.MainDesc": "Options for the alternative Fishing Minigames. Here you can pick your minigame style, or completely disable a minigame part. The fish size and quality is determined by the combined score of Start and End minigames, depending on which ones are enabled.",
+  "GenericMC.MainDescPC": "You can hover over the variable names for more info. Hitting F5, sleeping, or reloading the save will update saved config changes without restarting. If you changed your voice settings it will also play a preview of your current voice: Save + F5.",
+  "GenericMC.MainDescOther": "You can hover over the variable names for more info.  Sleeping, or reloading the save will update saved config changes without restarting the game. If you changed your voice settings it will also play a preview of your current voice. \n.",
 
   "GenericMC.Volume": "Voice Volume",
   "GenericMC.VolumeDesc": "Allows fine tuning of the \"Here Fishy!\" volume. Press F5 after Saving to preview.",
@@ -20,7 +19,7 @@
   "GenericMC.StartMinigameStyle3": "todo",
 
   "GenericMC.EndMinigameStyle": "Minigame Style (End)",
-  "GenericMC.EndMinigameStyleDesc": "This minigame determines whether you take damage (if failed) when scooping up any fishable item/fish, and contributes to total score. \nMinigame Button: At the right time, press the button you use for fishing. \nMatching Arrow:  At the right time, match the direction of the displayed arrow with your Movement buttons. \nMatching Key:    At the right time, press the displayed button. Keyboard only, will use a letter from the fish/item name. Buttons might conflict with other mods. If you're getting arrows, set controller option to 'Force Off'.",
+  "GenericMC.EndMinigameStyleDesc": "This minigame determines whether you take damage (if failed) when scooping up any fishable item/fish, and contributes to total score. \nMinigame Button: At the right time, press the button you use for fishing, keybind must be single button (no + combos). \nMatching Arrow:  At the right time, match the direction of the displayed arrow with WASD, Arrow Keys, or DPad. \nMatching Key:    At the right time, press the displayed button. Keyboard only, will use a letter from the fish/item name. Buttons might conflict with other mods. If you're getting arrows, set controller option to 'Force Off'.",
   "GenericMC.EndMinigameStyle1": "Minigame Button",
   "GenericMC.EndMinigameStyle2": "Matching Arrow",
   "GenericMC.EndMinigameStyle3": "Matching Letter",
@@ -37,11 +36,17 @@
   "GenericMC.RealisticSizesDesc": "Enabled: The fish shown off at the end will have a realistic size VS player size, assuming the player holds them at a perspective that makes them a tiny bit bigger. Keep in mind that most of the time the fish are still pretty tiny, around hand size, with perspective making them 20% bigger.",
 
   "GenericMC.FestivalLabel": "Festival Minigames",
-  "GenericMC.FestivalDesc": "This only matters for Fall 16 and Winter 8 festivals, as they have fishing minigames that happen inside events. Meaning that the animation mode and fishing override can't be fully hijacked, so it doesn't work/is janky. So here are the options for those. \n\nVanilla: Use the regular fishing minigame for both festivals. OTHERWISE: \n\nFall 16: Click (or hold for auto) rod-use button to catch a fish with random delay between attempts. \nWinter 8 (Simple): Only does the End Minigame (if enabled), any non-trash counts. \nWinter 8 (Perfect Only): Only does the End Minigame (if enabled), only perfect catch fish count (better balance).",
+  "GenericMC.FestivalDesc": "This only matters for Fall 16 and Winter 8 festivals, as they have fishing minigames that happen inside events. Meaning that the animation mode and fishing override can't be fully hijacked, so it doesn't work/is janky. So here are the options for those. \n.",
   "GenericMC.FestivalMode": "Festival Mode",
+  "GenericMC.FestivalModeDesc": "Vanilla: Use the regular fishing minigame for both festivals. OTHERWISE: \n\nFall 16: Click (or hold for auto) rod-use button to catch a fish with random delay between attempts. \nWinter 8 (Simple): Only does the End Minigame (if enabled), any non-trash counts. \nWinter 8 (Perfect Only): Only does the End Minigame (if enabled), only perfect catch fish count (better balance).",
   "GenericMC.FestivalModeVanilla": "Vanilla",
   "GenericMC.FestivalModeSimple": "Simple",
   "GenericMC.FestivalModePerfectOnly": "Perfect Only",
+
+  "GenericMC.SplitScreenDesc": "Split Screen-specific settings, these only matter for Split Screen players. The main player should change these.",
+  "GenericMC.SplitScreen2": "Split Screen 2: (Top) Right",
+  "GenericMC.SplitScreen3": "Split Screen 3: Bottom Left",
+  "GenericMC.SplitScreen4": "Split Screen 4: Bottom Right",
 
   "GenericMC.Disabled": "Disabled",
 

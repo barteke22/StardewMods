@@ -56,6 +56,7 @@
     <None Include="i18n\default.json" />
     <None Include="ModEntry.cs.old" />
     <None Include="ModEntry.cs.FailedSplitScreen" />
+    <Compile Include="Minigames.cs" />
     <Compile Include="ModEntry.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
