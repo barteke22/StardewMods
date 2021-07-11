@@ -16,23 +16,15 @@ namespace FishingMinigames
     public class ModEntry : Mod, IAssetEditor
     {
         ITranslationHelper translate;
-
-
-        //config values
         public static ModConfig config;
         private readonly PerScreen<Minigames> minigame = new PerScreen<Minigames>();
 
 
 
-        /*  
-         *  instead of where clicked, soundwave anim ahead? would be hard to aim at pools, could use swing effect anim?
-         */
-
 
         public override void Entry(IModHelper helper)
         {
             UpdateConfig();
-            minigame.Value = new Minigames(this);
 
             helper.Events.Display.RenderedWorld += Display_RenderedWorld;
             helper.Events.GameLoop.UpdateTicking += GameLoop_UpdateTicking;
@@ -44,12 +36,12 @@ namespace FishingMinigames
 
         private void GameLoop_SaveLoaded(object sender, SaveLoadedEventArgs e)
         {
-            //minigame.Value.GameLoop_SaveLoaded(sender, e);
             UpdateConfig();
         }
 
         private void GenericModConfigMenuIntegration(object sender, GameLaunchedEventArgs e)     //Generic Mod Config Menu API
         {
+            if (Context.IsSplitScreen) return;
             translate = Helper.Translation;
             var GenericMC = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
             if (GenericMC != null)
@@ -131,11 +123,13 @@ namespace FishingMinigames
             {
                 UpdateConfig();
             }
-            minigame.Value.Input_ButtonsChanged(sender, e);
+            if (Game1.player.IsLocalPlayer) minigame.Value.Input_ButtonsChanged(sender, e);
         }
 
         private void GameLoop_UpdateTicking(object sender, UpdateTickingEventArgs e) //adds item to inv
         {
+            if (!Game1.player.IsLocalPlayer) return;
+
             if (minigame.Value == null)
             {
                 minigame.Value = new Minigames(this);
@@ -145,7 +139,7 @@ namespace FishingMinigames
 
         private void Display_RenderedWorld(object sender, RenderedWorldEventArgs e)
         {
-            minigame.Value.Display_RenderedWorld(sender, e);
+            if (Game1.player.IsLocalPlayer) minigame.Value.Display_RenderedWorld(sender, e);
         }
 
 
@@ -228,6 +222,8 @@ namespace FishingMinigames
         {
             config = Helper.ReadConfig<ModConfig>();
 
+            if (Context.IsSplitScreen) return;
+
             try
             {
                 Minigames.fishySound = SoundEffect.FromStream(new FileStream(Path.Combine(Helper.DirectoryPath, "assets", "fishy.wav"), FileMode.Open));
@@ -257,7 +253,7 @@ namespace FishingMinigames
                     Minigames.keyBinds[i] = KeybindList.Parse(def);
                     config.KeyBinds[i] = def;
                     Helper.WriteConfig(config);
-                    Monitor.Log(e.Message + " Resetting KeyBinds to default. For key names, see: https://stardewcommunitywiki.com/Modding:Player_Guide/Key_Bindings", LogLevel.Error);
+                    Monitor.Log(e.Message + " Resetting KeyBinds for screen " + (i + 1) + " to default. For key names, see: https://stardewcommunitywiki.com/Modding:Player_Guide/Key_Bindings", LogLevel.Error);
                 }
                 Minigames.voicePitch[i] = config.VoicePitch[i] / 100f;
             }

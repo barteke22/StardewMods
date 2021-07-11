@@ -21,9 +21,8 @@ namespace FishingMinigames
 {
     public class Minigames
     {
-        //ModEntry Entry;
-        IMonitor Monitor;
-        IModHelper Helper;
+        private IMonitor Monitor;
+        private IModHelper Helper;
 
         private List<TemporaryAnimatedSprite> animations = new List<TemporaryAnimatedSprite>();
         private SpriteBatch batch;
@@ -85,17 +84,9 @@ namespace FishingMinigames
 
         public Minigames(ModEntry entry)
         {
-            //this.Entry = entry;
-            //this.config = entry.config;
             this.Helper = entry.Helper;
             this.Monitor = entry.Monitor;
         }
-
-
-        //public void GameLoop_SaveLoaded(object sender, SaveLoadedEventArgs e)
-        //{
-        //    UpdateConfig();
-        //}
 
 
 
@@ -300,6 +291,7 @@ namespace FishingMinigames
         private async void HereFishyFishy(Farmer who, int x, int y)
         {
             who.CanMove = false;
+            while (!who.IsLocalPlayer) await Task.Delay(1); //force local screen
             if (who.IsLocalPlayer && fishingFestivalMinigame != 2)
             {
                 float oldStamina = who.Stamina;
@@ -312,6 +304,7 @@ namespace FishingMinigames
             startMinigameStage = 0;
             endMinigameStage = 0;
 
+            while (!who.IsLocalPlayer) await Task.Delay(1); //force local screen
             CatchFish(who, x, y);
 
 
@@ -320,6 +313,7 @@ namespace FishingMinigames
                 //startMinigameStage = 1;
                 //await MINIGAME                    TODO
             }
+            while (!who.IsLocalPlayer) await Task.Delay(1); //force local screen
 
             if (startMinigameStage == 5)
             {
@@ -327,11 +321,13 @@ namespace FishingMinigames
                 return;
             }
             else await HereFishyStartingAnimation(who);
+            while (!who.IsLocalPlayer) await Task.Delay(1); //force local screen
 
 
             if (!fromFishPond && endMinigameStyle[index] > 0) endMinigameStage = 1;
 
             await HereFishyFlyingAnimation(who, x, y);
+            while (!who.IsLocalPlayer) await Task.Delay(1); //force local screen
         }
 
 
@@ -523,6 +519,7 @@ namespace FishingMinigames
         private async Task HereFishyStartingAnimation(Farmer who)
         {
             //Game1.freezeControls = true;
+            while (!who.IsLocalPlayer) await Task.Delay(1); //force local screen
             hereFishying = true;
             if (fishySound != null) fishySound.Play(voiceVolume, voicePitch[index], 0);
 
@@ -559,12 +556,14 @@ namespace FishingMinigames
 
             await Task.Delay(Game1.random.Next(500, 1000));
 
+            while (!who.IsLocalPlayer) await Task.Delay(1); //force local screen
             animations.Clear();
         }
 
         //fish flying from xy to player
         private async Task HereFishyFlyingAnimation(Farmer who, int x, int y)
         {
+            while (!who.IsLocalPlayer) await Task.Delay(1); //force local screen
             if (itemIsInstantCatch && !fromFishPond) //angory fish emote workaround
             {
                 int interval = 200;
@@ -578,6 +577,7 @@ namespace FishingMinigames
                 animations.Add(new TemporaryAnimatedSprite(Game1.emoteSpriteSheet.ToString(), new Rectangle(15 * 16 % Game1.emoteSpriteSheet.Width, 12 * 16 / Game1.emoteSpriteSheet.Width * 16, 16, 16), interval, 1, 0, position, false, false, 1f, 0f, Color.White, 4f, 0f, 0f, 0f, false));
                 await Task.Delay(interval);
             }
+            while (!who.IsLocalPlayer) await Task.Delay(1); //force local screen
 
             //realistic: divide fish size by 64 inches (around average human size) * 10f (how much you need to multiply item sprite to be player height (8*16 = 128 = 2 tiles + 20% for perspective))
             if (realisticSizes)
@@ -743,6 +743,7 @@ namespace FishingMinigames
 
         private async void PlayerCaughtFishEndFunction(int extraData)
         {
+            while (!who.IsLocalPlayer) await Task.Delay(1); //force local screen
             if (endMinigameStage > 8) await SwingAndEmote(who, 0);
 
             CatchFishAfterMinigame(who);
@@ -758,6 +759,8 @@ namespace FishingMinigames
 
                 if (fishingFestivalMinigame == 0)
                 {
+                    while (!who.IsLocalPlayer) await Task.Delay(1); //force local screen
+
                     recordSize = who.caughtFish(whichFish, (metricSizes) ? (int)(fishSize * 2.54f) : (int)fishSize, false, caughtDoubleFish ? 2 : 1);
                     if (bossFish)
                     {
@@ -786,6 +789,7 @@ namespace FishingMinigames
 
                 await SwingAndEmote(who, 2);
             }
+            while (!who.IsLocalPlayer) await Task.Delay(1); //force local screen
 
             Monitor.Log($"caught fish end");
             who.Halt();
@@ -796,6 +800,7 @@ namespace FishingMinigames
             {
                 if (!itemIsInstantCatch)
                 {
+                    while (!who.IsLocalPlayer) await Task.Delay(1); //force local screen
                     if (endMinigameStage == 10 || festivalMode[index] == 1) Game1.CurrentEvent.caughtFish(whichFish, (int)fishSize, who);
                 }
             }
@@ -812,13 +817,17 @@ namespace FishingMinigames
                 if (!treasureCaught || itemIsInstantCatch)
                 {
                     if (!fromFishPond) rod.doneFishing(who, true);
-                    this.Monitor.Log((item == null) + "," + who.IsLocalPlayer, LogLevel.Alert);
+                    //this.Monitor.Log(who.IsLocalPlayer + "," + who.Name + "," + Context.ScreenId, LogLevel.Alert);
+
+                    while (!who.IsLocalPlayer) await Task.Delay(1); //force local screen
                     who.addItemByMenuIfNecessary(item);
                 }
                 else
                 {
                     await Task.Delay(1000);
                     who.currentLocation.localSound("openChest");
+
+                    while (!who.IsLocalPlayer) await Task.Delay(1); //force local screen
                     animations.Add(new TemporaryAnimatedSprite("LooseSprites\\Cursors", new Rectangle(64, 1920, 32, 32), 200f, 4, 0, who.Position + new Vector2(-32f, -228f), flicker: false, flipped: false, (float)who.getStandingY() / 10000f + 0.001f, 0f, Color.White, 4f, 0f, 0f, 0f)
                     {
                         motion = new Vector2(0f, -0.128f),
@@ -842,6 +851,7 @@ namespace FishingMinigames
 
         private async Task SwingAndEmote(Farmer who, int which) //send messages to other mods to do stuff: sounds/animations
         {
+            while (!who.IsLocalPlayer) await Task.Delay(1); //force local screen
             if (which < 2)
             {
                 if (!fromFishPond && endMinigameStyle[index] > 0) //swing animation
@@ -951,6 +961,7 @@ namespace FishingMinigames
 
         private async void FestivalGameSkip(Farmer who, ButtonsChangedEventArgs button)
         {
+            while (!who.IsLocalPlayer) await Task.Delay(1); //force local screen
             if (!hereFishying)
             {
                 hereFishying = true;
