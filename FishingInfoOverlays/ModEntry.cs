@@ -98,7 +98,12 @@ namespace StardewMods
                 GenericMC.SetDefaultIngameOptinValue(ModManifest, true);
                 GenericMC.RegisterLabel(ModManifest, translate.Get("GenericMC.barLabel"), ""); //All of these strings are stored in the traslation files.
                 GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.barDescription"));
-                if (Constants.TargetPlatform != GamePlatform.Android) GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.barDescriptionPC"));
+                GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.barDescription2"));
+                if (Constants.TargetPlatform != GamePlatform.Android)
+                {
+                    GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.barDescriptionPC"));
+                    GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.barDescriptionPC2"));
+                }
                 else GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.barDescriptionOther"));
 
                 GenericMC.RegisterChoiceOption(ModManifest, translate.Get("GenericMC.barIconMode"), translate.Get("GenericMC.barIconModeDesc"),
@@ -143,6 +148,7 @@ namespace StardewMods
 
                 GenericMC.RegisterLabel(ModManifest, translate.Get("GenericMC.MinigameLabel"), "");
                 GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.MinigameDescription"));
+                GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.MinigameDescription2"));
                 GenericMC.RegisterChoiceOption(ModManifest, translate.Get("GenericMC.MinigameMode"), translate.Get("GenericMC.MinigameModeDesc"),
                     () => (config.MinigamePreviewMode == 0) ? translate.Get("GenericMC.MinigameModeFull") : (config.MinigamePreviewMode == 1) ? translate.Get("GenericMC.MinigameModeSimple") : (config.MinigamePreviewMode == 2) ? translate.Get("GenericMC.MinigameModeBarOnly") : translate.Get("GenericMC.Disabled"),
                     (string val) => config.MinigamePreviewMode = Int32.Parse((val.Equals(translate.Get("GenericMC.MinigameModeFull"), StringComparison.Ordinal)) ? "0" : (val.Equals(translate.Get("GenericMC.MinigameModeSimple"), StringComparison.Ordinal)) ? "1" : (val.Equals(translate.Get("GenericMC.MinigameModeBarOnly"), StringComparison.Ordinal)) ? "2" : "3"),

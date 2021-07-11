@@ -1,8 +1,10 @@
 {
 	"GenericMC.barLabel": "Preview Bar (Location)",
-	"GenericMC.barDescription": "The bar that shows location info when holding a Fishing Rod (bait/tackle/trash/fish here), or Crab Pot (trash/crustaceans here). You can hover over the variable names for more info.",
-	"GenericMC.barDescriptionPC": "Hitting F5, sleeping, or reloading the save will update saved config changes without restarting. If you're holding a fishing rod you can even see the results update while in this menu: Save + F5.\n",
-	"GenericMC.barDescriptionOther": "Sleeping, or reloading the save will update saved config changes without restarting the game.\n",
+	"GenericMC.barDescription": "The bar that shows location info when holding a Fishing Rod (bait/tackle/trash/fish here), or Crab Pot (trash/crustaceans here).",
+	"GenericMC.barDescription2": "You can hover over the variable names for more info.",
+	"GenericMC.barDescriptionPC": "Hitting F5, sleeping, or reloading the save will update saved config changes without restarting.",
+	"GenericMC.barDescriptionPC2": "If you're holding a fishing rod you can even see the results update while in this menu: Save + F5.",
+	"GenericMC.barDescriptionOther": "Sleeping, or reloading the save will update saved config changes without restarting the game.",
 
 	"GenericMC.barIconMode": "Icon Mode",
 	"GenericMC.barIconModeDesc": "The direction in which the bait/tackle/trash/fish icons will travel, before being split into rows/columns.",
@@ -54,7 +56,8 @@
 	"GenericMC.barUncaughtDarkerDesc": "Makes uncaught fish icons appear dark like they do in the Collections Tab (also applies to the minigame). Text Icon Mode also shows them as \"???\".",
 
 	"GenericMC.MinigameLabel": "Preview (Minigame)",
-	"GenericMC.MinigameDescription": "If enabled the fishing minigame will show a preview of the fish you're catching in place of the generic icon. So long as the mod overrides the BobberBar position variable it should work, otherwise you can try another mode, or disable the preview here.",
+	"GenericMC.MinigameDescription": "If enabled the fishing minigame will show a preview of the fish you're catching in place of the generic icon.",
+	"GenericMC.MinigameDescription2": "So long as the mod overrides the BobberBar position variable it should work, otherwise you can try another mode, or disable the preview here.",
 
 	"GenericMC.MinigameMode": "Minigame Mode",
 	"GenericMC.MinigameModeDesc": "Full: Copies multiple layers to look better.\nSimple: Only overlays the fish, looks worse, but might perform/work better.\nBar Only (included in the above two): Outlines the fish in the regular location bar (if it's enabled).",
