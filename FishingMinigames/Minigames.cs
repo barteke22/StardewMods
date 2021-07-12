@@ -23,6 +23,7 @@ namespace FishingMinigames
     {
         private IMonitor Monitor;
         private IModHelper Helper;
+        private IManifest ModManifest;
 
         private List<TemporaryAnimatedSprite> animations = new List<TemporaryAnimatedSprite>();
         private SpriteBatch batch;
@@ -61,6 +62,8 @@ namespace FishingMinigames
         private bool endMinigameAnimate;
         private int infoTimer;
 
+        private MinigameMessage message;
+
         //config values
         //public static ModConfig config;
         public static SoundEffect fishySound;
@@ -86,6 +89,7 @@ namespace FishingMinigames
         {
             this.Helper = entry.Helper;
             this.Monitor = entry.Monitor;
+            this.ModManifest = entry.ModManifest;
         }
 
 
@@ -211,6 +215,7 @@ namespace FishingMinigames
         {
             if (batch == null) batch = e.SpriteBatch;
             who = Game1.player;
+            while (!who.IsLocalPlayer) return; //force local screen
             if (!Game1.eventUp && !Game1.menuUp && !hereFishying && who.CurrentItem is FishingRod && who.currentLocation.isTileFishable((int)Game1.currentCursorTile.X, (int)Game1.currentCursorTile.Y))
             {
                 e.SpriteBatch.Draw(Game1.mouseCursors, new Vector2(((Game1.getMouseX() / 64) * 64), ((Game1.getMouseY() / 64) * 64)), new Rectangle(652, 204, 44, 44), new Color(0, 255, 0, 0.4f), 0f, Vector2.Zero, 1.45f, SpriteEffects.None, 1f);
@@ -290,8 +295,8 @@ namespace FishingMinigames
 
         private async void HereFishyFishy(Farmer who, int x, int y)
         {
-            who.CanMove = false;
             while (!who.IsLocalPlayer) await Task.Delay(1); //force local screen
+            who.CanMove = false;
             if (who.IsLocalPlayer && fishingFestivalMinigame != 2)
             {
                 float oldStamina = who.Stamina;
@@ -523,6 +528,7 @@ namespace FishingMinigames
             hereFishying = true;
             if (fishySound != null) fishySound.Play(voiceVolume, voicePitch[index], 0);
 
+            SendMessage(who, 0);
             who.completelyStopAnimatingOrDoingAction();
             who.CanMove = false;
             who.jitterStrength = 2f;
@@ -1007,6 +1013,78 @@ namespace FishingMinigames
             hereFishying = false;
             //Game1.freezeControls = false;
             who.CanMove = true;
+        }
+
+
+        private void SendMessage(Farmer who, int animation, int[] fishData = null)
+        {
+            
+            long[] IDs = Helper.Multiplayer.GetConnectedPlayers().Select(x => x.PlayerID).ToArray();
+            
+            foreach (var item in Helper.Multiplayer.GetConnectedPlayers())
+            {
+                if (item.IsSplitScreen)
+                {
+                    for (int i = 0; i < IDs.Length; i++)
+                    {
+                        if (IDs[i] == item.PlayerID) IDs[i] = -1;
+                    }
+                }
+            }
+            //Helper.Multiplayer.SendMessage(new MinigameMessage(who, 0, voicePitch[index], fishData), "Animation", modIDs: new[] { ModManifest.UniqueID }, IDs);
+        }
+
+        /// <summary>Other players' animations.</summary>
+        public void OnModMessageReceived(object sender, ModMessageReceivedEventArgs e)
+        {
+            if (e.FromModID == ModManifest.UniqueID && e.Type == "Animation")
+            {
+                message = e.ReadAs<MinigameMessage>();
+                if (message.whichPlayer == who) message = null;
+                else
+                {
+                    if (message.animation == 0)
+                    {
+                        message.whichPlayer.completelyStopAnimatingOrDoingAction();
+                        message.whichPlayer.CanMove = false;
+                        message.whichPlayer.jitterStrength = 2f;
+                        List<FarmerSprite.AnimationFrame> animationFrames = new List<FarmerSprite.AnimationFrame>(){
+                            new FarmerSprite.AnimationFrame(94, 100, false, false, null, false).AddFrameAction(delegate (Farmer f) { f.jitterStrength = 2f; }) };
+
+                        message.whichPlayer.FarmerSprite.setCurrentAnimation(animationFrames.ToArray());
+                        message.whichPlayer.FarmerSprite.PauseForSingleAnimation = true;
+                        message.whichPlayer.FarmerSprite.loop = true;
+                        message.whichPlayer.FarmerSprite.loopThisAnimation = true;
+                        message.whichPlayer.Sprite.currentFrame = 94;
+                    }
+                }
+            }
+        }
+    }
+}
+
+public class MinigameMessage
+{
+    public Farmer whichPlayer;
+    public int animation;
+    public float voice;
+    public int whichFish;
+    public Vector2 fishPos;
+    public MinigameMessage()
+    {
+        this.whichPlayer = null;
+        this.animation = -1;
+    }
+
+    public MinigameMessage(Farmer whichPlayer, int animation, float voice, int[] fishData)
+    {
+        this.whichPlayer = whichPlayer;
+        this.animation = animation;
+        this.voice = voice;
+        if (fishData != null)
+        {
+            this.whichFish = fishData[0];
+            this.fishPos = new Vector2(fishData[1], fishData[2]);
         }
     }
 }

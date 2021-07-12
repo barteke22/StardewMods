@@ -31,14 +31,8 @@ namespace FishingMinigames
             helper.Events.Input.ButtonsChanged += Input_ButtonsChanged;
             helper.Events.GameLoop.GameLaunched += GenericModConfigMenuIntegration;
             helper.Events.GameLoop.SaveLoaded += GameLoop_SaveLoaded;
+            helper.Events.Multiplayer.ModMessageReceived += OnModMessageReceived;
         }
-
-
-        private void GameLoop_SaveLoaded(object sender, SaveLoadedEventArgs e)
-        {
-            UpdateConfig();
-        }
-
         private void GenericModConfigMenuIntegration(object sender, GameLaunchedEventArgs e)     //Generic Mod Config Menu API
         {
             if (Context.IsSplitScreen) return;
@@ -50,8 +44,10 @@ namespace FishingMinigames
                 GenericMC.SetDefaultIngameOptinValue(ModManifest, true);
                 GenericMC.RegisterLabel(ModManifest, translate.Get("GenericMC.MainLabel"), ""); //All of these strings are stored in the traslation files.
                 GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.MainDesc"));
+                GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.MainDesc2"));
                 if (Constants.TargetPlatform != GamePlatform.Android) GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.MainDescPC"));
                 else GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.MainDescOther"));
+                GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.MainDesc3"));
 
                 try
                 {
@@ -110,11 +106,22 @@ namespace FishingMinigames
 
                 GenericMC.RegisterLabel(ModManifest, translate.Get("GenericMC.FestivalLabel"), "");
                 GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.FestivalDesc"));
+                GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.FestivalDesc2"));
             }
             GenericMC.RegisterChoiceOption(ModManifest, translate.Get("GenericMC.FestivalMode"), translate.Get("GenericMC.FestivalModeDesc"),
                 () => (config.FestivalMode[screen] == 0) ? translate.Get("GenericMC.FestivalModeVanilla") : (config.FestivalMode[screen] == 1) ? translate.Get("GenericMC.FestivalModeSimple") : translate.Get("GenericMC.FestivalModePerfectOnly"),
                 (string val) => config.FestivalMode[screen] = Int32.Parse((val.Equals(translate.Get("GenericMC.FestivalModeVanilla"), StringComparison.Ordinal)) ? "0" : (val.Equals(translate.Get("GenericMC.FestivalModeSimple"), StringComparison.Ordinal)) ? "1" : "2"),
                 new string[] { translate.Get("GenericMC.FestivalModeVanilla"), translate.Get("GenericMC.FestivalModeSimple"), translate.Get("GenericMC.FestivalModePerfectOnly") });
+        }
+
+
+        private void GameLoop_SaveLoaded(object sender, SaveLoadedEventArgs e)
+        {
+            UpdateConfig();
+        }
+        private void OnModMessageReceived(object sender, ModMessageReceivedEventArgs e)
+        {
+            minigame.Value.OnModMessageReceived(sender, e);
         }
 
         private void Input_ButtonsChanged(object sender, ButtonsChangedEventArgs e)  //this.Monitor.Log(locationName, LogLevel.Debug);
@@ -221,8 +228,6 @@ namespace FishingMinigames
         private void UpdateConfig()
         {
             config = Helper.ReadConfig<ModConfig>();
-
-            if (Context.IsSplitScreen) return;
 
             try
             {
