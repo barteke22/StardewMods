@@ -1,5 +1,4 @@
-﻿using GenericModConfigMenu;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
@@ -12,9 +11,7 @@ using StardewValley.Objects;
 using StardewValley.Tools;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using Object = StardewValley.Object;
 
 namespace FishingMinigames
@@ -83,7 +80,6 @@ namespace FishingMinigames
         public static int[] festivalMode = new int[4];
         public static float[] minigameDifficulty = new float[4];
 
-        private bool lastmenu;
 
 
         /*  
@@ -257,18 +253,27 @@ namespace FishingMinigames
                 animations[i].draw(e.SpriteBatch, false, 0, 0, 1f);
                 if (endMinigameStage > 0 && i == 0)
                 {
+                    int size = (int)(itemSpriteSize * ((item is Furniture) ? 32 : 16));
                     if (endMinigameStage == 1)
                     {
-                        Rectangle area = new Rectangle((int)who.Position.X - 200, (int)who.Position.Y - 400, 400, 400);
-                        if (area.Contains((int)animations[0].Position.X + ((int)animations[0].scale * 8), (int)animations[0].Position.Y + ((int)animations[0].scale * 8)) && animations[0].initialPosition != animations[0].Position)
+                        Rectangle area = new Rectangle((int)who.Position.X - 200, (int)who.Position.Y - 450, 400, 400);
+                        if ((area.Contains((int)animations[0].Position.X, (int)animations[0].Position.Y) ||
+                            area.Contains((int)animations[0].Position.X, (int)animations[0].Position.Y + size) ||
+                            area.Contains((int)animations[0].Position.X + size, (int)animations[0].Position.Y) ||
+                            area.Contains((int)animations[0].Position.X + size, (int)animations[0].Position.Y + size))
+                            && animations[0].initialPosition != animations[0].Position)
                         {
                             endMinigameStage = 2;
                         }
                     }
                     if (endMinigameStage == 2)
                     {
-                        Rectangle area = new Rectangle((int)who.Position.X - 70, (int)who.Position.Y - 185, 140, 205);
-                        if (area.Contains((int)animations[0].Position.X + ((int)animations[0].scale * 8), (int)animations[0].Position.Y + ((int)animations[0].scale * 8)) && animations[0].initialPosition != animations[0].Position)
+                        Rectangle area = new Rectangle((int)who.Position.X - 70, (int)who.Position.Y - 115, 140, 220);
+                        if ((area.Contains((int)animations[0].Position.X, (int)animations[0].Position.Y) ||
+                            area.Contains((int)animations[0].Position.X, (int)animations[0].Position.Y + size) ||
+                            area.Contains((int)animations[0].Position.X + size, (int)animations[0].Position.Y) ||
+                            area.Contains((int)animations[0].Position.X + size, (int)animations[0].Position.Y + size))
+                            && animations[0].initialPosition != animations[0].Position)
                         {
                             EndMinigame(0);
                         }
@@ -647,11 +652,11 @@ namespace FishingMinigames
 
                     float t;
                     float distance2 = y - (float)(who.getStandingY() - 100);
-                    float height2 = Math.Abs(distance2 + 256f + 32f);
-                    if (who.FacingDirection == 0)
-                    {
-                        height2 += 96f;
-                    }
+
+                    float height2 = Math.Abs(distance2 + 170f);
+                    if (who.FacingDirection == 0) height2 -= 130f;
+                    else if (who.FacingDirection == 2) height2 -= 170f;
+
                     float gravity2 = 0.002f;
                     float velocity = (float)Math.Sqrt((double)(2f * gravity2 * height2));
                     t = (float)(Math.Sqrt((double)(2f * (height2 - distance2) / gravity2)) + (double)(velocity / gravity2));
@@ -665,22 +670,22 @@ namespace FishingMinigames
                         motion = new Vector2(xVelocity2, -velocity),
                         acceleration = new Vector2(0f, gravity2),
                         timeBasedMotion = true,
-                        //endFunction = new TemporaryAnimatedSprite.endBehavior(PlayerCaughtFishEndFunction),
-                        extraInfoForEndBehavior = whichFish,
                         endSound = "tinyWhip"
                     });
+                    int delay = 25;
                     for (int i = 1; i < item.Stack; i++)
                     {
                         //await Task.Delay(100);
                         animations.Add(new TemporaryAnimatedSprite("Maps\\springobjects", Game1.getSourceRectForStandardTileSheet(Game1.objectSpriteSheet, whichFish, 16, 16), t, 1, 0, new Vector2(x, y), false, false, y / 10000f, 0f, Color.White, itemSpriteSize, 0f, 0f, 0f, false)
                         {
+                            delayBeforeAnimationStart = delay,
                             motion = new Vector2(xVelocity2, -velocity),
                             acceleration = new Vector2(0f, gravity2),
                             timeBasedMotion = true,
                             endSound = "tinyWhip",
                             Parent = who.currentLocation
-                        });
-
+                        }) ;
+                        delay += 25;
                     }
                     who.CanMove = false;
                     break;
@@ -799,7 +804,6 @@ namespace FishingMinigames
             }
         }
 
-        //probably don't call this directly from FlyingFish - instead make flyingfish call a method that sets a stage var
         private void PlayerCaughtFishEndFunction(int extraData)
         {
             FishingRod rod = who.CurrentTool as FishingRod;
@@ -1076,8 +1080,6 @@ namespace FishingMinigames
                         || Helper.Input.IsSuppressed(SButton.ControllerX)) FestivalGameSkip(who);
                     break;
             }
-
-            //if (fishingFestivalMinigame.Value == 1 && keyBinds.JustPressed()) FestivalGameSkip(who);
         }
 
         private void EmergencyCancel(Farmer who)
