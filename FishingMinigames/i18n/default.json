@@ -21,7 +21,7 @@
   "GenericMC.StartMinigameStyle3": "todo",
 
   "GenericMC.EndMinigameStyle": "Minigame Style (End)",
-  "GenericMC.EndMinigameStyleDesc": "This minigame determines whether you take damage (if failed) when scooping up any fishable item/fish, and contributes to total score. \nMinigame Button: At the right time, press the button you use for fishing, keybind must be single button (no + combos). \nMatching Arrow:  At the right time, match the direction of the displayed arrow with WASD, Arrow Keys, or DPad. \nMatching Key:    At the right time, press the displayed button. Keyboard only, will use a letter from the fish/item name. Buttons might conflict with other mods. If you're getting arrows, set controller option to 'Force Off'.",
+  "GenericMC.EndMinigameStyleDesc": "This minigame determines whether you take damage (if failed) when scooping up any fishable item/fish, and contributes to total score. \nMinigame Button: At the right time, press the button you use for fishing, keybind must be single button (no + combos). \nMatching Arrow:  At the right time, match the direction of the displayed arrow with WASD, Arrow Keys, or DPad. \nMatching Key:    At the right time, press the displayed button. Keyboard only, will use a letter from the fish/item name, if it can find any English ones - otherwise defaults to Arrows. Buttons might conflict with other mods. If you're getting arrows even when the name contains English letters, set Controller Option to 'Force Off'.",
   "GenericMC.EndMinigameStyle1": "Minigame Button",
   "GenericMC.EndMinigameStyle2": "Matching Arrow",
   "GenericMC.EndMinigameStyle3": "Matching Letter",
