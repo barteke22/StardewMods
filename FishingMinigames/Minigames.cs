@@ -768,6 +768,12 @@ namespace FishingMinigames
                                 rect = new Rectangle(398, 1660, 10, 10);
                                 break;
                         }
+                        if (LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.zh) rect.Y--; //language texture adjustment
+                        else if (LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.ko)
+                        {
+                            rect.X += 3;
+                            rect.Y--;
+                        }
                         break;
                     case 3:
                         string temp = System.Text.Encoding.ASCII.GetString(System.Text.Encoding.ASCII.GetBytes(item.DisplayName)).Replace(" ", "").Replace("?", "");
@@ -868,9 +874,13 @@ namespace FishingMinigames
 
                     if (!fromFishPond)
                     {
-                        if (endMinigameStage == 8)
+                        if (endMinigameStage == 8)//water on face
                         {
-                            animations.Add(new KeyValuePair<long, TemporaryAnimatedSprite>(who.UniqueMultiplayerID, new TemporaryAnimatedSprite(10, who.Position - new Vector2(0, 100), Color.Blue)));//water on face
+                            animations.Add(new KeyValuePair<long, TemporaryAnimatedSprite>(who.UniqueMultiplayerID, new TemporaryAnimatedSprite(10, who.Position - new Vector2(0, 120), Color.Blue)
+                            {
+                                motion = new Vector2(0f, 0.12f),
+                                timeBasedMotion = true,
+                            }));
                             SendMessage(who, "Water");
                         }
                         if (fishingFestivalMinigame == 0)
@@ -1281,7 +1291,11 @@ namespace FishingMinigames
                             who.Sprite.currentFrame = 94;
                             break;
                         case "Water":
-                            animations.Add(new KeyValuePair<long, TemporaryAnimatedSprite>(who.UniqueMultiplayerID, new TemporaryAnimatedSprite(10, who.Position - new Vector2(0, 100), Color.Blue)));//water on face
+                            animations.Add(new KeyValuePair<long, TemporaryAnimatedSprite>(who.UniqueMultiplayerID, new TemporaryAnimatedSprite(10, who.Position - new Vector2(0, 120), Color.Blue)
+                            {
+                                motion = new Vector2(0f, 0.12f),
+                                timeBasedMotion = true,
+                            })); 
                             who.completelyStopAnimatingOrDoingAction();
                             break;
                         case "Starting4":
