@@ -146,18 +146,16 @@ namespace FishingMinigames
 
                 StartMinigameInput(e);
             }
-            else if (endMinigameStage == 2 || endMinigameStage == 3)
+            else if (endMinigameStage == 2 || endMinigameStage == 3) //already in endMinigame
             {
                 SuppressAll(e.Pressed);
-                EndMinigame(1);//already in endMinigame
+                EndMinigame(1);
             }
             else//start attempt
             {
                 if (keyBinds[index].JustPressed())
                 {
-                    SuppressAll(e.Pressed);
-
-                    if (Context.IsWorldReady && Context.CanPlayerMove && who.CurrentTool is FishingRod)
+                    if (Context.IsWorldReady && Context.CanPlayerMove && who.CurrentItem is FishingRod)
                     {
                         if (Game1.isFestival() && (fishingFestivalMinigame == 0 || festivalMode[index] == 0)) return;
                         if (fishingFestivalMinigame == 1)
@@ -401,11 +399,17 @@ namespace FishingMinigames
 
             if (!fromFishPond && fishingFestivalMinigame != 2 && startMinigameStyle[index] > 0) //add !instant + test if works in festival
             {
-                startMinigameArrowData = new string[(int)Math.Ceiling((difficulty + fishSize) / 3f * minigameDifficulty[index])];
+                ITranslationHelper translate = Helper.Translation;
+                startMinigameTextures = new Texture2D[] { Game1.content.Load<Texture2D>("LooseSprites\\boardGameBorder"), Game1.content.Load<Texture2D>("LooseSprites\\CraneGame") };
+                startMinigameText = new List<string>() { translate.Get("Minigame.Score") };
+                foreach (string s in translate.Get("Minigame.InfoDDR").ToString().Split(new string[] { "\n" }, StringSplitOptions.None)) startMinigameText.Add(s);
+
+
+                startMinigameArrowData = new string[(int)Math.Ceiling((difficulty + fishSize) / 3f * minigameDifficulty[index])]; //make it minimum X (20?) and then apply diff/size - max 99
                 int offset = 0;
                 for (int i = 0; i < startMinigameArrowData.Length; i++)
                 {
-                    startMinigameArrowData[i] = Game1.random.Next(0, 4) + "/0/" + offset + "/1";//arrow direction/colour/offset/current distance
+                    startMinigameArrowData[i] = Game1.random.Next(0, 4) + "/0/" + offset + "/9999";//arrow direction/colour/offset/current distance
                     if (Game1.random.Next(0, 3) == 0) offset += 300;
                     else offset += 200;
                 }
@@ -744,33 +748,51 @@ namespace FishingMinigames
             }
         }
 
-        private string[] startMinigameArrowData;
+        private string[] startMinigameArrowData;//0 arrow direction/1 colour/2 offset/3 current distance
         private float startMinigameScale;
-        private int[] startMinigameData = new int[4];//data = 0 current arrow, 1 perfect area?, 2 score, 3 time
-        private void StartMinigameDraw(SpriteBatch batch) //limit to non-insta catch - for now testing with any
+        private int[] startMinigameData = new int[4];//data = 0 current arrow, 1 perfect area?, 2 score, 3 last arrow to vanish
+        private Texture2D[] startMinigameTextures;
+        private List<string> startMinigameText;
+        private void StartMinigameDraw(SpriteBatch batch) //limit to non-insta catch - for now testing with any //treasure arrow? +4 direction, x% chance of changing direction?
         {
-            Monitor.Log(startMinigameData[2].ToString(), LogLevel.Alert);
-
-            startMinigameScale = 10f - (Game1.options.zoomLevel * 1.5f) - (2000 / Game1.graphics.GraphicsDevice.Viewport.Width);
+            //scale/middle/bounds calculation
+            startMinigameScale = (float)Math.Round(10f - (Game1.options.zoomLevel * 1.5f) - (2000f / Game1.graphics.GraphicsDevice.Viewport.Width), 2);//maybe instead of all this add config scale
             int width = (int)Math.Round(138f * startMinigameScale);
             int height = (int)Math.Round(74f * startMinigameScale);
             Vector2 screenMid = new Vector2(Game1.graphics.GraphicsDevice.Viewport.Width / 2, Game1.graphics.GraphicsDevice.Viewport.Height / 2);
 
             //board
-            batch.Draw(Game1.content.Load<Texture2D>("LooseSprites\\boardGameBorder"), screenMid, null, Color.Cyan, 0f, new Vector2(69, 37), startMinigameScale, SpriteEffects.None, 0.1f);
+            batch.Draw(startMinigameTextures[0], screenMid, null, Color.Cyan, 0f, new Vector2(69f, 37f), startMinigameScale, SpriteEffects.None, 0.1f);
+            //info & score
+            Vector2 textLoc = new Vector2(0f, height * -0.44f);
+            for (int i = 1; i < startMinigameText.Count; i++)
+            {
+                batch.DrawString(Game1.tinyFont, startMinigameText[i], screenMid + (textLoc += new Vector2(0f, height * 0.05f)), Color.AntiqueWhite, 0f, new Vector2(Game1.tinyFont.MeasureString(startMinigameText[i]).X / 2f, 0f), startMinigameScale * 0.1f, SpriteEffects.None, 0.2f);
+            }
+            batch.DrawString(Game1.smallFont, startMinigameText[0] + ":  " + startMinigameData[2], screenMid + new Vector2(width * -0.44f, height * 0.33f), Color.AntiqueWhite, 0f, Vector2.Zero, startMinigameScale * 0.2f, SpriteEffects.None, 0.2f);
+
+
+
+            //if paused/out of focus:
+            if ((Game1.paused || (!Game1.game1.IsActiveNoOverlay && Program.releaseBuild)) && (Game1.options == null || Game1.options.pauseWhenOutOfFocus || Game1.paused) && Game1.multiplayerMode == 0)
+            {
+                batch.Draw(Game1.mouseCursors, screenMid, new Rectangle(322, 498, 12, 12), Color.Brown, 0f, new Vector2(6f), startMinigameScale * 2f, SpriteEffects.None, 0.12f);
+                return;
+            }
             //hit area rings
-            Texture2D sprites = Game1.content.Load<Texture2D>("LooseSprites\\CraneGame");
-            Vector2 startMinigameHitAreaMid = screenMid + new Vector2(width * -0.2f, height * 0.18f);
-            batch.Draw(sprites, startMinigameHitAreaMid, new Rectangle(355, 86, 26, 26), Color.Yellow, 0f, new Vector2(13f), startMinigameScale * 0.7f, SpriteEffects.None, 0.11f);
-            batch.Draw(sprites, startMinigameHitAreaMid, new Rectangle(355, 86, 26, 26), Color.Brown, 0f, new Vector2(13f), startMinigameScale * 0.5f, SpriteEffects.None, 0.12f);
+            Vector2 hitAreaMid = screenMid + new Vector2(width * -0.2f, height * 0.18f);
+            batch.Draw(startMinigameTextures[1], hitAreaMid, new Rectangle(355, 86, 26, 26), Color.Yellow, 0f, new Vector2(13f), startMinigameScale * 0.7f, SpriteEffects.None, 0.11f);
+            batch.Draw(startMinigameTextures[1], hitAreaMid, new Rectangle(355, 86, 26, 26), Color.Brown, 0f, new Vector2(13f), startMinigameScale * 0.5f, SpriteEffects.None, 0.12f);
+
             //arrows
-            Vector2 firstArrowLoc = new Vector2(screenMid.X + (width / 2) + startMinigameTimer, screenMid.Y + (height * 0.18f));
+            Vector2 firstArrowLoc = new Vector2(screenMid.X + (width / 2f) + startMinigameTimer, screenMid.Y + (height * 0.18f));
 
-            int speed = 2 + (int)((((difficulty - who.FishingLevel) / 10f) + (fishSize / 5)) * minigameDifficulty[index]);
-            startMinigameTimer -= speed;//////speed
+            int speed = (who.fishCaught.Count() == 0) ? 1 : 2 + (int)((((difficulty - who.FishingLevel) / 10f) + (fishSize / 5)) * minigameDifficulty[index]);
+            startMinigameTimer -= speed;
 
-            startMinigameData[0] = -1;
+            startMinigameData[0] = -2;
             startMinigameData[1] = 0;
+            int arrowsLeft = startMinigameArrowData.Length;
 
             for (int i = 0; i < startMinigameArrowData.Length; i++)
             {
@@ -778,36 +800,59 @@ namespace FishingMinigames
 
                 if (data[1] == 0)//if empty arrow
                 {
-                    if (startMinigameHitAreaMid.X - (13f * startMinigameScale * 0.5f) > firstArrowLoc.X + data[2])//too late - fail
+                    if (hitAreaMid.X - (13f * startMinigameScale * 0.5f) > firstArrowLoc.X + data[2])//too late - fail
                     {
                         data[1] = 3;
                         startMinigameArrowData[i] = startMinigameArrowData[i].Replace("/0/", "/-1/");
-                        startMinigameData[2]--;
+                        //startMinigameData[2]--;
                     }
-                    else if (startMinigameHitAreaMid.X - (13f * startMinigameScale * 0.5f) <= firstArrowLoc.X + data[2] &&
-                             startMinigameHitAreaMid.X + (13f * startMinigameScale * 0.5f) >= firstArrowLoc.X + data[2])
+                    else if (hitAreaMid.X - (13f * startMinigameScale * 0.5f) <= firstArrowLoc.X + data[2] &&
+                             hitAreaMid.X + (13f * startMinigameScale * 0.5f) >= firstArrowLoc.X + data[2])
                     {
                         startMinigameData[0] = i;
-                        if (startMinigameHitAreaMid.X - (13f * startMinigameScale * 0.1f) <= firstArrowLoc.X + data[2] &&
-                            startMinigameHitAreaMid.X + (13f * startMinigameScale * 0.1f) >= firstArrowLoc.X + data[2]) startMinigameData[1] = 1;
+                        if (hitAreaMid.X - (13f * startMinigameScale * 0.1f) <= firstArrowLoc.X + data[2] &&
+                            hitAreaMid.X + (13f * startMinigameScale * 0.1f) >= firstArrowLoc.X + data[2]) startMinigameData[1] = 1;// also offset between arrows * scale?
                     }
                 }
 
-                //startMinigameArrowData[i] = data[0] + "/" + data[1] + "/" + data[2] + "/" + (firstArrowLoc.X + data[2]);//current loc update
 
-                Color color = (data[1] == 2) ? Color.LimeGreen : (data[1] == 1) ? Color.Orange : (data[1] == -1) ? Color.Red : Color.Cyan;
-
-                if (firstArrowLoc.X + data[2] + (6f * startMinigameScale) <= screenMid.X + (width * 0.464f) && firstArrowLoc.X + data[2] - (6f * startMinigameScale) >= screenMid.X - (width * 0.464f))//draw arrow?
+                if (firstArrowLoc.X + data[2] + (6f * startMinigameScale) <= screenMid.X + (width * 0.464f))//arrow passed start
                 {
-                    batch.Draw(sprites, firstArrowLoc + new Vector2((data[2]), 0), new Rectangle((data[0] == 0 || data[0] == 2) ? 338 : 322, 82, 12, 12),
-                        color, 0f, new Vector2(6f), startMinigameScale, (data[0] == 0) ? SpriteEffects.FlipVertically : (data[0] == 3) ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 0.2f);
+                    arrowsLeft--;
+
+                    if (firstArrowLoc.X + data[2] - (6f * startMinigameScale) >= screenMid.X - (width * 0.464f))//arrow didn't pass end
+                    {
+                        Color color = (data[1] == 2) ? Color.LimeGreen : (data[1] == 1) ? Color.Orange : (data[1] == -1) ? Color.Red : Color.Cyan;
+                        batch.Draw(startMinigameTextures[1], firstArrowLoc + new Vector2((data[2]), 0), new Rectangle((data[0] == 0 || data[0] == 2) ? 338 : 322, 82, 12, 12),
+                            color, 0f, new Vector2(6f), startMinigameScale, (data[0] == 0) ? SpriteEffects.FlipVertically : (data[0] == 3) ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 0.2f);
+                    }
+                    else if (i + 1 > startMinigameData[3])//update score on new arrow passed end
+                    {
+                        startMinigameData[3] = i + 1;
+                        startMinigameData[2] = 0;
+                        for (int j = 0; j < i + 1; j++)
+                        {
+                            startMinigameData[2] += int.Parse(startMinigameArrowData[j].Split('/')[1]);
+                        }
+                    }
                 }
             }
             //arrow 'dispensers'
-            batch.Draw(Game1.mouseCursors, screenMid + new Vector2(width * 0.464f, height * 0.18f), new Rectangle(301, 288, 15, 15), Color.Blue, 0f, new Vector2(15f, 7.5f), startMinigameScale, SpriteEffects.None, 0.5f);
-            batch.Draw(Game1.mouseCursors, screenMid + new Vector2(width * -0.464f, height * 0.18f), new Rectangle(301, 288, 15, 15), Color.Blue, 0f, new Vector2(0f, 7.5f), startMinigameScale, SpriteEffects.FlipHorizontally, 0.5f);
-        }
-        private void StartMinigameInput(ButtonsChangedEventArgs e) //gotta trigger HereFishyAnimation here or in draw afterwards
+            batch.Draw(Game1.mouseCursors, screenMid + new Vector2(width * 0.464f, height * 0.18f), new Rectangle(301, 288, 15, 15), Color.DodgerBlue * 0.95f, 0f, new Vector2(15f, 7.5f), startMinigameScale, SpriteEffects.None, 0.5f);
+            batch.Draw(Game1.mouseCursors, screenMid + new Vector2(width * -0.464f, height * 0.18f), new Rectangle(301, 288, 15, 15), Color.DodgerBlue * 0.95f, 0f, new Vector2(0f, 7.5f), startMinigameScale, SpriteEffects.FlipHorizontally, 0.5f);
+            //score
+            batch.DrawString(Game1.smallFont, startMinigameData[2].ToString(), screenMid + new Vector2(width * -0.41f, height * 0.19f),
+                (startMinigameData[2] < startMinigameArrowData.Length * 0.8f) ? Color.Red :
+                (startMinigameData[2] < startMinigameArrowData.Length) ? Color.Orange :
+                (startMinigameData[2] < startMinigameArrowData.Length * 1.2f) ? Color.Yellow :
+                (startMinigameData[2] < startMinigameArrowData.Length * 1.5f) ? Color.LimeGreen :
+                (startMinigameData[2] < startMinigameArrowData.Length * 1.9f) ? Color.Green : Color.Purple,
+                0f, Game1.smallFont.MeasureString(startMinigameData[2].ToString()) / 2f, startMinigameScale * 0.28f, SpriteEffects.None, 0.6f);
+            //arrows left
+            batch.DrawString(Game1.smallFont, arrowsLeft.ToString(), screenMid + new Vector2(width * 0.41f, height * 0.19f), Color.DarkTurquoise, 0f, Game1.smallFont.MeasureString(arrowsLeft.ToString()) / 2f, startMinigameScale * 0.28f, SpriteEffects.None, 0.6f);
+
+        }//split draw check into 2 and use bools - after start, before end - use bools to count how many are left and if reached end changed - update score then
+        private void StartMinigameInput(ButtonsChangedEventArgs e) //gotta trigger HereFishyAnimation here = if last arrow to vanish = array length-1, display score and await input?
         {
             if (startMinigameData[0] >= 0)
             {
@@ -831,11 +876,7 @@ namespace FishingMinigames
                 else if (passed) startMinigameArrowData[startMinigameData[0]] = startMinigameArrowData[startMinigameData[0]].Replace("/0/", "/1/");
                 else startMinigameArrowData[startMinigameData[0]] = startMinigameArrowData[startMinigameData[0]].Replace("/0/", "/-1/"); ;
             }
-            //else negative point if hit when arrow outside box?
-
-            
-            startMinigameData[2] = 0; //can update points here + in fail to avoid recalc
-            foreach (string s in startMinigameArrowData) startMinigameData[2] += int.Parse(s.Split('/')[1]);
+            //else negative point if hit when arrow outside box? maybe if 2 in a row to avoid spam cheeze? can do it by changing data into list and adding red arrows
         }
         private void EndMinigame(int stage)
         {

@@ -53,6 +53,11 @@
 
   "GenericMC.Disabled": "Disabled",
 
+
+  "Minigame.Score": "Score",
+  "Minigame.InfoDDR": "Match Arrow direction when inside the circle \n with Arrow Keys, WASD, or DPad. \n\n Your final score will decide \n if you manage to get the fish's attention.",
+
+
   "net.fishing": "Fishing Net",
   "net.bamboo": "Bamboo Net",
   "net.training": "Training Net",
