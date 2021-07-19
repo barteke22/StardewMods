@@ -98,6 +98,9 @@ namespace FishingMinigames
 
             if (screen == 0)//only page 0
             {
+                GenericMC.RegisterClampedOption(ModManifest, translate.Get("GenericMC.StartMinigameScale"), translate.Get("GenericMC.StartMinigameScale"),
+                    () => config.StartMinigameScale, (float val) => config.StartMinigameScale = val, 0.5f, 5f);
+
                 GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.RealisticSizes"), translate.Get("GenericMC.RealisticSizesDesc"),
                     () => config.RealisticSizes, (bool val) => config.RealisticSizes = val);
 
@@ -269,6 +272,7 @@ namespace FishingMinigames
                 Minigames.endMinigameStyle = config.EndMinigameStyle;
                 Minigames.minigameDamage = config.EndMinigameDamage;
                 Minigames.minigameDifficulty = config.MinigameDifficulty;
+                Minigames.startMinigameScale = config.StartMinigameScale;
                 Minigames.realisticSizes = config.RealisticSizes;
                 if (LocalizedContentManager.CurrentLanguageCode == 0) Minigames.metricSizes = config.ConvertToMetric;
                 else Minigames.metricSizes = false;
