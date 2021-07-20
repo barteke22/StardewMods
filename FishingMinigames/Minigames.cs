@@ -55,12 +55,16 @@ namespace FishingMinigames
         private float itemSpriteSize;
         private Rectangle sourceRect;
         private bool drawTool;
-        private int fishingFestivalMinigame;//0=none, 1=fall16, 2=winter8
+        private int fishingFestivalMinigame;        //0 none, 1 fall16, 2 winter8
 
-        private int startMinigameStage;
+        private int startMinigameStage;             //0 before, 1 fade in, 2 playing, 3 show score, 5 fail, 6-10 = score
         private int startMinigameTimer;
+        private string[] startMinigameArrowData;    //0 arrow direction, 1 colour, 2 offset, 3 current distance
+        private int[] startMinigameData;            //0 current arrow, 1 perfect area?, 2 score, 3 last arrow to vanish, 4 treasure arrow, 5 fade
+        private Texture2D[] startMinigameTextures;
+        private List<string> startMinigameText;
 
-        private int endMinigameStage;
+        private int endMinigameStage;               //0 before, 1 fish flying, 2 input can fail, 3 input can succeed/time out, 8 failed, 9 success, 10 perfect
         private string endMinigameKey;
         private int endMinigameTimer;
         private int infoTimer;
@@ -145,7 +149,7 @@ namespace FishingMinigames
                     return;
                 }
 
-                StartMinigameInput(e);
+                if (startMinigameStage > 1) StartMinigameInput(e);
             }
             else if (endMinigameStage == 2 || endMinigameStage == 3) //already in endMinigame
             {
@@ -278,76 +282,103 @@ namespace FishingMinigames
         {
             if (batch == null) batch = e.SpriteBatch;
             who = Game1.player;
+
             if (startMinigameStage > 0 && startMinigameStage < 5) StartMinigameDraw(batch);
-
-            if (!Game1.eventUp && !Game1.menuUp && !hereFishying && who.CurrentItem is FishingRod && who.currentLocation.isTileFishable((int)Game1.currentCursorTile.X, (int)Game1.currentCursorTile.Y))
+            else if (startMinigameStage > 4 && startMinigameData[5] > 0) StartMinigameDraw(batch);
+            else
             {
-                e.SpriteBatch.Draw(Game1.mouseCursors, new Vector2(((Game1.getMouseX() / 64) * 64), ((Game1.getMouseY() / 64) * 64)), new Rectangle(652, 204, 44, 44), new Color(0, 255, 0, 0.4f), 0f, Vector2.Zero, 1.45f, SpriteEffects.None, 1f);
-            }
-            for (int i = animations.Count - 1; i >= 0; i--)
-            {
-                animations[i].Value.draw(e.SpriteBatch, false, 0, 0, 1f);
-                if (endMinigameStage > 0 && animations[i].Key == who.UniqueMultiplayerID)
+                //draw mouse target on water
+                if (!Game1.eventUp && !Game1.menuUp && !hereFishying && who.CurrentItem is FishingRod && who.currentLocation.isTileFishable((int)Game1.currentCursorTile.X, (int)Game1.currentCursorTile.Y))
                 {
-                    int size = (int)(itemSpriteSize * ((item is Furniture) ? 32 : 16));
-                    if (endMinigameStage == 1)
+                    e.SpriteBatch.Draw(Game1.mouseCursors, new Vector2(((Game1.getMouseX() / 64) * 64), ((Game1.getMouseY() / 64) * 64)), new Rectangle(652, 204, 44, 44), new Color(0, 255, 0, 0.4f), 0f, Vector2.Zero, 1.45f, SpriteEffects.None, 1f);
+                }
+                //draw fish flying
+                for (int i = animations.Count - 1; i >= 0; i--)
+                {
+                    animations[i].Value.draw(e.SpriteBatch, false, 0, 0, 1f);
+                    if (endMinigameStage > 0 && animations[i].Key == who.UniqueMultiplayerID)
                     {
-                        Rectangle area = new Rectangle((int)who.Position.X - 200, (int)who.Position.Y - 450, 400, 400);
-                        if (animations[i].Value.Position != animations[i].Value.initialPosition &&
-                            (area.Contains((int)animations[i].Value.Position.X, (int)animations[i].Value.Position.Y) ||
-                            area.Contains((int)animations[i].Value.Position.X, (int)animations[i].Value.Position.Y + size) ||
-                            area.Contains((int)animations[i].Value.Position.X + size, (int)animations[i].Value.Position.Y) ||
-                            area.Contains((int)animations[i].Value.Position.X + size, (int)animations[i].Value.Position.Y + size)))
+                        int size = (int)(itemSpriteSize * ((item is Furniture) ? 32 : 16));
+                        if (endMinigameStage == 1)//can miss area
                         {
-                            endMinigameStage = 2;
+                            Rectangle area = new Rectangle((int)who.Position.X - 200, (int)who.Position.Y - 450, 400, 400);
+                            if (animations[i].Value.Position != animations[i].Value.initialPosition &&
+                                (area.Contains((int)animations[i].Value.Position.X, (int)animations[i].Value.Position.Y) ||
+                                area.Contains((int)animations[i].Value.Position.X, (int)animations[i].Value.Position.Y + size) ||
+                                area.Contains((int)animations[i].Value.Position.X + size, (int)animations[i].Value.Position.Y) ||
+                                area.Contains((int)animations[i].Value.Position.X + size, (int)animations[i].Value.Position.Y + size)))
+                            {
+                                endMinigameStage = 2;
+                            }
                         }
-                    }
-                    if (endMinigameStage == 2)
-                    {
-                        Rectangle area = new Rectangle((int)who.Position.X - 70, (int)who.Position.Y - 115, 140, 220);
-                        if (animations[i].Value.Position != animations[i].Value.initialPosition &&
-                            (area.Contains((int)animations[i].Value.Position.X, (int)animations[i].Value.Position.Y) ||
-                            area.Contains((int)animations[i].Value.Position.X, (int)animations[i].Value.Position.Y + size) ||
-                            area.Contains((int)animations[i].Value.Position.X + size, (int)animations[i].Value.Position.Y) ||
-                            area.Contains((int)animations[i].Value.Position.X + size, (int)animations[i].Value.Position.Y + size)))
+                        if (endMinigameStage == 2)//can succeed area
                         {
-                            PlayPause(who);
-                            SendMessage(who, "Pause");
-                            EndMinigame(0);
+                            Rectangle area = new Rectangle((int)who.Position.X - 70, (int)who.Position.Y - 115, 140, 220);
+                            if (animations[i].Value.Position != animations[i].Value.initialPosition &&
+                                (area.Contains((int)animations[i].Value.Position.X, (int)animations[i].Value.Position.Y) ||
+                                area.Contains((int)animations[i].Value.Position.X, (int)animations[i].Value.Position.Y + size) ||
+                                area.Contains((int)animations[i].Value.Position.X + size, (int)animations[i].Value.Position.Y) ||
+                                area.Contains((int)animations[i].Value.Position.X + size, (int)animations[i].Value.Position.Y + size)))
+                            {
+                                PlayPause(who);
+                                SendMessage(who, "Pause");
+                                EndMinigame(0);
+                            }
                         }
-                    }
-                    else if (endMinigameStage == 3)
-                    {
-                        endMinigameTimer++;
-
-                        int totalDifficulty = (int)(100f + ((endMinigameStyle[index] == 3) ? 25f : 0f) - ((difficulty / 2f) - (fishSize / 10f) * minigameDifficulty[index]));
-
-                        if (endMinigameTimer > totalDifficulty)
+                        else if (endMinigameStage == 3)//too late timer
                         {
-                            PlayPause(who);
-                            drawTool = true;
-                            SendMessage(who, "Fail");
+                            endMinigameTimer++;
 
-                            if (oldFacingDirection == 0) who.armOffset += new Vector2(-10f, 0);
-                            endMinigameTimer = 0;
-                            endMinigameStage = 8;
-                            who.completelyStopAnimatingOrDoingAction();
-                            who.CanMove = false;
-                            List<FarmerSprite.AnimationFrame> animationFrames = new List<FarmerSprite.AnimationFrame>(){
+                            int totalDifficulty = (int)(100f + ((endMinigameStyle[index] == 3) ? 25f : 0f) - ((difficulty / 2f) - (fishSize / 10f) * minigameDifficulty[index]));
+
+                            if (endMinigameTimer > totalDifficulty)//too late/missed/failed
+                            {
+                                PlayPause(who);
+                                drawTool = true;
+                                SendMessage(who, "Fail");
+
+                                if (oldFacingDirection == 0) who.armOffset += new Vector2(-10f, 0);
+                                endMinigameTimer = 0;
+                                endMinigameStage = 8;
+                                who.completelyStopAnimatingOrDoingAction();
+                                who.CanMove = false;
+                                List<FarmerSprite.AnimationFrame> animationFrames = new List<FarmerSprite.AnimationFrame>(){
                                 new FarmerSprite.AnimationFrame(94, 500, false, false, null, false).AddFrameAction(delegate (Farmer f) { f.jitterStrength = 2f; }) };
-                            who.FarmerSprite.setCurrentAnimation(animationFrames.ToArray());
-                            who.FarmerSprite.PauseForSingleAnimation = true;
-                            who.FarmerSprite.loop = true;
-                            who.FarmerSprite.loopThisAnimation = true;
-                            who.Sprite.currentFrame = 94;
+                                who.FarmerSprite.setCurrentAnimation(animationFrames.ToArray());
+                                who.FarmerSprite.PauseForSingleAnimation = true;
+                                who.FarmerSprite.loop = true;
+                                who.FarmerSprite.loopThisAnimation = true;
+                                who.Sprite.currentFrame = 94;
+                            }
                         }
                     }
                 }
+
+                if (showPerfect)//add perfect popup
+                {
+                    perfect = true;
+                    sparklingText = new SparklingText(Game1.dialogueFont, Game1.content.LoadString("Strings\\UI:BobberBar_Perfect"), Color.Yellow, Color.White, false, 0.1, 1500, -1, 500, 1f);
+                    Game1.playSound("jingle1");
+                    showPerfect = false;
+                }
+                if (sparklingText != null && who != null && !itemIsInstantCatch)//show perfect/new record popup
+                {
+                    sparklingText.draw(e.SpriteBatch, Game1.GlobalToLocal(Game1.viewport, who.Position + new Vector2(-64f, -300f)));
+                }
+
+                if (endMinigameStyle[index] == 3 && endMinigameTimer > 0 && endMinigameTimer < 100)//draw letter for end minigame
+                {
+                    float y_offset = (float)Math.Round(Math.Sin(Game1.currentGameTime.TotalGameTime.TotalMilliseconds / 200), 2);
+                    Vector2 position = new Vector2(who.getStandingX() - Game1.viewport.X, who.getStandingY() - 156 - Game1.viewport.Y) + new Vector2(y_offset);
+                    batch.Draw(Game1.mouseCursors, position + new Vector2(-24, 0), new Rectangle(473, 36, 24, 24), Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, 0.98f);//text bg box
+                    batch.DrawString(Game1.smallFont, endMinigameKey, position - (Game1.smallFont.MeasureString(endMinigameKey) / 2 * 1.2f) + new Vector2(0f, 28f), Color.Gold, 0f, Vector2.Zero, 1.2f, SpriteEffects.None, 1f); //text
+                }
+
+                if (drawTool) Game1.drawTool(who);//draw tool for tool animations
+                if (infoTimer > 0) CaughtBubble(who);//bubble
             }
 
-            if (drawTool) Game1.drawTool(who);
-            if (infoTimer > 0) CaughtBubble(who);
-            foreach (Farmer other in Game1.getAllFarmers())
+            foreach (Farmer other in Game1.getAllFarmers())//draw tool for tool & bubble for other players animations
             {
                 if (messages.ContainsKey(other.UniqueMultiplayerID))
                 {
@@ -355,32 +386,12 @@ namespace FishingMinigames
                     if (messages[other.UniqueMultiplayerID].stage != null && messages[other.UniqueMultiplayerID].stage.Equals("CaughtBubble", StringComparison.Ordinal)) CaughtBubble(other);
                 }
             }
-
-            if (showPerfect)
-            {
-                perfect = true;
-                sparklingText = new SparklingText(Game1.dialogueFont, Game1.content.LoadString("Strings\\UI:BobberBar_Perfect"), Color.Yellow, Color.White, false, 0.1, 1500, -1, 500, 1f);
-                Game1.playSound("jingle1");
-                showPerfect = false;
-            }
-
-            if (sparklingText != null && who != null && !itemIsInstantCatch)
-            {
-                sparklingText.draw(e.SpriteBatch, Game1.GlobalToLocal(Game1.viewport, who.Position + new Vector2(-64f, -300f)));
-            }
-
-            if (endMinigameStyle[index] == 3 && endMinigameTimer > 0 && endMinigameTimer < 100)//ADD SOME TIME BASED JITTER? see the vanilla bubble op
-            {
-                float y_offset = (float)Math.Round(Math.Sin(Game1.currentGameTime.TotalGameTime.TotalMilliseconds / 200), 2);
-                Vector2 position = new Vector2(who.getStandingX() - Game1.viewport.X, who.getStandingY() - 156 - Game1.viewport.Y) + new Vector2(y_offset);
-                batch.Draw(Game1.mouseCursors, position + new Vector2(-24, 0), new Rectangle(473, 36, 24, 24), Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, 0.98f);//text bg box
-                batch.DrawString(Game1.smallFont, endMinigameKey, position - (Game1.smallFont.MeasureString(endMinigameKey) / 2 * 1.2f) + new Vector2(0f, 28f), Color.Gold, 0f, Vector2.Zero, 1.2f, SpriteEffects.None, 1f); //text
-            }
         }
 
 
         private void HereFishyFishy(Farmer who)
         {
+            treasureCaught = false;
             who.CanMove = false;
             hereFishying = true;
             startMinigameStage = 0;
@@ -400,12 +411,13 @@ namespace FishingMinigames
 
             if (!fromFishPond && fishingFestivalMinigame != 2 && startMinigameStyle[index] > 0) //add !instant + test if works in festival
             {
+                //starting minigame init
                 ITranslationHelper translate = Helper.Translation;
                 startMinigameTextures = new Texture2D[] { Game1.content.Load<Texture2D>("LooseSprites\\boardGameBorder"), Game1.content.Load<Texture2D>("LooseSprites\\CraneGame") };
                 startMinigameText = new List<string>() { translate.Get("Minigame.Score") };
                 foreach (string s in translate.Get("Minigame.InfoDDR").ToString().Split(new string[] { "\n" }, StringSplitOptions.None)) startMinigameText.Add(s);
 
-                startMinigameData = new int[4];
+                startMinigameData = new int[7];
                 startMinigameArrowData = new string[5 + (int)Math.Ceiling((difficulty + fishSize) / 3f * minigameDifficulty[index])]; //make it minimum X (20?) and then apply diff/size - max 99
                 int offset = 0;
                 for (int i = 0; i < startMinigameArrowData.Length; i++)
@@ -414,8 +426,30 @@ namespace FishingMinigames
                     if (Game1.random.Next(0, 3) == 0) offset += (int)(250 * startMinigameScale);
                     else offset += (int)(140 * startMinigameScale);
                 }
+                //vanilla treasure chance calculation
+                if (fishingFestivalMinigame != 2 && who.fishCaught != null && who.fishCaught.Count() > 1 && Game1.random.NextDouble() < FishingRod.baseChanceForTreasure + who.LuckLevel * 0.005 + (((who.CurrentTool as FishingRod).getBaitAttachmentIndex() == 703) ? FishingRod.baseChanceForTreasure : 0.0) + (((who.CurrentTool as FishingRod).getBobberAttachmentIndex() == 693) ? (FishingRod.baseChanceForTreasure / 3.0) : 0.0) + who.DailyLuck / 2.0 + ((who.professions.Contains(9) ? FishingRod.baseChanceForTreasure : 0.0)))
+                {
+                    startMinigameData[4] = Game1.random.Next(startMinigameArrowData.Length / 2, startMinigameArrowData.Length - 1);
+                }
+                else startMinigameData[4] = -1;
+                startMinigameData[0] = -2;
+                startMinigameData[5] = 0;
+                startMinigameData[6] = (int)(Game1.options.desiredBaseZoomLevel * 1000000);
+
                 startMinigameStage = 1;
                 startMinigameTimer = 0;
+
+                //float scale = 7f * startMinigameScale;
+                //Vector2 screenMid = new Vector2(Game1.graphics.GraphicsDevice.Viewport.Width / 2, Game1.graphics.GraphicsDevice.Viewport.Height / 2);
+                //animations.Add(new KeyValuePair<long, TemporaryAnimatedSprite>(who.UniqueMultiplayerID, new TemporaryAnimatedSprite(Game1.mouseCursors.ToString(), new Rectangle(31, 1870, 73, 49), 3000, 1, 0, screenMid, false, false, 0f, 0f, Color.White, 0f, 0f, 0f, 0f, false)
+                //{
+                //    alpha = 0f,
+                //    alphaFade = -0.01f,
+                    
+                //    extraInfoForEndBehavior = 2,
+                //    endFunction = new TemporaryAnimatedSprite.endBehavior(StartMinigameFadeEnd),
+                //    endSound = "tinyWhip"
+                //})) ;
             }
             else HereFishyAnimation(who, x, y);
         }
@@ -527,7 +561,6 @@ namespace FishingMinigames
             //data calculations: quality, double, exp, treasure
             FishingRod rod = who.CurrentTool as FishingRod;
 
-            treasureCaught = false;
             float reduction = 0f;
 
             if (!itemIsInstantCatch)
@@ -594,7 +627,7 @@ namespace FishingMinigames
                 }
 
 
-                treasureCaught = fishingFestivalMinigame != 2 && who.fishCaught != null && who.fishCaught.Count() > 1 && Game1.random.NextDouble() < FishingRod.baseChanceForTreasure + (double)who.LuckLevel * 0.005 + ((rod.getBaitAttachmentIndex() == 703) ? FishingRod.baseChanceForTreasure : 0.0) + ((rod.getBobberAttachmentIndex() == 693) ? (FishingRod.baseChanceForTreasure / 3.0) : 0.0) + who.DailyLuck / 2.0 + ((who.professions.Contains(9) ? FishingRod.baseChanceForTreasure : 0.0) - reduction - 0.5f);
+                if (startMinigameStyle[index] == 0) treasureCaught = fishingFestivalMinigame != 2 && who.fishCaught != null && who.fishCaught.Count() > 1 && Game1.random.NextDouble() < FishingRod.baseChanceForTreasure + (double)who.LuckLevel * 0.005 + ((rod.getBaitAttachmentIndex() == 703) ? FishingRod.baseChanceForTreasure : 0.0) + ((rod.getBobberAttachmentIndex() == 693) ? (FishingRod.baseChanceForTreasure / 3.0) : 0.0) + who.DailyLuck / 2.0 + ((who.professions.Contains(9) ? FishingRod.baseChanceForTreasure : 0.0) - reduction - 0.5f);
                 item.Quality = fishQuality;
                 if (caughtDoubleFish) item.Stack = 2;
             }
@@ -749,30 +782,48 @@ namespace FishingMinigames
             }
         }
 
-        private string[] startMinigameArrowData;//0 arrow direction/1 colour/2 offset/3 current distance
-        private int[] startMinigameData;//data = 0 current arrow, 1 perfect area?, 2 score, 3 last arrow to vanish
-        private Texture2D[] startMinigameTextures;
-        private List<string> startMinigameText;
-        private void StartMinigameDraw(SpriteBatch batch) //limit to non-insta catch - for now testing with any //treasure arrow? +4 direction, x% chance of changing direction?
+
+        private void StartMinigameDraw(SpriteBatch batch) //limit to non-insta catch - for now testing with any
         {
+            if (startMinigameStage == 1)//fade in (opacity calc)
+            {
+                startMinigameData[5]++;
+                if (startMinigameData[5] == 300) startMinigameStage = 2;
+            }
+            else if (startMinigameStage > 4)//fade out and continue
+            {
+                startMinigameData[5]--;
+                if (startMinigameData[5] == 0)
+                {
+                    if (startMinigameStage == 5)
+                    {
+                        SwingAndEmote(who, 2);
+                        EmergencyCancel(who);
+                    }
+                    else HereFishyAnimation(who, x, y);
+                    return;
+                }
+            }
+            float opacity = startMinigameData[5] / 100f;
+
             //scale/middle/bounds calculation
             float scale = 7f * startMinigameScale;
-            int width = (int)Math.Round(138f * scale);//FIND OUT WHY IT'S NOT CLEARED
+            int width = (int)Math.Round(138f * scale);
             int height = (int)Math.Round(74f * scale);
             Vector2 screenMid = new Vector2(Game1.graphics.GraphicsDevice.Viewport.Width / 2, Game1.graphics.GraphicsDevice.Viewport.Height / 2);
 
             //board
-            batch.Draw(startMinigameTextures[0], screenMid, null, Color.Cyan, 0f, new Vector2(69f, 37f), scale, SpriteEffects.None, 0.1f);
+            batch.Draw(Game1.mouseCursors, screenMid, new Rectangle(31, 1870, 73, 49), Color.Cyan * (opacity / 3f), 0f, new Vector2(36.5f, 22.5f), scale * 1.84f, SpriteEffects.None, 0f);
+            batch.Draw(startMinigameTextures[0], screenMid, null, Color.Cyan * opacity, 0f, new Vector2(69f, 37f), scale, SpriteEffects.None, 0.1f);
 
 
-
-            if (startMinigameData[3] != startMinigameArrowData.Length)
+            if (startMinigameData[3] != startMinigameArrowData.Length)//minigame not done
             {
                 //info
                 Vector2 textLoc = new Vector2(0f, height * -0.44f);
                 for (int i = 1; i < startMinigameText.Count; i++)
                 {
-                    batch.DrawString(Game1.tinyFont, startMinigameText[i], screenMid + (textLoc += new Vector2(0f, height * 0.05f)), Color.AntiqueWhite, 0f, new Vector2(Game1.tinyFont.MeasureString(startMinigameText[i]).X / 2f, 0f), scale * 0.1f, SpriteEffects.None, 0.2f);
+                    batch.DrawString(Game1.tinyFont, startMinigameText[i], screenMid + (textLoc += new Vector2(0f, height * 0.05f)), Color.AntiqueWhite * opacity, 0f, new Vector2(Game1.tinyFont.MeasureString(startMinigameText[i]).X / 2f, 0f), scale * 0.1f, SpriteEffects.None, 0.2f);
                 }
 
                 //if paused/out of focus:
@@ -782,23 +833,29 @@ namespace FishingMinigames
                     return;
                 }
                 //hit area rings
-                Vector2 hitAreaMid = screenMid + new Vector2(width * -0.2f, height * 0.18f);
-                batch.Draw(startMinigameTextures[1], hitAreaMid, new Rectangle(355, 86, 26, 26), Color.Yellow, 0f, new Vector2(13f), scale * 0.7f, SpriteEffects.None, 0.11f);
-                batch.Draw(startMinigameTextures[1], hitAreaMid, new Rectangle(355, 86, 26, 26), Color.Brown, 0f, new Vector2(13f), scale * 0.5f, SpriteEffects.None, 0.12f);
+                Vector2 hitAreaMid = screenMid + new Vector2((int)(width * -0.2f), height * 0.18f);
+                batch.Draw(startMinigameTextures[1], hitAreaMid, new Rectangle(355, 86, 26, 26), Color.Yellow * (opacity / 3f), 0f, new Vector2(13f), scale * 0.7f, SpriteEffects.None, 0.11f);
+                batch.Draw(startMinigameTextures[1], hitAreaMid, new Rectangle(355, 86, 26, 26), Color.Brown * (opacity / 3f), 0f, new Vector2(13f), scale * 0.5f, SpriteEffects.None, 0.12f);
 
                 //arrows
-                Vector2 firstArrowLoc = new Vector2(screenMid.X + (width / 2f) + startMinigameTimer, screenMid.Y + (height * 0.18f));
+                Vector2 firstArrowLoc = new Vector2((int)(screenMid.X + (width / 2f)) + startMinigameTimer, screenMid.Y + (height * 0.18f));
 
                 int speed = (int)(startMinigameScale * ((who.fishCaught.Count() == 0) ? 2 : 2 + (((difficulty - who.FishingLevel) / 10f) + (fishSize / 5)) * minigameDifficulty[index]));
-                startMinigameTimer -= 5;
+                if (startMinigameStage == 2) startMinigameTimer -= speed;
 
 
-                startMinigameData[0] = -1;
+                startMinigameData[0] = -2;//-2 to not clash with treasure arrow
                 startMinigameData[1] = 0;
                 int arrowsLeft = startMinigameArrowData.Length;
 
                 for (int i = 0; i < startMinigameArrowData.Length; i++)
                 {
+                    if (i == startMinigameData[4] && startMinigameTimer % (speed * 200) == 0)//flip treasure arrow clockwise
+                    {
+                        if (int.Parse(startMinigameArrowData[i][0].ToString()) == 3) startMinigameArrowData[i] = startMinigameArrowData[i].Remove(0, 1).Insert(0, "0");
+                        else startMinigameArrowData[i] = startMinigameArrowData[i].Remove(0, 1).Insert(0, (int.Parse(startMinigameArrowData[i][0].ToString()) + 1).ToString());
+                    }
+
                     int[] data = startMinigameArrowData[i].Split('/').Select(int.Parse).ToArray();//data = 0 direction, 1 colour, 2 offset from first, 3 current loc
 
                     if (data[1] == 0)//if empty arrow
@@ -809,11 +866,12 @@ namespace FishingMinigames
                             startMinigameArrowData[i] = startMinigameArrowData[i].Replace("/0/", "/-1/");
                         }
                         else if (hitAreaMid.X - (13f * scale * 0.5f) <= firstArrowLoc.X + data[2] &&
-                                 hitAreaMid.X + (13f * scale * 0.5f) >= firstArrowLoc.X + data[2])
+                                 hitAreaMid.X + (13f * scale * 0.5f) >= firstArrowLoc.X + data[2])                          //in regular hit area
                         {
                             startMinigameData[0] = i;
+
                             if (hitAreaMid.X - (13f * scale * 0.1f) <= firstArrowLoc.X + data[2] &&
-                                hitAreaMid.X + (13f * scale * 0.1f) >= firstArrowLoc.X + data[2]) startMinigameData[1] = 1;
+                                hitAreaMid.X + (13f * scale * 0.1f) >= firstArrowLoc.X + data[2]) startMinigameData[1] = 1; //+ in perfect area
                         }
                     }
 
@@ -824,9 +882,12 @@ namespace FishingMinigames
 
                         if (firstArrowLoc.X + data[2] - (6f * scale) >= screenMid.X - (width * 0.464f))//arrow didn't pass end
                         {
-                            Color color = (data[1] == 2) ? Color.LimeGreen : (data[1] == 1) ? Color.Orange : (data[1] == -1) ? Color.Red : Color.Cyan;
+                            Color color = (data[1] == 2) ? Color.LimeGreen : (data[1] == 1) ? Color.Orange : (data[1] == -1) ? Color.Red : (i == startMinigameData[4]) ? Color.LightPink : Color.Cyan;
                             batch.Draw(startMinigameTextures[1], firstArrowLoc + new Vector2((data[2]), 0), new Rectangle((data[0] == 0 || data[0] == 2) ? 338 : 322, 82, 12, 12),
                                 color, 0f, new Vector2(6f), scale, (data[0] == 0) ? SpriteEffects.FlipVertically : (data[0] == 3) ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 0.2f);
+                            //treasure arrow?
+                            if (i == startMinigameData[4]) batch.Draw(Game1.mouseCursors, firstArrowLoc + new Vector2((data[2]), 0), new Rectangle((treasureCaught) ? 104 : (data[1] == -1) ? 167 : 71, 1926, 20, 26),
+                                Color.White, 0f, new Vector2(9f, 14f), scale * 0.2f, SpriteEffects.None, 0.3f);
                         }
                         else if (i + 1 > startMinigameData[3])//update score on new arrow passed end
                         {
@@ -841,29 +902,29 @@ namespace FishingMinigames
                 }
 
                 //arrow 'dispensers'
-                batch.Draw(Game1.mouseCursors, screenMid + new Vector2(width * 0.464f, height * 0.18f), new Rectangle(301, 288, 15, 15), Color.DodgerBlue * 0.95f, 0f, new Vector2(15f, 7.5f), scale, SpriteEffects.None, 0.5f);
-                batch.Draw(Game1.mouseCursors, screenMid + new Vector2(width * -0.464f, height * 0.18f), new Rectangle(301, 288, 15, 15), Color.DodgerBlue * 0.95f, 0f, new Vector2(0f, 7.5f), scale, SpriteEffects.FlipHorizontally, 0.5f);
+                batch.Draw(Game1.mouseCursors, screenMid + new Vector2(width * 0.464f, height * 0.18f), new Rectangle(301, 288, 15, 15), Color.DodgerBlue * ((scale < 0.95f) ? scale : 0.95f), 0f, new Vector2(15f, 7.5f), scale, SpriteEffects.None, 0.5f);
+                batch.Draw(Game1.mouseCursors, screenMid + new Vector2(width * -0.464f, height * 0.18f), new Rectangle(301, 288, 15, 15), Color.DodgerBlue * ((scale < 0.95f) ? scale : 0.95f), 0f, new Vector2(0f, 7.5f), scale, SpriteEffects.FlipHorizontally, 0.5f);
                 //score count
                 batch.DrawString(Game1.smallFont, startMinigameData[2].ToString(), screenMid + new Vector2(width * -0.41f, height * 0.19f),
-                    (startMinigameData[2] < startMinigameArrowData.Length * 0.4f) ? Color.Crimson :
+                    ((startMinigameData[2] < startMinigameArrowData.Length * 0.4f) ? Color.Crimson :
                     (startMinigameData[2] < startMinigameArrowData.Length * 0.8f) ? Color.Red :
                     (startMinigameData[2] < startMinigameArrowData.Length) ? Color.Orange :
                     (startMinigameData[2] < startMinigameArrowData.Length * 1.2f) ? Color.Yellow :
                     (startMinigameData[2] < startMinigameArrowData.Length * 1.5f) ? Color.LimeGreen :
-                    (startMinigameData[2] < startMinigameArrowData.Length * 1.9f) ? Color.Green : Color.Purple,
+                    (startMinigameData[2] < startMinigameArrowData.Length * 1.9f) ? Color.Green : Color.Purple) * opacity,
                     0f, Game1.smallFont.MeasureString(startMinigameData[2].ToString()) / 2f, scale * 0.28f, SpriteEffects.None, 0.6f);
                 //arrows left count
-                batch.DrawString(Game1.smallFont, arrowsLeft.ToString(), screenMid + new Vector2(width * 0.41f, height * 0.19f), Color.DarkTurquoise, 0f, Game1.smallFont.MeasureString(arrowsLeft.ToString()) / 2f, scale * 0.28f, SpriteEffects.None, 0.6f);
+                batch.DrawString(Game1.smallFont, arrowsLeft.ToString(), screenMid + new Vector2(width * 0.41f, height * 0.19f), Color.DarkTurquoise * opacity, 0f, Game1.smallFont.MeasureString(arrowsLeft.ToString()) / 2f, scale * 0.28f, SpriteEffects.None, 0.6f);
             }
             else
             {
-                batch.DrawString(Game1.smallFont, startMinigameText[0] + ": " + startMinigameData[2], screenMid, Color.AntiqueWhite, 0f, Game1.smallFont.MeasureString(startMinigameText[0] + ": " + startMinigameData[2]) / 2f, scale * 0.5f, SpriteEffects.None, 0.2f);
-                startMinigameStage = 2;
+                batch.DrawString(Game1.smallFont, startMinigameText[0] + ": " + startMinigameData[2], screenMid, Color.AntiqueWhite * opacity, 0f, Game1.smallFont.MeasureString(startMinigameText[0] + ": " + startMinigameData[2]) / 2f, scale * 0.5f, SpriteEffects.None, 0.2f);
+                if  (startMinigameStage < 5) startMinigameStage = 3;
             }
         }
-        private void StartMinigameInput(ButtonsChangedEventArgs e) //gotta trigger HereFishyAnimation here = if last arrow to vanish = array length-1, display score and await input?
+        private void StartMinigameInput(ButtonsChangedEventArgs e)
         {
-            if (startMinigameStage == 1)
+            if (startMinigameStage == 2)
             {
                 if (startMinigameData[0] >= 0)
                 {
@@ -883,20 +944,25 @@ namespace FishingMinigames
                             if (KeybindList.Parse("A, Left, DPadLeft").JustPressed()) passed = true;
                             break;
                     }
-                    if (passed && startMinigameData[1] == 1) startMinigameArrowData[startMinigameData[0]] = startMinigameArrowData[startMinigameData[0]].Replace("/0/", "/2/");
-                    else if (passed) startMinigameArrowData[startMinigameData[0]] = startMinigameArrowData[startMinigameData[0]].Replace("/0/", "/1/");
-                    else startMinigameArrowData[startMinigameData[0]] = startMinigameArrowData[startMinigameData[0]].Replace("/0/", "/-1/"); ;
+                    if (passed)
+                    {
+                        if (startMinigameData[0] == startMinigameData[4])//treasure arrow?
+                        {
+                            who.currentLocation.localSound("coin");
+                            treasureCaught = true;
+                        }
+                        if (startMinigameData[1] == 1) startMinigameArrowData[startMinigameData[0]] = startMinigameArrowData[startMinigameData[0]].Replace("/0/", "/2/");//perfect?
+                        else startMinigameArrowData[startMinigameData[0]] = startMinigameArrowData[startMinigameData[0]].Replace("/0/", "/1/");
+                    }
+                    else startMinigameArrowData[startMinigameData[0]] = startMinigameArrowData[startMinigameData[0]].Replace("/0/", "/-1/");
                 }
                 //else negative point if hit when arrow outside box? maybe if 2 in a row to avoid spam cheeze? can do it by changing data into list and adding red arrows
             }
             else
             {
-                if (startMinigameData[2] < startMinigameArrowData.Length * 0.8f)
-                {
-                    startMinigameStage = 5;
-                    SwingAndEmote(who, 2);
-                    EmergencyCancel(who);
-                }
+                startMinigameData[5] = 60;
+                
+                if (startMinigameData[2] < startMinigameArrowData.Length * 0.8f) startMinigameStage = 5;
                 else
                 {
                     if (startMinigameData[2] < startMinigameArrowData.Length) startMinigameStage = 6;
@@ -904,8 +970,6 @@ namespace FishingMinigames
                     else if (startMinigameData[2] < startMinigameArrowData.Length * 1.5f) startMinigameStage = 8;
                     else if (startMinigameData[2] < startMinigameArrowData.Length * 1.9f) startMinigameStage = 9;
                     else startMinigameStage = 10;
-
-                    HereFishyAnimation(who, x, y);
                 }
             }
         }

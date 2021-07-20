@@ -9,8 +9,8 @@ namespace FishingMinigames
         public string[] Voice_Test_Ignore_Me { get; set; }//internal for voice setting change check
         public string[] KeyBinds { get; set; } = { "MouseLeft, Space, ControllerX", "MouseLeft, Space, ControllerX", "MouseLeft, Space, ControllerX", "MouseLeft, Space, ControllerX" };
         public int[] StartMinigameStyle { get; set; } = { 1, 1, 1, 1 };
-        public float StartMinigameScale = 1f;
         public int[] EndMinigameStyle { get; set; } = { 2, 2, 2, 2 };
+        public float StartMinigameScale { get; set; } = 1f;
         public float[] EndMinigameDamage { get; set; } = { 1f, 1f, 1f, 1f };
         public float[] MinigameDifficulty { get; set; } = { 1f, 1f, 1f, 1f };
         public bool ConvertToMetric { get; set; } = false;
