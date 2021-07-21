@@ -282,6 +282,19 @@ namespace FishingMinigames
         {
             if (batch == null) batch = e.SpriteBatch;
             who = Game1.player;
+            foreach (Farmer other in Game1.getAllFarmers())//draw tool for tool anims & bubble for other players
+            {
+                if (messages.ContainsKey(other.UniqueMultiplayerID))
+                {
+                    if (messages[other.UniqueMultiplayerID].drawTool) Game1.drawTool(other);
+                    if (messages[other.UniqueMultiplayerID].stage != null)
+                    {
+                        if (messages[other.UniqueMultiplayerID].stage.Equals("CaughtBubble", StringComparison.Ordinal)) CaughtBubble(other);
+                        else if (messages[other.UniqueMultiplayerID].stage.Equals("Playing", StringComparison.Ordinal)) SwingAndEmote(other, 3);
+                    }
+                }
+            }
+
 
             if (startMinigameStage > 0 && startMinigameStage < 5) StartMinigameDraw(batch);
             else if (startMinigameStage > 4 && startMinigameData[5] > 0) StartMinigameDraw(batch);
@@ -377,15 +390,6 @@ namespace FishingMinigames
                 if (drawTool) Game1.drawTool(who);//draw tool for tool animations
                 if (infoTimer > 0) CaughtBubble(who);//bubble
             }
-
-            foreach (Farmer other in Game1.getAllFarmers())//draw tool for tool & bubble for other players animations
-            {
-                if (messages.ContainsKey(other.UniqueMultiplayerID))
-                {
-                    if (messages[other.UniqueMultiplayerID].drawTool) Game1.drawTool(other);
-                    if (messages[other.UniqueMultiplayerID].stage != null && messages[other.UniqueMultiplayerID].stage.Equals("CaughtBubble", StringComparison.Ordinal)) CaughtBubble(other);
-                }
-            }
         }
 
 
@@ -417,12 +421,12 @@ namespace FishingMinigames
                 startMinigameText = new List<string>() { translate.Get("Minigame.Score") };
                 foreach (string s in translate.Get("Minigame.InfoDDR").ToString().Split(new string[] { "\n" }, StringSplitOptions.None)) startMinigameText.Add(s);
 
-                startMinigameData = new int[7];
+                startMinigameData = new int[6];
                 startMinigameArrowData = new string[5 + (int)Math.Ceiling((difficulty + fishSize) / 3f * minigameDifficulty[index])]; //make it minimum X (20?) and then apply diff/size - max 99
                 int offset = 0;
                 for (int i = 0; i < startMinigameArrowData.Length; i++)
                 {
-                    startMinigameArrowData[i] = Game1.random.Next(0, 4) + "/0/" + offset + "/9999";//arrow direction/colour/offset/current distance
+                    startMinigameArrowData[i] = Game1.random.Next(0, 4) + "/0/" + offset + "/9999";//0 arrow direction, 1 colour, 2 offset, 3 current distance
                     if (Game1.random.Next(0, 3) == 0) offset += (int)(250 * startMinigameScale);
                     else offset += (int)(140 * startMinigameScale);
                 }
@@ -434,22 +438,10 @@ namespace FishingMinigames
                 else startMinigameData[4] = -1;
                 startMinigameData[0] = -2;
                 startMinigameData[5] = 0;
-                startMinigameData[6] = (int)(Game1.options.desiredBaseZoomLevel * 1000000);
 
                 startMinigameStage = 1;
                 startMinigameTimer = 0;
-
-                //float scale = 7f * startMinigameScale;
-                //Vector2 screenMid = new Vector2(Game1.graphics.GraphicsDevice.Viewport.Width / 2, Game1.graphics.GraphicsDevice.Viewport.Height / 2);
-                //animations.Add(new KeyValuePair<long, TemporaryAnimatedSprite>(who.UniqueMultiplayerID, new TemporaryAnimatedSprite(Game1.mouseCursors.ToString(), new Rectangle(31, 1870, 73, 49), 3000, 1, 0, screenMid, false, false, 0f, 0f, Color.White, 0f, 0f, 0f, 0f, false)
-                //{
-                //    alpha = 0f,
-                //    alphaFade = -0.01f,
-                    
-                //    extraInfoForEndBehavior = 2,
-                //    endFunction = new TemporaryAnimatedSprite.endBehavior(StartMinigameFadeEnd),
-                //    endSound = "tinyWhip"
-                //})) ;
+                SendMessage(who, "Playing");
             }
             else HereFishyAnimation(who, x, y);
         }
@@ -795,6 +787,7 @@ namespace FishingMinigames
                 startMinigameData[5]--;
                 if (startMinigameData[5] == 0)
                 {
+                    stage = null;
                     if (startMinigameStage == 5)
                     {
                         SwingAndEmote(who, 2);
@@ -813,8 +806,8 @@ namespace FishingMinigames
             Vector2 screenMid = new Vector2(Game1.graphics.GraphicsDevice.Viewport.Width / 2, Game1.graphics.GraphicsDevice.Viewport.Height / 2);
 
             //board
-            batch.Draw(Game1.mouseCursors, screenMid, new Rectangle(31, 1870, 73, 49), Color.Cyan * (opacity / 3f), 0f, new Vector2(36.5f, 22.5f), scale * 1.84f, SpriteEffects.None, 0f);
-            batch.Draw(startMinigameTextures[0], screenMid, null, Color.Cyan * opacity, 0f, new Vector2(69f, 37f), scale, SpriteEffects.None, 0.1f);
+            batch.Draw(Game1.mouseCursors, screenMid, new Rectangle(31, 1870, 73, 49), Color.Cyan * (opacity / 3f), 0f, new Vector2(36.5f, 22.5f), scale * 1.84f, SpriteEffects.None, 0.2f);
+            batch.Draw(startMinigameTextures[0], screenMid, null, Color.Cyan * opacity, 0f, new Vector2(69f, 37f), scale, SpriteEffects.None, 0.3f);
 
 
             if (startMinigameData[3] != startMinigameArrowData.Length)//minigame not done
@@ -823,19 +816,19 @@ namespace FishingMinigames
                 Vector2 textLoc = new Vector2(0f, height * -0.44f);
                 for (int i = 1; i < startMinigameText.Count; i++)
                 {
-                    batch.DrawString(Game1.tinyFont, startMinigameText[i], screenMid + (textLoc += new Vector2(0f, height * 0.05f)), Color.AntiqueWhite * opacity, 0f, new Vector2(Game1.tinyFont.MeasureString(startMinigameText[i]).X / 2f, 0f), scale * 0.1f, SpriteEffects.None, 0.2f);
+                    batch.DrawString(Game1.tinyFont, startMinigameText[i], screenMid + (textLoc += new Vector2(0f, height * 0.05f)), Color.AntiqueWhite * opacity, 0f, new Vector2(Game1.tinyFont.MeasureString(startMinigameText[i]).X / 2f, 0f), scale * 0.1f, SpriteEffects.None, 0.4f);
                 }
 
                 //if paused/out of focus:
                 if ((Game1.paused || (!Game1.game1.IsActiveNoOverlay && Program.releaseBuild)) && (Game1.options == null || Game1.options.pauseWhenOutOfFocus || Game1.paused) && Game1.multiplayerMode == 0)
                 {
-                    batch.Draw(Game1.mouseCursors, screenMid, new Rectangle(322, 498, 12, 12), Color.Brown, 0f, new Vector2(6f), scale * 2f, SpriteEffects.None, 0.12f);
+                    batch.Draw(Game1.mouseCursors, screenMid, new Rectangle(322, 498, 12, 12), Color.Brown, 0f, new Vector2(6f), scale * 2f, SpriteEffects.None, 0.4f);
                     return;
                 }
                 //hit area rings
                 Vector2 hitAreaMid = screenMid + new Vector2((int)(width * -0.2f), height * 0.18f);
-                batch.Draw(startMinigameTextures[1], hitAreaMid, new Rectangle(355, 86, 26, 26), Color.Yellow * (opacity / 3f), 0f, new Vector2(13f), scale * 0.7f, SpriteEffects.None, 0.11f);
-                batch.Draw(startMinigameTextures[1], hitAreaMid, new Rectangle(355, 86, 26, 26), Color.Brown * (opacity / 3f), 0f, new Vector2(13f), scale * 0.5f, SpriteEffects.None, 0.12f);
+                batch.Draw(startMinigameTextures[1], hitAreaMid, new Rectangle(355, 86, 26, 26), Color.Yellow * (opacity / 3f), 0f, new Vector2(13f), scale * 0.7f, SpriteEffects.None, 0.4f);
+                batch.Draw(startMinigameTextures[1], hitAreaMid, new Rectangle(355, 86, 26, 26), Color.Brown * (opacity / 3f), 0f, new Vector2(13f), scale * 0.5f, SpriteEffects.None, 0.41f);
 
                 //arrows
                 Vector2 firstArrowLoc = new Vector2((int)(screenMid.X + (width / 2f)) + startMinigameTimer, screenMid.Y + (height * 0.18f));
@@ -884,10 +877,10 @@ namespace FishingMinigames
                         {
                             Color color = (data[1] == 2) ? Color.LimeGreen : (data[1] == 1) ? Color.Orange : (data[1] == -1) ? Color.Red : (i == startMinigameData[4]) ? Color.LightPink : Color.Cyan;
                             batch.Draw(startMinigameTextures[1], firstArrowLoc + new Vector2((data[2]), 0), new Rectangle((data[0] == 0 || data[0] == 2) ? 338 : 322, 82, 12, 12),
-                                color, 0f, new Vector2(6f), scale, (data[0] == 0) ? SpriteEffects.FlipVertically : (data[0] == 3) ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 0.2f);
+                                color, 0f, new Vector2(6f), scale, (data[0] == 0) ? SpriteEffects.FlipVertically : (data[0] == 3) ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 0.4f);
                             //treasure arrow?
                             if (i == startMinigameData[4]) batch.Draw(Game1.mouseCursors, firstArrowLoc + new Vector2((data[2]), 0), new Rectangle((treasureCaught) ? 104 : (data[1] == -1) ? 167 : 71, 1926, 20, 26),
-                                Color.White, 0f, new Vector2(9f, 14f), scale * 0.2f, SpriteEffects.None, 0.3f);
+                                Color.White, 0f, new Vector2(9f, 14f), scale * 0.2f, SpriteEffects.None, 0.41f);
                         }
                         else if (i + 1 > startMinigameData[3])//update score on new arrow passed end
                         {
@@ -912,13 +905,13 @@ namespace FishingMinigames
                     (startMinigameData[2] < startMinigameArrowData.Length * 1.2f) ? Color.Yellow :
                     (startMinigameData[2] < startMinigameArrowData.Length * 1.5f) ? Color.LimeGreen :
                     (startMinigameData[2] < startMinigameArrowData.Length * 1.9f) ? Color.Green : Color.Purple) * opacity,
-                    0f, Game1.smallFont.MeasureString(startMinigameData[2].ToString()) / 2f, scale * 0.28f, SpriteEffects.None, 0.6f);
+                    0f, Game1.smallFont.MeasureString(startMinigameData[2].ToString()) / 2f, scale * 0.28f, SpriteEffects.None, 0.51f);
                 //arrows left count
-                batch.DrawString(Game1.smallFont, arrowsLeft.ToString(), screenMid + new Vector2(width * 0.41f, height * 0.19f), Color.DarkTurquoise * opacity, 0f, Game1.smallFont.MeasureString(arrowsLeft.ToString()) / 2f, scale * 0.28f, SpriteEffects.None, 0.6f);
+                batch.DrawString(Game1.smallFont, arrowsLeft.ToString(), screenMid + new Vector2(width * 0.41f, height * 0.19f), Color.DarkTurquoise * opacity, 0f, Game1.smallFont.MeasureString(arrowsLeft.ToString()) / 2f, scale * 0.28f, SpriteEffects.None, 0.51f);
             }
             else
             {
-                batch.DrawString(Game1.smallFont, startMinigameText[0] + ": " + startMinigameData[2], screenMid, Color.AntiqueWhite * opacity, 0f, Game1.smallFont.MeasureString(startMinigameText[0] + ": " + startMinigameData[2]) / 2f, scale * 0.5f, SpriteEffects.None, 0.2f);
+                batch.DrawString(Game1.smallFont, startMinigameText[0] + ": " + startMinigameData[2], screenMid, Color.AntiqueWhite * opacity, 0f, Game1.smallFont.MeasureString(startMinigameText[0] + ": " + startMinigameData[2]) / 2f, scale * 0.5f, SpriteEffects.None, 0.4f);
                 if  (startMinigameStage < 5) startMinigameStage = 3;
             }
         }
@@ -1251,7 +1244,7 @@ namespace FishingMinigames
                     stageTimer = 18;
                 }
             }
-            else if (which == 2)
+            else if (which == 2)//emotes
             {
                 if (startMinigameStyle[index] + endMinigameStyle[index] > 0)
                 {
@@ -1276,6 +1269,12 @@ namespace FishingMinigames
                         who.netDoEmote("happy");
                     }
                 }
+            }
+            else if (which == 3)//controller above head while startminigame
+            {
+                batch.Draw(Game1.emoteSpriteSheet, who.getLocalPosition(Game1.viewport) + new Vector2(0f, -160f),
+                    new Rectangle(52 * 16 % Game1.emoteSpriteSheet.Width, 52 * 16 / Game1.emoteSpriteSheet.Width * 16, 16, 16),
+                    Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0f);
             }
         }
 
@@ -1318,37 +1317,37 @@ namespace FishingMinigames
             if (maxFishSize > 0)
             {
                 //bubble
-                batch.Draw(Game1.mouseCursors, Game1.GlobalToLocal(Game1.viewport, who.Position + new Vector2(-130f, -75f)), new Rectangle(156, 465, 5, 20), Color.White * 0.8f, -1.57f, Vector2.Zero, 5f, SpriteEffects.None, 0.9f);
-                batch.Draw(Game1.mouseCursors, Game1.GlobalToLocal(Game1.viewport, who.Position + new Vector2(-130f, -50f)), new Rectangle(149, 465, 5, 24), Color.White * 0.8f, -1.57f, Vector2.Zero, 5f, SpriteEffects.None, 0.9f);
-                batch.Draw(Game1.mouseCursors, Game1.GlobalToLocal(Game1.viewport, who.Position + new Vector2(-130f, -25f)), new Rectangle(141, 465, 5, 20), Color.White * 0.8f, -1.57f, Vector2.Zero, 5f, SpriteEffects.None, 0.9f);
+                batch.Draw(Game1.mouseCursors, Game1.GlobalToLocal(Game1.viewport, who.Position + new Vector2(-130f, -75f)), new Rectangle(156, 465, 5, 20), Color.White * 0.8f, -1.57f, Vector2.Zero, 5f, SpriteEffects.None, 0f);
+                batch.Draw(Game1.mouseCursors, Game1.GlobalToLocal(Game1.viewport, who.Position + new Vector2(-130f, -50f)), new Rectangle(149, 465, 5, 24), Color.White * 0.8f, -1.57f, Vector2.Zero, 5f, SpriteEffects.None, 0f);
+                batch.Draw(Game1.mouseCursors, Game1.GlobalToLocal(Game1.viewport, who.Position + new Vector2(-130f, -25f)), new Rectangle(141, 465, 5, 20), Color.White * 0.8f, -1.57f, Vector2.Zero, 5f, SpriteEffects.None, 0f);
                 //stars
                 if (fishQuality > 0)
                 {
                     Rectangle quality_rect = (fishQuality < 4) ? new Rectangle(338 + (fishQuality - 1) * 8, 400, 8, 8) : new Rectangle(346, 392, 8, 8);
-                    batch.Draw(Game1.mouseCursors, Game1.GlobalToLocal(Game1.viewport, who.Position + new Vector2(-104f, -48f)), quality_rect, Color.White, 0f, new Vector2(4f, 4f), 2f, SpriteEffects.None, 1f);
-                    batch.Draw(Game1.mouseCursors, Game1.GlobalToLocal(Game1.viewport, who.Position + new Vector2(-56f, -48f)), quality_rect, Color.White, 0f, new Vector2(4f, 4f), 2f, SpriteEffects.None, 1f);
+                    batch.Draw(Game1.mouseCursors, Game1.GlobalToLocal(Game1.viewport, who.Position + new Vector2(-104f, -48f)), quality_rect, Color.White, 0f, new Vector2(4f, 4f), 2f, SpriteEffects.None, 0.1f);
+                    batch.Draw(Game1.mouseCursors, Game1.GlobalToLocal(Game1.viewport, who.Position + new Vector2(-56f, -48f)), quality_rect, Color.White, 0f, new Vector2(4f, 4f), 2f, SpriteEffects.None, 0.1f);
                 }
                 //strings
                 float offset = 0f;
                 if (caughtDoubleFish || fishQuality > 0) offset = 13f;
                 if (caughtDoubleFish)
                 {
-                    batch.DrawString(Game1.smallFont, "x2", Game1.GlobalToLocal(Game1.viewport, who.Position + new Vector2(-91f, -60f)), Game1.textColor, 0f, Vector2.Zero, 0.8f, SpriteEffects.None, 1f);
+                    batch.DrawString(Game1.smallFont, "x2", Game1.GlobalToLocal(Game1.viewport, who.Position + new Vector2(-91f, -60f)), Game1.textColor, 0f, Vector2.Zero, 0.8f, SpriteEffects.None, 0.1f);
                 }
                 string sizeString = Game1.content.LoadString("Strings\\StringsFromCSFiles:FishingRod.cs.14083", (metricSizes || LocalizedContentManager.CurrentLanguageCode != 0) ? Math.Round(fishSize * 2.54f) : (fishSize));
-                batch.DrawString(Game1.smallFont, sizeString, Game1.GlobalToLocal(Game1.viewport, who.Position + new Vector2(-80f - Game1.smallFont.MeasureString(sizeString).X / 2f, -77f - offset)), recordSize ? Color.Blue : Game1.textColor, 0f, Vector2.Zero, 1f, SpriteEffects.None, 1f);
+                batch.DrawString(Game1.smallFont, sizeString, Game1.GlobalToLocal(Game1.viewport, who.Position + new Vector2(-80f - Game1.smallFont.MeasureString(sizeString).X / 2f, -77f - offset)), recordSize ? Color.Blue : Game1.textColor, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0.1f);
             }
             //fishing net
-            batch.Draw(Game1.toolSpriteSheet, Game1.GlobalToLocal(Game1.viewport, who.Position + new Vector2(+22f, +17f)), Game1.getSourceRectForStandardTileSheet(Game1.toolSpriteSheet, who.CurrentTool.IndexOfMenuItemView, 16, 16), Color.White, -3f, new Vector2(8f, 8f), 4f, SpriteEffects.None, 0.9f);
+            batch.Draw(Game1.toolSpriteSheet, Game1.GlobalToLocal(Game1.viewport, who.Position + new Vector2(+22f, +17f)), Game1.getSourceRectForStandardTileSheet(Game1.toolSpriteSheet, who.CurrentTool.IndexOfMenuItemView, 16, 16), Color.White, -3f, new Vector2(8f, 8f), 4f, SpriteEffects.None, 0f);
 
             //item(s) in hand
             if (!furniture)
             {
-                batch.Draw(Game1.objectSpriteSheet, Game1.GlobalToLocal(Game1.viewport, who.Position + new Vector2(12f, -44f)), sourceRect, Color.White, (fishSize == -1 || whichFish == 800 || whichFish == 798 || whichFish == 149 || whichFish == 151) ? 0.5f : (caughtDoubleFish) ? 2.2f : 2.4f, new Vector2(8f, 8f), itemSpriteSize, SpriteEffects.None, 1f);
+                batch.Draw(Game1.objectSpriteSheet, Game1.GlobalToLocal(Game1.viewport, who.Position + new Vector2(12f, -44f)), sourceRect, Color.White, (fishSize == -1 || whichFish == 800 || whichFish == 798 || whichFish == 149 || whichFish == 151) ? 0.5f : (caughtDoubleFish) ? 2.2f : 2.4f, new Vector2(8f, 8f), itemSpriteSize, SpriteEffects.None, 0.1f);
 
-                if (caughtDoubleFish) batch.Draw(Game1.objectSpriteSheet, Game1.GlobalToLocal(Game1.viewport, who.Position + new Vector2(4f, -44f)), sourceRect, Color.White, (fishSize == -1 || whichFish == 800 || whichFish == 798 || whichFish == 149 || whichFish == 151) ? 1f : 2.6f, new Vector2(8f, 8f), itemSpriteSize, SpriteEffects.None, 1f);
+                if (caughtDoubleFish) batch.Draw(Game1.objectSpriteSheet, Game1.GlobalToLocal(Game1.viewport, who.Position + new Vector2(4f, -44f)), sourceRect, Color.White, (fishSize == -1 || whichFish == 800 || whichFish == 798 || whichFish == 149 || whichFish == 151) ? 1f : 2.6f, new Vector2(8f, 8f), itemSpriteSize, SpriteEffects.None, 0.1f);
             }
-            else batch.Draw(Furniture.furnitureTexture, Game1.GlobalToLocal(Game1.viewport, who.Position + new Vector2(0f, -56f)), sourceRect, Color.White, 0f, new Vector2(8f, 8f), 2.25f, SpriteEffects.None, 1f);
+            else batch.Draw(Furniture.furnitureTexture, Game1.GlobalToLocal(Game1.viewport, who.Position + new Vector2(0f, -56f)), sourceRect, Color.White, 0f, new Vector2(8f, 8f), 2.25f, SpriteEffects.None, 0.1f);
         }
 
         private void FestivalGameSkip(Farmer who)
@@ -1477,7 +1476,7 @@ namespace FishingMinigames
                 stack, recordSize, furniture, sourceRect, x, y), "Animation", modIDs: new[] { ModManifest.UniqueID }, IDs);
         }
 
-        /// <summary>Other players' animationsOthers.</summary>
+        /// <summary>Other players' animations.</summary>
         public void OnModMessageReceived(object sender, ModMessageReceivedEventArgs e)
         {
             if (e.FromModID == ModManifest.UniqueID && e.Type == "Animation")
@@ -1535,7 +1534,24 @@ namespace FishingMinigames
                         case "Fail":
                         case null:
                             if (message.stage != null) PlayPause(who);
-                            else if (fishySound != null) fishySound.Play(voiceVolume, message.voicePitch, 0);//volume based on distance? will be iffy in split... play at the same time?
+                            else if (fishySound != null)//volume based on distance? will be iffy in split... play at the same time?
+                            {
+                                float volume = 0f;
+                                if (who.currentLocation == this.who.currentLocation) volume = Math.Min(Math.Max((Vector2.Distance(who.Position, this.who.Position) - 2560f) / -2560f, 0f), 1f);//distance based volume within 40ish tiles
+                                if (Context.IsSplitScreen)
+                                {
+                                    int screen = Context.ScreenId;
+                                    if (Helper.Multiplayer.GetConnectedPlayer(message.multiplayerID).IsSplitScreen)
+                                    {
+                                        int screen2 = (int)Helper.Multiplayer.GetConnectedPlayer(message.multiplayerID).ScreenID;
+                                        fishySound.Play(voiceVolume, message.voicePitch, (screen2 == 0 || screen2 == 2) ? -1f : 1f); //if local split screen, screen 0 and 2 play on left, 1, 3 on right, * distance on other side
+                                        if (((screen == 0 || screen == 2) && (screen2 == 1 || screen2 == 3)) ||
+                                            ((screen == 1 || screen == 3) && (screen2 == 0 || screen2 == 2))) fishySound.Play(volume * voiceVolume, message.voicePitch, (screen == 0 || screen == 2) ? -1f : 1f);
+                                    }
+                                    else fishySound.Play(volume * voiceVolume, message.voicePitch, (screen == 0 || screen == 2) ? -1f : 1f); //if split screen, but sender is not split screen (same as above * distance)
+                                }
+                                else fishySound.Play(volume * voiceVolume, message.voicePitch, 0); //not scplit screen, won't do directional sound as it can be annoying
+                            }
                             who.completelyStopAnimatingOrDoingAction();
                             who.jitterStrength = 2f;
                             List<FarmerSprite.AnimationFrame> animationFrames = new List<FarmerSprite.AnimationFrame>(){
