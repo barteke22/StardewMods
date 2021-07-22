@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace StardewMods
 {
 	internal class ModConfig

@@ -51,6 +51,7 @@
   <ItemGroup>
     <Compile Include="APIs.cs" />
     <Compile Include="ModConfig.cs" />
+    <None Include="ModEntry.cs.OLDsplitByName" />
     <Compile Include="ModEntry.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

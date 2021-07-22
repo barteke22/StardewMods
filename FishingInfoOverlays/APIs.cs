@@ -9,12 +9,15 @@ namespace GenericModConfigMenu
     public interface IGenericModConfigMenuApi
     {
         void RegisterModConfig(IManifest mod, Action revertToDefault, Action saveToFile);
+        void UnregisterModConfig(IManifest mod);
 
         void SetDefaultIngameOptinValue(IManifest mod, bool optedIn);
 
         void RegisterLabel(IManifest mod, string labelName, string labelDesc);
         void RegisterPageLabel(IManifest mod, string labelName, string labelDesc, string newPage);
         void RegisterParagraph(IManifest mod, string paragraph);
+
+        void StartNewPage(IManifest mod, string pageName);
 
         void RegisterSimpleOption(IManifest mod, string optionName, string optionDesc, Func<bool> optionGet, Action<bool> optionSet);
         void RegisterSimpleOption(IManifest mod, string optionName, string optionDesc, Func<int> optionGet, Action<int> optionSet);
