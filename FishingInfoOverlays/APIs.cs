@@ -9,7 +9,6 @@ namespace GenericModConfigMenu
     public interface IGenericModConfigMenuApi
     {
         void RegisterModConfig(IManifest mod, Action revertToDefault, Action saveToFile);
-        void UnregisterModConfig(IManifest mod);
 
         void SetDefaultIngameOptinValue(IManifest mod, bool optedIn);
 

@@ -1,8 +1,6 @@
-using System.Collections.Generic;
-
 namespace StardewMods
 {
-	internal class ModConfig
+    internal class ModConfig
 	{
 		public int BarIconMode { get; set; } = 0;
 		public string Comment_BarIconMode { get; set; } = "Above BarIconMode values: 0= Horizontal Icons, 1= Vertical Icons, 2= Vertical Icons + Text, 3= Off";

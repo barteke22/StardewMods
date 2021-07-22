@@ -91,10 +91,10 @@ namespace StardewMods
             var GenericMC = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
             if (GenericMC != null)
             {
-                if (e != null) GenericMC.RegisterModConfig(ModManifest, () => config = new ModConfig(), () => Helper.WriteConfig(config));
+                GenericMC.RegisterModConfig(ModManifest, () => config = new ModConfig(), () => Helper.WriteConfig(config));
                 GenericMC.SetDefaultIngameOptinValue(ModManifest, true);
                 GenericMC.RegisterLabel(ModManifest, translate.Get("GenericMC.barLabel"), ""); //All of these strings are stored in the traslation files.
-                if (Context.IsWorldReady) GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.barDescription"));
+                GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.barDescription"));
                 GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.barDescription2"));
                 if (Constants.TargetPlatform != GamePlatform.Android)
                 {
@@ -338,22 +338,23 @@ namespace StardewMods
                         }
                         batch.End();
                         batch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise);
-                        //oldTool.Value = null;
                         return;
                     }
 
                     if (who.CurrentItem is FishingRod)
                     {
-                        if (oldGeneric.Value == null)
-                        {
-                            oldGeneric.Value = new List<int>();
-                            fishFailed.Value = new Dictionary<int, int>();
-                            fishHere.Value = new List<int> { 168 };
-                            fishChances.Value = new Dictionary<int, int> { { -1, 0 }, { 168, 0 } };
-                            fishChancesSlow.Value = new Dictionary<int, int>();
-                            fishChancesModulo.Value = 1;
+                        if (!isMinigame.Value) {
+                            if (oldGeneric.Value == null)
+                            {
+                                oldGeneric.Value = new List<int>();
+                                fishFailed.Value = new Dictionary<int, int>();
+                                fishHere.Value = new List<int> { 168 };
+                                fishChances.Value = new Dictionary<int, int> { { -1, 0 }, { 168, 0 } };
+                                fishChancesSlow.Value = new Dictionary<int, int>();
+                                fishChancesModulo.Value = 1;
+                            }
+                            AddGenericFishToList(locationName, who.currentLocation.getFishingLocation(who.getTileLocation()));
                         }
-                        AddGenericFishToList(locationName, who.currentLocation.getFishingLocation(who.getTileLocation()));
                     }
                     else AddCrabPotFish();
                     //for (int i = 0; i < 20; i++)    //TEST ITEM INSERT
