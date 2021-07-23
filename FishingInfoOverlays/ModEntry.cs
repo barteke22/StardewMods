@@ -199,6 +199,8 @@ namespace StardewMods
 
             //locationData = Helper.Content.Load<Dictionary<string, string>>("Data\\Locations", ContentSource.GameContent);
             //fishData = Helper.Content.Load<Dictionary<int, string>>("Data\\Fish", ContentSource.GameContent);
+
+            overlay.ResetAllScreens();
         }
 
 

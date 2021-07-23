@@ -598,7 +598,7 @@ namespace StardewMods
         private void SortListByPercentages()
         {
             int index = 0;
-            foreach (var item in fishChancesSlow.OrderByDescending(d => d).ToList())
+            foreach (var item in fishChancesSlow.OrderByDescending(d => d.Value).ToList())
             {
                 if (fishHere.Contains(item.Key))
                 {
