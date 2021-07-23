@@ -108,7 +108,7 @@ namespace StardewMods
                 new string[] { translate.Get("GenericMC.barSortModeName"), translate.Get("GenericMC.barSortModeChance"), translate.Get("GenericMC.Disabled") });
 
             GenericMC.RegisterClampedOption(ModManifest, translate.Get("GenericMC.barScanRadius"), translate.Get("GenericMC.barScanRadiusDesc"),
-                () => config.BarScanRadius[screen], (int val) => config.BarScanRadius[screen] = val, 0, 50);
+                () => config.BarScanRadius[screen], (int val) => config.BarScanRadius[screen] = val, 1, 60);
             GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.barCrabPotEnabled"), translate.Get("GenericMC.barCrabPotEnabledDesc"),
                 () => config.BarCrabPotEnabled[screen], (bool val) => config.BarCrabPotEnabled[screen] = val);
             GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.barUncaughtDarker"), translate.Get("GenericMC.barUncaughtDarkerDesc"),

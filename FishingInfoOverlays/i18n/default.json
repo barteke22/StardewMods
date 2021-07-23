@@ -47,7 +47,7 @@
 	"GenericMC.barExtraCheckFrequencyDesc": "Performance intensive check that simulates fishing in current location. The higher the number, the more attempts (more accuracy and less flickering). Should be accurate with any mod, but can tank performance if high. In split screen mode, divided by the screen amount to help performance.",
 
 	"GenericMC.barScanRadius": "Scan Radius",
-	"GenericMC.barScanRadiusDesc": "If 0 it'll only check if you can fish on this map (not very accurate). If above 0 it'll scan the area X tiles around the player for water, and only display fish info if it found any.",
+	"GenericMC.barScanRadiusDesc": "The overlay will scan an area X tiles around the player for water, and will only display fish info for the nearest water tile found (if any).",
 
 	"GenericMC.barCrabPotEnabled": "Crab Pot Preview Enabled",
 	"GenericMC.barCrabPotEnabledDesc": "Extends the preview to also work for Crab Pots.",

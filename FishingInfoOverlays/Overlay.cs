@@ -217,30 +217,29 @@ namespace StardewMods
 
 
                 bool foundWater = false;
-                if (who.currentLocation.canFishHere())      //water nearby check
+                Vector2 nearestWaterTile = new Vector2(99999f, 99999f);      //any water nearby + nearest water tile check
+                if (who.currentLocation.canFishHere())
                 {
-                    if (scanRadius[screen] > 0)
+                    Vector2 scanTopLeft = who.getTileLocation() - new Vector2(scanRadius[screen] + 1);
+                    Vector2 scanBottomRight = who.getTileLocation() + new Vector2(scanRadius[screen] + 2);
+                    for (int x = (int)scanTopLeft.X; x < (int)scanBottomRight.X; x++)
                     {
-                        Vector2 scanTopLeft = who.getTileLocation() - new Vector2(scanRadius[screen] + 1);
-                        Vector2 scanBottomRight = who.getTileLocation() + new Vector2(scanRadius[screen] + 2);
-                        for (int x = (int)scanTopLeft.X; x < (int)scanBottomRight.X; x++)
+                        for (int y = (int)scanTopLeft.Y; y < (int)scanBottomRight.Y; y++)
                         {
-                            for (int y = (int)scanTopLeft.Y; y < (int)scanBottomRight.Y; y++)
+                            if (who.currentLocation.isTileFishable(x, y))
                             {
-                                if (who.currentLocation.isTileFishable(x, y))
-                                {
-                                    foundWater = true;
-                                    break;
-                                }
+                                Vector2 tile = new Vector2(x, y);
+                                if (Vector2.DistanceSquared(who.getTileLocation(), tile) < Vector2.DistanceSquared(who.getTileLocation(), nearestWaterTile)) nearestWaterTile = tile;
+                                foundWater = true;
                             }
-                            if (foundWater) break;
                         }
                     }
-                    else foundWater = true;
                 }
 
                 if (foundWater)
                 {
+                    who.setTileLocation(nearestWaterTile);
+
                     string locationName = who.currentLocation.Name;    //LOCATION FISH PREVIEW                 //this.Monitor.Log("\n", LogLevel.Debug);
                     if (who.currentLocation is Railroad || who.currentLocation is IslandFarmCave || (who.currentLocation is MineShaft && who.CurrentItem.Name.Equals("Crab Pot", StringComparison.Ordinal)))//crab pot
                     {
@@ -258,7 +257,8 @@ namespace StardewMods
 
                     if (who.CurrentItem is FishingRod)
                     {
-                        if (!isMinigame) {
+                        if (!isMinigame)
+                        {
                             if (oldGeneric == null)
                             {
                                 oldGeneric = new List<int>();
@@ -268,7 +268,7 @@ namespace StardewMods
                                 fishChancesSlow = new Dictionary<int, int>();
                                 fishChancesModulo = 1;
                             }
-                            AddGenericFishToList(locationName, who.currentLocation.getFishingLocation(who.getTileLocation()));
+                            AddGenericFishToList(locationName);
                         }
                     }
                     else AddCrabPotFish();
@@ -282,9 +282,9 @@ namespace StardewMods
                     {
                         if (onlyFish[screen] && fish != 168 && !fishData.ContainsKey(fish)) continue;//skip if not fish, except trash
 
-                        int percent = (int)Math.Round((float)fishChancesSlow[fish] / (float)fishChancesSlow[-1] * 100); //chance of this fish
+                        int percent = fishChancesSlow.ContainsKey(fish) ? (int)Math.Round((float)fishChancesSlow[fish] / (float)fishChancesSlow[-1] * 100) : 0; //chance of this fish
 
-                        if (iconCount < maxIcons[screen] && fishChancesSlow.ContainsKey(fish) && percent > 0)
+                        if (iconCount < maxIcons[screen] && percent > 0)
                         {
                             bool caught = (!uncaughtDark[screen] || who.fishCaught.ContainsKey(fish));
                             if (fish == 168) caught = true;
@@ -406,84 +406,86 @@ namespace StardewMods
             }
         }
 
-        private void AddGenericFishToList(string locationName, int fishingLocation)         //From GameLocation.cs getFish()
+        private void AddGenericFishToList(string locationName)         //From GameLocation.cs getFish()
         {
             List<int> tempFish = new List<int>();
             bool magicBait = who.currentLocation.IsUsingMagicBait(who);
-            if (!locationData.ContainsKey(locationName)) return;
-            if (locationName.Equals("BeachNightMarket", StringComparison.Ordinal)) locationName = "Beach";
-
-            string[] rawFishData;
-            if (!magicBait) rawFishData = locationData[locationName].Split('/')[4 + Utility.getSeasonNumber(Game1.currentSeason)].Split(' '); //fish by season
-            else
+            if (locationData.ContainsKey(locationName))
             {
-                List<string> all_season_fish = new List<string>(); //magic bait = all fish
-                for (int k = 0; k < 4; k++)
+                if (locationName.Equals("BeachNightMarket", StringComparison.Ordinal)) locationName = "Beach";
+
+                string[] rawFishData;
+                if (!magicBait) rawFishData = locationData[locationName].Split('/')[4 + Utility.getSeasonNumber(Game1.currentSeason)].Split(' '); //fish by season
+                else
                 {
-                    if (locationData[locationName].Split('/')[4 + k].Split(' ').Length > 1) all_season_fish.AddRange(locationData[locationName].Split('/')[4 + k].Split(' '));
-                }
-                rawFishData = all_season_fish.ToArray();
-            }
-
-            Dictionary<string, string> rawFishDataWithLocation = new Dictionary<string, string>();
-
-            if (rawFishData.Length > 1) for (int j = 0; j < rawFishData.Length; j += 2) rawFishDataWithLocation[rawFishData[j]] = rawFishData[j + 1];
-
-            string[] keys = rawFishDataWithLocation.Keys.ToArray();
-            for (int i = 0; i < keys.Length; i++)
-            {
-                bool fail = true;
-                int key = Convert.ToInt32(keys[i]);
-                string[] specificFishData = fishData[key].Split('/');
-                string[] timeSpans = specificFishData[5].Split(' ');
-                int location = Convert.ToInt32(rawFishDataWithLocation[keys[i]]);
-                if (location == -1 || fishingLocation == location)
-                {
-                    for (int l = 0; l < timeSpans.Length; l += 2)
+                    List<string> all_season_fish = new List<string>(); //magic bait = all fish
+                    for (int k = 0; k < 4; k++)
                     {
-                        if (Game1.timeOfDay >= Convert.ToInt32(timeSpans[l]) && Game1.timeOfDay < Convert.ToInt32(timeSpans[l + 1]))
+                        if (locationData[locationName].Split('/')[4 + k].Split(' ').Length > 1) all_season_fish.AddRange(locationData[locationName].Split('/')[4 + k].Split(' '));
+                    }
+                    rawFishData = all_season_fish.ToArray();
+                }
+
+                Dictionary<string, string> rawFishDataWithLocation = new Dictionary<string, string>();
+
+                if (rawFishData.Length > 1) for (int j = 0; j < rawFishData.Length; j += 2) rawFishDataWithLocation[rawFishData[j]] = rawFishData[j + 1];
+
+                string[] keys = rawFishDataWithLocation.Keys.ToArray();
+                for (int i = 0; i < keys.Length; i++)
+                {
+                    bool fail = true;
+                    int key = Convert.ToInt32(keys[i]);
+                    string[] specificFishData = fishData[key].Split('/');
+                    string[] timeSpans = specificFishData[5].Split(' ');
+                    int location = Convert.ToInt32(rawFishDataWithLocation[keys[i]]);
+                    if (location == -1 || who.currentLocation.getFishingLocation(who.getTileLocation()) == location)
+                    {
+                        for (int l = 0; l < timeSpans.Length; l += 2)
                         {
-                            fail = false;
-                            break;
+                            if (Game1.timeOfDay >= Convert.ToInt32(timeSpans[l]) && Game1.timeOfDay < Convert.ToInt32(timeSpans[l + 1]))
+                            {
+                                fail = false;
+                                break;
+                            }
                         }
                     }
+                    if (!specificFishData[7].Equals("both", StringComparison.Ordinal))
+                    {
+                        if (specificFishData[7].Equals("rainy", StringComparison.Ordinal) && !Game1.IsRainingHere(who.currentLocation)) fail = true;
+                        else if (specificFishData[7].Equals("sunny", StringComparison.Ordinal) && Game1.IsRainingHere(who.currentLocation)) fail = true;
+                    }
+                    if (magicBait) fail = false; //I guess magic bait check comes at this exact point because it overrides all conditions except rod and level?
+
+                    bool beginnersRod = who != null && who.CurrentItem != null && who.CurrentItem is FishingRod && (int)who.CurrentTool.upgradeLevel == 1;
+
+                    if (Convert.ToInt32(specificFishData[1]) >= 50 && beginnersRod) fail = true;
+                    if (who.FishingLevel < Convert.ToInt32(specificFishData[12])) fail = true;
+                    if (!fail && !tempFish.Contains(key))
+                    {
+                        tempFish.Add(key);
+                    }
                 }
-                if (!specificFishData[7].Equals("both", StringComparison.Ordinal))
+                if ((tempFish.Count == 0 && oldGeneric.Count != 0) || tempFish.Count > 0 && (!(new HashSet<int>(oldGeneric).SetEquals(tempFish))))//reset lists if generic list changed
                 {
-                    if (specificFishData[7].Equals("rainy", StringComparison.Ordinal) && !Game1.IsRainingHere(who.currentLocation)) fail = true;
-                    else if (specificFishData[7].Equals("sunny", StringComparison.Ordinal) && Game1.IsRainingHere(who.currentLocation)) fail = true;
-                }
-                if (magicBait) fail = false; //I guess magic bait check comes at this exact point because it overrides all conditions except rod and level?
+                    oldGeneric = tempFish.ToList();
+                    fishFailed = new Dictionary<int, int>();
+                    fishHere = new List<int> { 168 };
+                    fishChances = new Dictionary<int, int> { { -1, 0 }, { 168, 0 } };
+                    fishChancesSlow = new Dictionary<int, int>();
+                    fishChancesModulo = 1;
 
-                bool beginnersRod = who != null && who.CurrentItem != null && who.CurrentItem is FishingRod && (int)who.CurrentTool.upgradeLevel == 1;
+                    foreach (var key in oldGeneric)
+                    {
+                        if (sortMode[screen] == 0) SortItemIntoListByDisplayName(key);
+                        else fishHere.Add(key);
 
-                if (Convert.ToInt32(specificFishData[1]) >= 50 && beginnersRod) fail = true;
-                if (who.FishingLevel < Convert.ToInt32(specificFishData[12])) fail = true;
-                if (!fail && !tempFish.Contains(key))
-                {
-                    tempFish.Add(key);
-                }
-            }
-            if ((tempFish.Count == 0 && oldGeneric.Count != 0) || tempFish.Count > 0 && (!(new HashSet<int>(oldGeneric).SetEquals(tempFish))))//reset lists if generic list changed
-            {
-                oldGeneric = tempFish.ToList();
-                fishFailed = new Dictionary<int, int>();
-                fishHere = new List<int> { 168 };
-                fishChances = new Dictionary<int, int> { { -1, 0 }, { 168, 0 } };
-                fishChancesSlow = new Dictionary<int, int>();
-                fishChancesModulo = 1;
-
-                foreach (var key in oldGeneric)
-                {
-                    if (sortMode[screen] == 0) SortItemIntoListByDisplayName(key);
-                    else fishHere.Add(key);
-
-                    if (!fishChances.ContainsKey(key)) fishChances.Add(key, 0);
+                        if (!fishChances.ContainsKey(key)) fishChances.Add(key, 0);
+                    }
                 }
             }
             AddFishToListDynamic();
         }
-        private void AddFishToListDynamic()                                                  //very performance intensive check for fish fish available in this area - simulates fishing
+        private void AddFishToListDynamic()                            //very performance intensive check for fish fish available in this area - simulates fishing
         {
             if (!(who.currentLocation is IslandSouthEast && who.getTileLocation().X >= 17 && who.getTileLocation().X <= 21 && who.getTileLocation().Y >= 19 && who.getTileLocation().Y <= 23))
             {
@@ -522,15 +524,13 @@ namespace StardewMods
 
                     if (!caughtIridiumKrobus && Game1.player.mailReceived.Contains("caughtIridiumKrobus")) Game1.player.mailReceived.Remove("caughtIridiumKrobus");
                     if (Game1.player.team.limitedNutDrops.ContainsKey("IslandFishing") && Game1.player.team.limitedNutDrops["IslandFishing"] != nuts) Game1.player.team.limitedNutDrops["IslandFishing"] = nuts;
-
-                    if (f < 167 || f > 172) //if fish not in last 2000 attempts, redo lists
-                    {   
-                        fishFailed[f] = 2000;
-                        foreach (var key in fishFailed.Keys.ToList())
-                        {
-                            if (fishFailed[key] != f) fishFailed[key]--;
-                            if (fishFailed[key] < 1) oldGeneric = null;
-                        } 
+                    
+                    //if fish not in last 1200 attempts, redo lists
+                    if (f < 167 || f > 172) fishFailed[f] = 1200;
+                    foreach (var key in fishFailed.Keys.ToList())
+                    {
+                        if (fishFailed[key] != f) fishFailed[key]--;
+                        if (fishFailed[key] < 1) oldGeneric = null;
                     }
                 }
             }
