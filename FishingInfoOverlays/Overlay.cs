@@ -410,10 +410,10 @@ namespace StardewMods
         {
             List<int> tempFish = new List<int>();
             bool magicBait = who.currentLocation.IsUsingMagicBait(who);
+            if (locationName.Equals("BeachNightMarket", StringComparison.Ordinal)) locationName = "Beach";
+
             if (locationData.ContainsKey(locationName))
             {
-                if (locationName.Equals("BeachNightMarket", StringComparison.Ordinal)) locationName = "Beach";
-
                 string[] rawFishData;
                 if (!magicBait) rawFishData = locationData[locationName].Split('/')[4 + Utility.getSeasonNumber(Game1.currentSeason)].Split(' '); //fish by season
                 else
