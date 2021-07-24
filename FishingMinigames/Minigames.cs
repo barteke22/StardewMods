@@ -110,6 +110,7 @@ namespace FishingMinigames
             if (infoTimer > 0 && infoTimer < 1001)//reset from bubble
             {
                 who.CanMove = true;
+                hereFishying = false;
                 infoTimer = 0;
                 SendMessage(who, "Clear");
                 who.completelyStopAnimatingOrDoingAction();
@@ -250,6 +251,8 @@ namespace FishingMinigames
             else if (infoTimer > 0) infoTimer--;
             if (infoTimer == 1)
             {
+                who.CanMove = true;
+                hereFishying = false;
                 SendMessage(who, "Clear");
                 infoTimer--;
                 who.faceDirection(oldFacingDirection);
@@ -1191,7 +1194,6 @@ namespace FishingMinigames
                 case "Caught2":
                     if (!Game1.IsMultiplayer && !Game1.isFestival()) Game1.gameTimeInterval = oldGameTimeInterval;
                     fishCaught = true;
-                    hereFishying = false;
 
                     Helper.Multiplayer.SendMessage(-1, "whichFish", modIDs: new[] { "barteke22.FishingInfoOverlays" }, new[] { who.UniqueMultiplayerID });//clear overlay
                     break;

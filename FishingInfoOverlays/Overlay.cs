@@ -8,7 +8,9 @@ using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.Locations;
 using StardewValley.Menus;
+using StardewValley.Objects;
 using StardewValley.Tools;
+using Object = StardewValley.Object;
 
 namespace StardewMods
 {
@@ -238,7 +240,7 @@ namespace StardewMods
 
                 if (foundWater)
                 {
-                    who.setTileLocation(nearestWaterTile);
+                    if (who.CurrentItem is FishingRod) who.setTileLocation(nearestWaterTile);
 
                     string locationName = who.currentLocation.Name;    //LOCATION FISH PREVIEW                 //this.Monitor.Log("\n", LogLevel.Debug);
                     if (who.currentLocation is Railroad || who.currentLocation is IslandFarmCave || (who.currentLocation is MineShaft && who.CurrentItem.Name.Equals("Crab Pot", StringComparison.Ordinal)))//crab pot
@@ -568,8 +570,6 @@ namespace StardewMods
                     }
                 }
             }
-            if (showPercentages[screen] || sortMode[screen] == 1)
-            {
                 if (isMariner) fishChancesSlow.Add(-1, fishChancesSlow.Sum(x => x.Value));
                 else
                 {
@@ -577,16 +577,17 @@ namespace StardewMods
                     fishChancesSlow.Add(-1, 100);
                 }
                 if (sortMode[screen] == 1) SortListByPercentages();
-            }
         }
 
 
         private void SortItemIntoListByDisplayName(int itemId)
         {
-            string name = (new StardewValley.Object(itemId, 1).Name.Equals("Error Item", StringComparison.Ordinal)) ? new StardewValley.Objects.Furniture(itemId, Vector2.Zero).DisplayName : new StardewValley.Object(itemId, 1).DisplayName;
+            string name = (new Object(itemId, 1).Name.Equals("Error Item", StringComparison.Ordinal)) ? new Furniture(itemId, Vector2.Zero).DisplayName : new Object(itemId, 1).DisplayName;
             for (int j = 0; j < fishHere.Count; j++)
             {
-                if (string.Compare(name, new StardewValley.Object(fishHere[j], 1).DisplayName, StringComparison.CurrentCulture) <= 0)
+                string name2 = (new Object(fishHere[j], 1).Name.Equals("Error Item", StringComparison.Ordinal)) ? new Furniture(fishHere[j], Vector2.Zero).DisplayName : new Object(fishHere[j], 1).DisplayName;
+
+                if (string.Compare(name, name2, StringComparison.CurrentCulture) <= 0)
                 {
                     fishHere.Insert(j, itemId);
                     return;
