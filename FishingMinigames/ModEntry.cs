@@ -263,21 +263,26 @@ namespace FishingMinigames
                     Helper.WriteConfig(config);
                     Monitor.Log(e.Message + " Resetting KeyBinds for screen " + (i + 1) + " to default. For key names, see: https://stardewcommunitywiki.com/Modding:Player_Guide/Key_Bindings", LogLevel.Error);
                 }
+
                 Minigames.voicePitch[i] = config.VoicePitch[i] / 100f;
+
+                if (Context.IsWorldReady)
+                {
+                    Minigames.startMinigameStyle[i] = config.StartMinigameStyle[i];
+                    Minigames.endMinigameStyle[i] = config.EndMinigameStyle[i];
+                    Minigames.minigameDamage[i] = config.EndMinigameDamage[i];
+                    Minigames.minigameDifficulty[i] = config.MinigameDifficulty[i];
+                    Minigames.festivalMode[i] = config.FestivalMode[i];
+                }
             }
             if (Context.IsWorldReady)
             {
                 Minigames.voiceVolume = config.VoiceVolume / 100f;
-                Minigames.startMinigameStyle = config.StartMinigameStyle;
-                Minigames.endMinigameStyle = config.EndMinigameStyle;
-                Minigames.minigameDamage = config.EndMinigameDamage;
-                Minigames.minigameDifficulty = config.MinigameDifficulty;
                 Minigames.startMinigameScale = config.StartMinigameScale;
                 Minigames.realisticSizes = config.RealisticSizes;
                 if (LocalizedContentManager.CurrentLanguageCode == 0) Minigames.metricSizes = config.ConvertToMetric;
                 else Minigames.metricSizes = false;
                 Helper.Content.InvalidateCache("Strings/StringsFromCSFiles");
-                Minigames.festivalMode = config.FestivalMode;
             }
         }
     }

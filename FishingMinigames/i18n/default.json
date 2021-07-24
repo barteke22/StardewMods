@@ -49,12 +49,13 @@
     "GenericMC.FestivalModeSimple": "Simple",
     "GenericMC.FestivalModePerfectOnly": "Perfect Only",
 
-    "GenericMC.SplitScreenDesc": "Split Screen-specific settings, these only matter for Split Screen players. The main player should change these.",
+    "GenericMC.Disabled": "Disabled",
+
+
+    "GenericMC.SplitScreenDesc": "Split Screen-specific settings, these only matter for Split Screen players. Only the main player should change these.",
     "GenericMC.SplitScreen2": "Split Screen 2: (Top) Right",
     "GenericMC.SplitScreen3": "Split Screen 3: Bottom Left",
     "GenericMC.SplitScreen4": "Split Screen 4: Bottom Right",
-
-    "GenericMC.Disabled": "Disabled",
 
 
     "Minigame.Score": "Score",
