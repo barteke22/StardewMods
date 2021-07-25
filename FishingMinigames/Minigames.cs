@@ -184,6 +184,7 @@ namespace FishingMinigames
                                     Monitor.Log($"here fishy fishy {mouse.X},{mouse.Y}");
                                     x = (int)mouse.X * 64;
                                     y = (int)mouse.Y * 64;
+                                    Game1.stats.timesFished++;
                                     HereFishyFishy(who);
                                 }
                             }
@@ -478,6 +479,11 @@ namespace FishingMinigames
                 }
             }
 
+            if (whichFish == 79 || whichFish == 842)//notes
+            {
+                item = who.currentLocation.tryToCreateUnseenSecretNote(who);
+            }
+
             if (item != null) whichFish = item.ParentSheetIndex;//fix here for fishpond
 
             if (item == null || whichFish <= 0)
@@ -512,11 +518,6 @@ namespace FishingMinigames
             }
 
             //special item handling
-            if (whichFish == GameLocation.CAROLINES_NECKLACE_ITEM) item.questItem.Value = true;
-            if (whichFish == 79 || whichFish == 842)
-            {
-                item = who.currentLocation.tryToCreateUnseenSecretNote(who);
-            }
             if (fishingFestivalMinigame != 2 && !(item is Furniture) && !fromFishPond && who.team.specialOrders != null)
             {
                 foreach (SpecialOrder order in who.team.specialOrders)
@@ -524,6 +525,8 @@ namespace FishingMinigames
                     order.onFishCaught?.Invoke(who, item);
                 }
             }
+            if (whichFish == GameLocation.CAROLINES_NECKLACE_ITEM) item.questItem.Value = true;
+            
 
 
             //sizes
@@ -1168,7 +1171,7 @@ namespace FishingMinigames
                     {
                         if (!treasureCaught || itemIsInstantCatch)
                         {
-                            if (!fromFishPond) rod.doneFishing(who, true);
+                            if (!itemIsInstantCatch) rod.doneFishing(who, true);
 
                             //maybe extra checks will help split screen issue where menu sometimes pops up even though there's space in inventory
                             if (!who.couldInventoryAcceptThisItem(item) || !who.addItemToInventoryBool(item)) who.addItemByMenuIfNecessary(item);

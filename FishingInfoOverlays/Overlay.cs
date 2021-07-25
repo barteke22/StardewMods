@@ -117,6 +117,9 @@ namespace StardewMods
                 who.currentLocation = Game1.player.currentLocation;
                 who.setTileLocation(Game1.player.getTileLocation());
                 who.FishingLevel = Game1.player.FishingLevel;
+                //if there's ever any downside of referencing player rod directly, use below + add bait/tackle to it
+                //FishingRod rod = (FishingRod)(Game1.player.CurrentTool as FishingRod).getOne();
+                //who.CurrentTool = rod;
                 who.CurrentTool = Game1.player.CurrentTool;
                 who.LuckLevel = Game1.player.LuckLevel;
                 foreach (var item in Game1.player.fishCaught) who.fishCaught.Add(item);
@@ -178,6 +181,20 @@ namespace StardewMods
                 Vector2 boxTopLeft = barPosition[screen];
                 Vector2 boxBottomLeft = barPosition[screen];
 
+
+                //this.Monitor.Log("\n", LogLevel.Debug);
+                if (who.currentLocation is MineShaft && who.CurrentItem.Name.Equals("Crab Pot", StringComparison.Ordinal))//crab pot
+                {
+                    string warning = translate.Get("Bar.CrabMineWarning");
+                    batch.DrawString(font, warning, boxBottomLeft + new Vector2(source.Width * iconScale, 0), Color.Black, 0f, new Vector2(1, -2), 1f * barScale[screen], SpriteEffects.None, 0.9f); //textbg
+                    batch.DrawString(font, warning, boxBottomLeft + new Vector2(source.Width * iconScale, 0), Color.Black, 0f, new Vector2(-1, -4), 1f * barScale[screen], SpriteEffects.None, 0.9f); //textbg
+                    batch.DrawString(font, warning, boxBottomLeft + new Vector2(source.Width * iconScale, 0), Color.Red, 0f, new Vector2(0, -3), 1f * barScale[screen], SpriteEffects.None, 1f); //text
+                    batch.End();
+                    batch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise);
+                    return;
+                }
+
+
                 if (showTackles[screen] && who.CurrentItem is FishingRod)    //BAIT AND TACKLE (BOBBERS) PREVIEW
                 {
                     int bait = (who.CurrentItem as FishingRod).getBaitAttachmentIndex();
@@ -218,6 +235,7 @@ namespace StardewMods
                 }
 
 
+
                 bool foundWater = false;
                 Vector2 nearestWaterTile = new Vector2(99999f, 99999f);      //any water nearby + nearest water tile check
                 if (who.currentLocation.canFishHere())
@@ -228,10 +246,12 @@ namespace StardewMods
                     {
                         for (int y = (int)scanTopLeft.Y; y < (int)scanBottomRight.Y; y++)
                         {
-                            if (who.currentLocation.isTileFishable(x, y))
+                            if (who.currentLocation.isTileFishable(x, y) && !who.currentLocation.isTileBuildingFishable(x, y))
                             {
                                 Vector2 tile = new Vector2(x, y);
-                                if (Vector2.DistanceSquared(who.getTileLocation(), tile) < Vector2.DistanceSquared(who.getTileLocation(), nearestWaterTile)) nearestWaterTile = tile;
+                                float distance = Vector2.DistanceSquared(who.getTileLocation(), tile);
+                                float distanceNearest = Vector2.DistanceSquared(who.getTileLocation(), nearestWaterTile);
+                                if (distance < distanceNearest || (distance == distanceNearest && Game1.player.GetGrabTile() == tile)) nearestWaterTile = tile;
                                 foundWater = true;
                             }
                         }
@@ -241,22 +261,7 @@ namespace StardewMods
                 if (foundWater)
                 {
                     if (who.CurrentItem is FishingRod) who.setTileLocation(nearestWaterTile);
-
-                    string locationName = who.currentLocation.Name;    //LOCATION FISH PREVIEW                 //this.Monitor.Log("\n", LogLevel.Debug);
-                    if (who.currentLocation is Railroad || who.currentLocation is IslandFarmCave || (who.currentLocation is MineShaft && who.CurrentItem.Name.Equals("Crab Pot", StringComparison.Ordinal)))//crab pot
-                    {
-                        if (who.currentLocation is MineShaft)
-                        {
-                            string warning = translate.Get("Bar.CrabMineWarning");
-                            batch.DrawString(font, warning, boxBottomLeft + new Vector2(source.Width * iconScale, 0), Color.Black, 0f, new Vector2(1, -2), 1f * barScale[screen], SpriteEffects.None, 0.9f); //textbg
-                            batch.DrawString(font, warning, boxBottomLeft + new Vector2(source.Width * iconScale, 0), Color.Black, 0f, new Vector2(-1, -4), 1f * barScale[screen], SpriteEffects.None, 0.9f); //textbg
-                            batch.DrawString(font, warning, boxBottomLeft + new Vector2(source.Width * iconScale, 0), Color.Red, 0f, new Vector2(0, -3), 1f * barScale[screen], SpriteEffects.None, 1f); //text
-                        }
-                        batch.End();
-                        batch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise);
-                        return;
-                    }
-
+                    string locationName = who.currentLocation.Name;    //LOCATION FISH PREVIEW
                     if (who.CurrentItem is FishingRod)
                     {
                         if (!isMinigame)
@@ -284,7 +289,7 @@ namespace StardewMods
                     {
                         if (onlyFish[screen] && fish != 168 && !fishData.ContainsKey(fish)) continue;//skip if not fish, except trash
 
-                        int percent = fishChancesSlow.ContainsKey(fish) ? (int)Math.Round((float)fishChancesSlow[fish] / (float)fishChancesSlow[-1] * 100) : 0; //chance of this fish
+                        int percent = fishChancesSlow.ContainsKey(fish) ? (int)Math.Round((float)fishChancesSlow[fish] / fishChancesSlow[-1] * 100f) : 0; //chance of this fish
 
                         if (iconCount < maxIcons[screen] && percent > 0)
                         {
@@ -294,16 +299,23 @@ namespace StardewMods
                             iconCount++;
                             string fishNameLocalized = "???";
 
-                            if (new StardewValley.Object(fish, 1).Name.Equals("Error Item", StringComparison.Ordinal))  //Furniture
+                            if (fish > 900000)//Hat (workaround)
                             {
-                                if (caught) fishNameLocalized = new StardewValley.Objects.Furniture(fish, Vector2.Zero).DisplayName;
+                                if (caught) fishNameLocalized = new Hat(fish - 900000).DisplayName;
 
-                                batch.Draw(StardewValley.Objects.Furniture.furnitureTexture, boxBottomLeft, new StardewValley.Objects.Furniture(fish, Vector2.Zero).defaultSourceRect,
+                                batch.Draw(FarmerRenderer.hatsTexture, boxBottomLeft, new Rectangle((int)(fish - 900000) * 20 % FarmerRenderer.hatsTexture.Width, (int)(fish - 900000) * 20 / FarmerRenderer.hatsTexture.Width * 20 * 4, 20, 20),
+                                    Color.White, 0f, Vector2.Zero, 1.5f * barScale[screen], SpriteEffects.None, 0.98f);//icon
+                            }
+                            else if (new Object(fish, 1).Name.Equals("Error Item", StringComparison.Ordinal))  //Furniture
+                            {
+                                if (caught) fishNameLocalized = new Furniture(fish, Vector2.Zero).DisplayName;
+
+                                batch.Draw(Furniture.furnitureTexture, boxBottomLeft, new Furniture(fish, Vector2.Zero).defaultSourceRect,
                                     (caught) ? Color.White : Color.DarkSlateGray, 0f, Vector2.Zero, 0.95f * barScale[screen], SpriteEffects.None, 0.98f);//icon
                             }
                             else                                                                                        //Item
                             {
-                                if (caught) fishNameLocalized = new StardewValley.Object(fish, 1).DisplayName;
+                                if (caught) fishNameLocalized = new Object(fish, 1).DisplayName;
 
                                 source = GameLocation.getSourceRectForObject(fish);
                                 if (fish == 168) batch.Draw(Game1.objectSpriteSheet, boxBottomLeft + new Vector2(2 * barScale[screen], -5 * barScale[screen]), source, (caught) ? Color.White : Color.DarkSlateGray,
@@ -489,54 +501,161 @@ namespace StardewMods
         }
         private void AddFishToListDynamic()                            //very performance intensive check for fish fish available in this area - simulates fishing
         {
-            if (!(who.currentLocation is IslandSouthEast && who.getTileLocation().X >= 17 && who.getTileLocation().X <= 21 && who.getTileLocation().Y >= 19 && who.getTileLocation().Y <= 23))
+            int freq = (isMinigame) ? 6 / totalPlayersOnThisPC : extraCheckFrequency / totalPlayersOnThisPC; //minigame lowers frequency
+            for (int i = 0; i < freq; i++)
             {
-                int freq = (isMinigame) ? 5 : extraCheckFrequency / totalPlayersOnThisPC; //minigame lowers frequency
-                for (int i = 0; i < freq; i++)
+                Game1.stats.TimesFished++;
+                int fish = AddHardcoded();
+                Game1.stats.TimesFished--;
+                if (fish != -2)//not fully hardcoded
                 {
-                    bool caughtIridiumKrobus = Game1.player.mailReceived.Contains("caughtIridiumKrobus"); //workaround for preventing player from getting something
-                    int nuts = 0;
-                    if (Game1.player.team.limitedNutDrops.ContainsKey("IslandFishing")) nuts = Game1.player.team.limitedNutDrops["IslandFishing"];
+                    if (fish == -1)//dynamic
+                    {
+                        int nuts = 5;                                                                           //"fix" for preventing player from not getting specials       ----start1
+                        bool mail1 = false;
+                        bool mail2 = false;
+                        bool caughtIridiumKrobus = Game1.player.mailReceived.Contains("caughtIridiumKrobus");
+                        if (who.currentLocation is IslandLocation)
+                        {
+                            nuts = (Game1.player.team.limitedNutDrops.ContainsKey("IslandFishing")) ? Game1.player.team.limitedNutDrops["IslandFishing"] : 0;
+                            if (nuts < 5) Game1.player.team.limitedNutDrops["IslandFishing"] = 5;
+                            mail1 = Game1.player.mailReceived.Contains("islandNorthCaveOpened");
+                            mail2 = Game1.player.mailForTomorrow.Contains("islandNorthCaveOpened");
+                            if (mail1) Game1.player.mailReceived.Remove("islandNorthCaveOpened");
+                            if (mail2) Game1.player.mailForTomorrow.Remove("islandNorthCaveOpened");                                                                         //-----end1
+                        }
 
-                    int f = who.currentLocation.getFish(0, 1, 5, who, 100, who.getTileLocation(), who.currentLocation.Name).ParentSheetIndex;
+                        Game1.stats.TimesFished++;
+                        fish = who.currentLocation.getFish(0, 1, 5, who, 100, who.getTileLocation(), who.currentLocation.Name).ParentSheetIndex;
+                        Game1.stats.TimesFished--;
 
+                        if (who.currentLocation is IslandLocation)
+                        {
+                            if (!caughtIridiumKrobus && Game1.player.mailReceived.Contains("caughtIridiumKrobus")) Game1.player.mailReceived.Remove("caughtIridiumKrobus");//"fix"----start2
+                            if (nuts < 5) Game1.player.team.limitedNutDrops["IslandFishing"] = nuts;
+                            if (mail1) Game1.player.mailReceived.Add("islandNorthCaveOpened");
+                            if (mail2) Game1.player.mailForTomorrow.Add("islandNorthCaveOpened");                                                                                //-----end2
+                        }
+                    }
+                    int val;
                     if (fishChances[-1] < int.MaxValue) //percentages, slow version (the one shown) is updated less over time
                     {
-                        if (f >= 167 && f <= 172) fishChances[168]++;
-                        else if (!fishHere.Contains(f))
+                        if (fish >= 167 && fish <= 172)
+                        {
+                            fishChances.TryGetValue(168, out val);
+                            fishChances[168] = val + 1;
+                        }
+                        else if (!fishHere.Contains(fish))
                         {
                             fishChances = new Dictionary<int, int> { { -1, 0 } };//reset % on new fish added
-                            foreach (var fish in fishHere) fishChances.Add(fish, 1);
+                            foreach (var f in fishHere) fishChances.Add(f, 1);
                             fishChancesSlow = new Dictionary<int, int>();
                             fishChancesModulo = 1;
-                            if (sortMode[screen] == 0) SortItemIntoListByDisplayName(f); //sort by name
-                            else fishHere.Add(f);
-                            fishChances.Add(f, 1);
+
+                            if (sortMode[screen] == 0) SortItemIntoListByDisplayName(fish); //sort by name
+                            else fishHere.Add(fish);
+                            fishChances.Add(fish, 1);
                         }
-                        else fishChances[f]++;
-                        fishChances[-1]++;
-                        if (fishChances[-1] % fishChancesModulo == 0)
+                        else
                         {
-                            if (fishChancesModulo < Int16.MaxValue) fishChancesModulo *= 10;
-                            fishChancesSlow = fishChances.ToDictionary(entry => entry.Key, entry => entry.Value);
+                            fishChances.TryGetValue(fish, out val);
+                            fishChances[fish] = val + 1;
                         }
                     }
-
+                    fishChances.TryGetValue(-1, out val);
+                    fishChances[-1] = val + 1;
+                    if (fishChances[-1] % fishChancesModulo == 0)
+                    {
+                        if (fishChancesModulo < 10000) fishChancesModulo *= 10;
+                        fishChancesSlow = fishChances.ToDictionary(entry => entry.Key, entry => entry.Value);
+                    }
                     if (sortMode[screen] == 1) SortListByPercentages(); //sort by %
 
-                    if (!caughtIridiumKrobus && Game1.player.mailReceived.Contains("caughtIridiumKrobus")) Game1.player.mailReceived.Remove("caughtIridiumKrobus");
-                    if (Game1.player.team.limitedNutDrops.ContainsKey("IslandFishing") && Game1.player.team.limitedNutDrops["IslandFishing"] != nuts) Game1.player.team.limitedNutDrops["IslandFishing"] = nuts;
-                    
-                    //if fish not in last 1200 attempts, redo lists
-                    if (f < 167 || f > 172) fishFailed[f] = 1200;
-                    foreach (var key in fishFailed.Keys.ToList())
+
+
+                    //if fish not in last X attempts, redo lists
+                    if ((fish < 167 || fish > 172))
                     {
-                        if (fishFailed[key] != f) fishFailed[key]--;
-                        if (fishFailed[key] < 1) oldGeneric = null;
+                        fishChances.TryGetValue(fish, out val);
+                        float chance = (float)val / fishChances[-1] * 100f;
+                        if (chance < 0.5f) fishFailed[fish] = 5000;
+                        else if (chance < 1f) fishFailed[fish] = 3500;
+                        else if (chance < 2f) fishFailed[fish] = 3000;
+                        else if (chance < 3f) fishFailed[fish] = 2500;
+                        else if (chance < 4f) fishFailed[fish] = 1500;
+                        else fishFailed[fish] = 1000;
                     }
                 }
+                foreach (var key in fishFailed.Keys.ToList())
+                {
+                    fishFailed[key]--;
+                    if (fishFailed[key] < 1) oldGeneric = null;
+                }
             }
+        }
 
+        private int AddHardcoded()//-2 skip dynamic, -1 dynamic, above -1 = item to add to dynamic
+        {
+            if (who.currentLocation is Caldera)
+            {
+                if (Game1.random.NextDouble() < 0.05 && !Game1.player.mailReceived.Contains("CalderaPainting")) return 2732;//physics 101
+                return -1;
+            }
+            if (who.currentLocation is Forest)
+            {
+                if (who.getTileY() > 108f && !Game1.player.mailReceived.Contains("caughtIridiumKrobus")) return 2396;//iridium krobus
+                return -1;
+            }
+            if (who.currentLocation is IslandLocation)
+            {
+                if (new Random((int)(Game1.stats.DaysPlayed + Game1.stats.TimesFished + Game1.uniqueIDForThisGame)).NextDouble() < 0.15 && (!Game1.player.team.limitedNutDrops.ContainsKey("IslandFishing") || Game1.player.team.limitedNutDrops["IslandFishing"] < 5)) return 73;
+
+                if (who.currentLocation is IslandFarmCave)
+                {
+                    if (Game1.random.NextDouble() < 0.1) return 900078;//frog hat + 900000
+                    else if (who.currentLocation.HasUnlockedAreaSecretNotes(Game1.player) && Game1.random.NextDouble() < (0.08) && who.currentLocation.tryToCreateUnseenSecretNote(Game1.player) != null) return 842;//journal
+                    else return 168;
+                }
+
+                if (who.currentLocation is IslandNorth)
+                {
+                    if ((bool)(Game1.getLocationFromName("IslandNorth") as IslandNorth).bridgeFixed &&
+                        (new Random(who.getTileX() * 2000 + who.getTileY() * 777 + (int)Game1.uniqueIDForThisGame / 2 + (int)Game1.stats.DaysPlayed + (int)Game1.stats.TimesFished)).NextDouble() < 0.1) return 821;
+                    return -1;
+                }
+
+                if (who.currentLocation is IslandSouthEast && who.getTileLocation().X >= 17 && who.getTileLocation().X <= 21 && who.getTileLocation().Y >= 19 && who.getTileLocation().Y <= 23)
+                {
+                    if (!(Game1.player.currentLocation as IslandSouthEast).fishedWalnut)
+                    {
+                        fishHere = new List<int>() { 73 };
+                        fishChancesSlow = new Dictionary<int, int>() { { -1, 1 }, { 73, 1 }, { 168, 0 } };
+                    }
+                    else
+                    {
+                        fishHere = new List<int>() { 168 };
+                        fishChancesSlow = new Dictionary<int, int>() { { -1, 1 }, { 168, 1 } };
+                    }
+                    oldGeneric = null;
+                    return -2;
+                }
+
+                if (who.currentLocation is IslandWest)
+                {
+                    if (Game1.player.hasOrWillReceiveMail("islandNorthCaveOpened") &&
+                        (new Random(who.getTileX() * 2000 + who.getTileY() * 777 + (int)Game1.uniqueIDForThisGame / 2 + (int)Game1.stats.DaysPlayed + (int)Game1.stats.TimesFished)).NextDouble() < 0.1) return 825;
+                    return -1;
+                }
+            }
+            if (who.currentLocation is Railroad)
+            {
+                if (Game1.currentSeason.Equals("winter")) return -2;
+                else if (Game1.player.secretNotesSeen.Contains(GameLocation.NECKLACE_SECRET_NOTE_INDEX) && !Game1.player.hasOrWillReceiveMail(GameLocation.CAROLINES_NECKLACE_MAIL)) return GameLocation.CAROLINES_NECKLACE_ITEM;
+                else if (!who.mailReceived.Contains("gotSpaFishing")) return 2423;
+                else if (Game1.random.NextDouble() < 0.08) return 2423;
+                else return 168;
+            }
+            return -1;
         }
 
         private void AddCrabPotFish()
@@ -570,22 +689,22 @@ namespace StardewMods
                     }
                 }
             }
-                if (isMariner) fishChancesSlow.Add(-1, fishChancesSlow.Sum(x => x.Value));
-                else
-                {
-                    fishChancesSlow.Add(168, 100 - fishChancesSlow.Sum(x => x.Value));
-                    fishChancesSlow.Add(-1, 100);
-                }
-                if (sortMode[screen] == 1) SortListByPercentages();
+            if (isMariner) fishChancesSlow.Add(-1, fishChancesSlow.Sum(x => x.Value));
+            else
+            {
+                fishChancesSlow.Add(168, 100 - fishChancesSlow.Sum(x => x.Value));
+                fishChancesSlow.Add(-1, 100);
+            }
+            if (sortMode[screen] == 1) SortListByPercentages();
         }
 
 
         private void SortItemIntoListByDisplayName(int itemId)
         {
-            string name = (new Object(itemId, 1).Name.Equals("Error Item", StringComparison.Ordinal)) ? new Furniture(itemId, Vector2.Zero).DisplayName : new Object(itemId, 1).DisplayName;
+            string name = (itemId > 900000) ? new Hat(itemId - 900000).DisplayName : (new Object(itemId, 1).Name.Equals("Error Item", StringComparison.Ordinal)) ? new Furniture(itemId, Vector2.Zero).DisplayName : new Object(itemId, 1).DisplayName;
             for (int j = 0; j < fishHere.Count; j++)
             {
-                string name2 = (new Object(fishHere[j], 1).Name.Equals("Error Item", StringComparison.Ordinal)) ? new Furniture(fishHere[j], Vector2.Zero).DisplayName : new Object(fishHere[j], 1).DisplayName;
+                string name2 = (fishHere[j] > 900000) ? new Hat(fishHere[j] - 900000).DisplayName : (new Object(fishHere[j], 1).Name.Equals("Error Item", StringComparison.Ordinal)) ? new Furniture(fishHere[j], Vector2.Zero).DisplayName : new Object(fishHere[j], 1).DisplayName;
 
                 if (string.Compare(name, name2, StringComparison.CurrentCulture) <= 0)
                 {
