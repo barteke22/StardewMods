@@ -51,7 +51,6 @@ namespace FishingMinigames
         private bool hereFishying;
         private bool itemIsInstantCatch;
         private int oldFacingDirection;
-        private int oldGameTimeInterval;
         private float itemSpriteSize;
         private Rectangle sourceRect;
         private bool drawTool;
@@ -107,17 +106,19 @@ namespace FishingMinigames
         {
             if (Game1.emoteMenu != null) return;
             who = Game1.player;
+            screen = Context.ScreenId;
+
             if (infoTimer > 0 && infoTimer < 1001)//reset from bubble
             {
-                who.CanMove = true;
                 hereFishying = false;
                 infoTimer = 0;
                 SendMessage(who, "Clear");
                 who.completelyStopAnimatingOrDoingAction();
                 who.faceDirection(oldFacingDirection);
             }
-            screen = Context.ScreenId;
-            if (keyBinds[screen].JustPressed()) //cancel regular rod use, if it's a shared keybind
+
+            if (hereFishying) SuppressAll(e.Pressed);
+            else if (keyBinds[screen].JustPressed()) //cancel regular rod use, if it's a shared keybind
             {
                 if (!Context.IsPlayerFree) return;
                 if (Game1.activeClickableMenu == null && who.CurrentItem is FishingRod)
@@ -236,6 +237,7 @@ namespace FishingMinigames
                 sparklingText = null;
             }
 
+
             if (fishCaught)
             {
                 if (fishingFestivalMinigame == 0)
@@ -249,10 +251,9 @@ namespace FishingMinigames
             }
 
             if (infoTimer > 0 && Game1.activeClickableMenu != null) infoTimer = 1020;//bubble logic
-            else if (infoTimer > 0) infoTimer--;
-            if (infoTimer == 1)
+            else if (infoTimer > 1) infoTimer--;
+            else if (infoTimer == 1)
             {
-                who.CanMove = true;
                 hereFishying = false;
                 SendMessage(who, "Clear");
                 infoTimer--;
@@ -277,7 +278,6 @@ namespace FishingMinigames
                         break;
                 }
             }
-            if (hereFishying) who.CanMove = false;
         }
 
         public void Display_RenderedWorld(object sender, RenderedWorldEventArgs e)
@@ -303,7 +303,7 @@ namespace FishingMinigames
             else
             {
                 //draw mouse target on water
-                if (!Game1.eventUp && !Game1.menuUp && !hereFishying && who.CurrentItem is FishingRod && who.currentLocation.isTileFishable((int)Game1.currentCursorTile.X, (int)Game1.currentCursorTile.Y))
+                if (!Game1.eventUp && !Game1.menuUp && who.CurrentItem is FishingRod && (!hereFishying || infoTimer > 0) && who.currentLocation.isTileFishable((int)Game1.currentCursorTile.X, (int)Game1.currentCursorTile.Y))
                 {
                     e.SpriteBatch.Draw(Game1.mouseCursors, new Vector2(((Game1.getMouseX() / 64) * 64), ((Game1.getMouseY() / 64) * 64)), new Rectangle(652, 204, 44, 44), new Color(0, 255, 0, 0.4f), 0f, Vector2.Zero, 1.45f, SpriteEffects.None, 1f);
                 }
@@ -400,8 +400,6 @@ namespace FishingMinigames
             hereFishying = true;
             startMinigameStage = 0;
             endMinigameStage = 0;
-            oldGameTimeInterval = Game1.gameTimeInterval;
-            if (!Game1.IsMultiplayer && !Game1.isFestival()) Game1.gameTimeInterval = 0;
 
             if (who.IsLocalPlayer && fishingFestivalMinigame != 2)
             {
@@ -417,6 +415,7 @@ namespace FishingMinigames
             if (!fromFishPond && fishingFestivalMinigame != 2 && startMinigameStyle[screen] > 0) //add !instant + test if works in festival
             {
                 //starting minigame init
+                who.CanMove = false;
                 ITranslationHelper translate = Helper.Translation;
                 startMinigameTextures = new Texture2D[] { Game1.content.Load<Texture2D>("LooseSprites\\boardGameBorder"), Game1.content.Load<Texture2D>("LooseSprites\\CraneGame") };
                 startMinigameText = new List<string>() { translate.Get("Minigame.Score") };
@@ -526,7 +525,7 @@ namespace FishingMinigames
                 }
             }
             if (whichFish == GameLocation.CAROLINES_NECKLACE_ITEM) item.questItem.Value = true;
-            
+
 
 
             //sizes
@@ -618,7 +617,11 @@ namespace FishingMinigames
                     else if (perfect) experience += (int)((float)experience * 1.4f);
 
                     who.gainExperience(1, experience);
-                    if (minigameDamage[screen] > 0 && endMinigameStyle[screen] > 0 && endMinigameStage == 8) who.takeDamage((int)((10 + (difficulty / 10) + (int)(fishSize / 5) - who.FishingLevel) * minigameDamage[screen]), true, null);
+                    if (minigameDamage[screen] > 0 && endMinigameStyle[screen] > 0 && endMinigameStage == 8)
+                    {
+                        who.takeDamage((int)((10 + (difficulty / 10) + (int)(fishSize / 5) - who.FishingLevel) * minigameDamage[screen]), true, null);
+                        who.temporarilyInvincible = false;
+                    }
                 }
 
 
@@ -628,7 +631,11 @@ namespace FishingMinigames
             else if (who.IsLocalPlayer && fishingFestivalMinigame != 2)
             {
                 who.gainExperience(1, 3);
-                if (!fromFishPond && minigameDamage[screen] > 0 && endMinigameStyle[screen] > 0 && endMinigameStage == 8) who.takeDamage((int)((16 - who.FishingLevel) * minigameDamage[screen]), true, null);
+                if (!fromFishPond && minigameDamage[screen] > 0 && endMinigameStyle[screen] > 0 && endMinigameStage == 8)
+                {
+                    who.takeDamage((int)((16 - who.FishingLevel) * minigameDamage[screen]), true, null);
+                    who.temporarilyInvincible = false;
+                }
             }
         }
 
@@ -641,6 +648,7 @@ namespace FishingMinigames
                     if (fishySound != null && !Context.IsSplitScreen) fishySound.Play(voiceVolume, voicePitch[screen], 0);
                     SendMessage(who);
 
+                    who.CanMove = true;
                     who.completelyStopAnimatingOrDoingAction();
                     who.jitterStrength = 2f;
                     List<FarmerSprite.AnimationFrame> animationFrames = new List<FarmerSprite.AnimationFrame>(){
@@ -1195,7 +1203,6 @@ namespace FishingMinigames
                     }
                     break;
                 case "Caught2":
-                    if (!Game1.IsMultiplayer && !Game1.isFestival()) Game1.gameTimeInterval = oldGameTimeInterval;
                     fishCaught = true;
 
                     Helper.Multiplayer.SendMessage(-1, "whichFish", modIDs: new[] { "barteke22.FishingInfoOverlays" }, new[] { who.UniqueMultiplayerID });//clear overlay
@@ -1287,7 +1294,7 @@ namespace FishingMinigames
             {
                 if (!(who.CurrentItem is FishingRod))//cancel for scrolling
                 {
-                    infoTimer = 0;
+                    infoTimer = 1;
                     return;
                 }
                 furniture = item is Furniture;
@@ -1423,8 +1430,6 @@ namespace FishingMinigames
             SendMessage(who, "Clear");
             hereFishying = false;
             stage = null;
-            if (oldGameTimeInterval > 0 && !Game1.IsMultiplayer && !Game1.isFestival()) Game1.gameTimeInterval = oldGameTimeInterval;
-            who.CanMove = true;
         }
         private void ClearAnimations(Farmer who)
         {
