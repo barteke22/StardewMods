@@ -123,7 +123,7 @@ namespace FishingMinigames
                 if (!Context.IsPlayerFree) return;
                 if (Game1.activeClickableMenu == null && who.CurrentItem is FishingRod)
                 {
-                    if (fishingFestivalMinigame > 0 && festivalMode[screen] == 0) return;
+                    if (Game1.isFestival() && (fishingFestivalMinigame == 0 || festivalMode[screen] == 0)) return;//fishing + other festivals
                     SuppressAll(e.Pressed);
                 }
             }
@@ -131,7 +131,7 @@ namespace FishingMinigames
 
             if (e.Pressed.Contains(SButton.F5) && Context.IsWorldReady)
             {
-                EmergencyCancel(who);
+                EmergencyCancel();
                 return;
             }
             if (!Context.IsWorldReady) return;
@@ -146,7 +146,7 @@ namespace FishingMinigames
                     Helper.Input.Suppress(SButton.ControllerB);
                     startMinigameStage = 5;
                     SwingAndEmote(who, 2);
-                    EmergencyCancel(who);
+                    EmergencyCancel();
                     return;
                 }
 
@@ -163,14 +163,9 @@ namespace FishingMinigames
                 {
                     if (Context.IsWorldReady && Context.CanPlayerMove && who.CurrentItem is FishingRod)
                     {
-                        if (Game1.isFestival() && (fishingFestivalMinigame == 0 || festivalMode[screen] == 0)) return;
-                        if (fishingFestivalMinigame == 1)
-                        {
-                            FestivalGameSkip(who);
-                            return;
-                        }
+                        if (fishingFestivalMinigame == 1) FestivalGameSkip(who);
 
-                        if (!hereFishying)
+                        else if (!hereFishying)
                         {
                             try
                             {
@@ -182,7 +177,6 @@ namespace FishingMinigames
 
                                 if (who.currentLocation.canFishHere() && who.currentLocation.isTileFishable((int)mouse.X, (int)mouse.Y))
                                 {
-                                    Monitor.Log($"here fishy fishy {mouse.X},{mouse.Y}");
                                     x = (int)mouse.X * 64;
                                     y = (int)mouse.Y * 64;
                                     Game1.stats.timesFished++;
@@ -192,7 +186,7 @@ namespace FishingMinigames
                             catch (Exception ex)
                             {
                                 Monitor.Log("Canceled fishing because: " + ex.Message, LogLevel.Error);
-                                EmergencyCancel(who);
+                                EmergencyCancel();
                             }
                         }
                     }
@@ -220,7 +214,7 @@ namespace FishingMinigames
                         timer = Game1.CurrentEvent.festivalTimer;
                         if (timer < 120000 && timer >= 500) fishingFestivalMinigame = 2;
                     }
-                    if (timer <= 500 && fishingFestivalMinigame > 0 && festivalMode[screen] > 0) EmergencyCancel(who);
+                    if (timer <= 500 && fishingFestivalMinigame > 0 && festivalMode[screen] > 0) EmergencyCancel();
                 }
             }
 
@@ -245,6 +239,7 @@ namespace FishingMinigames
                     infoTimer = 1000;
                     SendMessage(who, "CaughtBubble");
                 }
+                else infoTimer = 1;
                 stageTimer = -1;
                 stage = null;
                 fishCaught = false;
@@ -796,7 +791,7 @@ namespace FishingMinigames
                     if (startMinigameStage == 5)
                     {
                         SwingAndEmote(who, 2);
-                        EmergencyCancel(who);
+                        EmergencyCancel();
                     }
                     else HereFishyAnimation(who, x, y);
                     return;
@@ -1100,113 +1095,120 @@ namespace FishingMinigames
 
         private void PlayerCaughtFishEndFunction(int forceStage = 0)
         {
-            if (forceStage == 1) stage = "Caught1";
-
-            FishingRod rod = who.CurrentTool as FishingRod;
-            Helper.Reflection.GetField<Farmer>(rod, "lastUser").SetValue(who);
-            Helper.Reflection.GetField<int>(rod, "whichFish").SetValue(whichFish);
-            Helper.Reflection.GetField<bool>(rod, "caughtDoubleFish").SetValue(caughtDoubleFish);
-            Helper.Reflection.GetField<int>(rod, "fishQuality").SetValue(fishQuality);
-            Helper.Reflection.GetField<int>(rod, "clearWaterDistance").SetValue(clearWaterDistance);
-            Helper.Reflection.GetField<Farmer>(who.CurrentTool, "lastUser").SetValue(who);
-
-            switch (stage)
+            try
             {
-                case "Caught1":
-                    drawTool = false;
-                    SendMessage(who);
+                if (forceStage == 1) stage = "Caught1";
 
-                    CatchFishAfterMinigame(who);
+                FishingRod rod = who.CurrentTool as FishingRod;
+                Helper.Reflection.GetField<Farmer>(rod, "lastUser").SetValue(who);
+                Helper.Reflection.GetField<int>(rod, "whichFish").SetValue(whichFish);
+                Helper.Reflection.GetField<bool>(rod, "caughtDoubleFish").SetValue(caughtDoubleFish);
+                Helper.Reflection.GetField<int>(rod, "fishQuality").SetValue(fishQuality);
+                Helper.Reflection.GetField<int>(rod, "clearWaterDistance").SetValue(clearWaterDistance);
+                Helper.Reflection.GetField<Farmer>(who.CurrentTool, "lastUser").SetValue(who);
 
-                    if (!fromFishPond)
-                    {
-                        if (endMinigameStage == 8)//water on face
+                switch (stage)
+                {
+                    case "Caught1":
+                        drawTool = false;
+                        SendMessage(who);
+
+                        CatchFishAfterMinigame(who);
+
+                        if (!fromFishPond)
                         {
-                            animations.Add(new KeyValuePair<long, TemporaryAnimatedSprite>(who.UniqueMultiplayerID, new TemporaryAnimatedSprite(10, who.Position - new Vector2(0, 120), Color.Blue)
+                            if (endMinigameStage == 8)//water on face
                             {
-                                motion = new Vector2(0f, 0.12f),
-                                timeBasedMotion = true,
-                            }));
-                            SendMessage(who, "Water");
-                        }
-                        if (fishingFestivalMinigame == 0)
-                        {
-
-
-                            recordSize = who.caughtFish(whichFish, (metricSizes) ? (int)(fishSize * 2.54f) : (int)fishSize, false, caughtDoubleFish ? 2 : 1);
-                            if (bossFish)
-                            {
-                                Game1.showGlobalMessage(Game1.content.LoadString("Strings\\StringsFromCSFiles:FishingRod.cs.14068"));
-                                string name = Game1.objectInformation[whichFish].Split('/')[4];
-
-                                //Helper.Reflection.GetField<Multiplayer>(Game1.game1, "multiplayer").GetValue().globalChatInfoMessage("CaughtLegendaryFish", new string[] { who.Name, name }); //multiplayer class is not protected
-                                if (Game1.IsMultiplayer || Game1.multiplayerMode != 0)
+                                animations.Add(new KeyValuePair<long, TemporaryAnimatedSprite>(who.UniqueMultiplayerID, new TemporaryAnimatedSprite(10, who.Position - new Vector2(0, 120), Color.Blue)
                                 {
-                                    if (Game1.IsClient) Game1.client.sendMessage(15, "CaughtLegendaryFish", new string[] { who.Name, name });
-                                    else if (Game1.IsServer)
+                                    motion = new Vector2(0f, 0.12f),
+                                    timeBasedMotion = true,
+                                }));
+                                SendMessage(who, "Water");
+                            }
+                            if (fishingFestivalMinigame == 0)
+                            {
+
+
+                                recordSize = who.caughtFish(whichFish, (metricSizes) ? (int)(fishSize * 2.54f) : (int)fishSize, false, caughtDoubleFish ? 2 : 1);
+                                if (bossFish)
+                                {
+                                    Game1.showGlobalMessage(Game1.content.LoadString("Strings\\StringsFromCSFiles:FishingRod.cs.14068"));
+                                    string name = Game1.objectInformation[whichFish].Split('/')[4];
+
+                                    //Helper.Reflection.GetField<Multiplayer>(Game1.game1, "multiplayer").GetValue().globalChatInfoMessage("CaughtLegendaryFish", new string[] { who.Name, name }); //multiplayer class is not protected
+                                    if (Game1.IsMultiplayer || Game1.multiplayerMode != 0)
                                     {
-                                        foreach (long id in Game1.otherFarmers.Keys)
+                                        if (Game1.IsClient) Game1.client.sendMessage(15, "CaughtLegendaryFish", new string[] { who.Name, name });
+                                        else if (Game1.IsServer)
                                         {
-                                            Game1.server.sendMessage(id, 15, who, "CaughtLegendaryFish", new string[] { who.Name, name });
+                                            foreach (long id in Game1.otherFarmers.Keys)
+                                            {
+                                                Game1.server.sendMessage(id, 15, who, "CaughtLegendaryFish", new string[] { who.Name, name });
+                                            }
                                         }
                                     }
                                 }
+                                else if (recordSize)
+                                {
+                                    sparklingText = new SparklingText(Game1.dialogueFont, Game1.content.LoadString("Strings\\StringsFromCSFiles:FishingRod.cs.14069"), Color.LimeGreen, Color.Azure, false, 0.1, 2500, -1, 500, 1f);
+                                    who.currentLocation.localSound("newRecord");
+                                }
                             }
-                            else if (recordSize)
+                            SwingAndEmote(who, 2);
+                        }
+
+
+                        who.Halt();
+                        who.armOffset = Vector2.Zero;
+
+                        stage = "Caught2";
+                        if (fishingFestivalMinigame == 2)
+                        {
+                            if (!itemIsInstantCatch)
                             {
-                                sparklingText = new SparklingText(Game1.dialogueFont, Game1.content.LoadString("Strings\\StringsFromCSFiles:FishingRod.cs.14069"), Color.LimeGreen, Color.Azure, false, 0.1, 2500, -1, 500, 1f);
-                                who.currentLocation.localSound("newRecord");
+                                if (endMinigameStage == 10 || festivalMode[screen] == 1) Game1.CurrentEvent.caughtFish(whichFish, (int)fishSize, who);
                             }
-                        }
-                        SwingAndEmote(who, 2);
-                    }
-
-
-                    Monitor.Log($"caught fish end");
-                    who.Halt();
-                    who.armOffset = Vector2.Zero;
-
-                    stage = "Caught2";
-                    if (fishingFestivalMinigame == 2)
-                    {
-                        if (!itemIsInstantCatch)
-                        {
-                            if (endMinigameStage == 10 || festivalMode[screen] == 1) Game1.CurrentEvent.caughtFish(whichFish, (int)fishSize, who);
-                        }
-                        stageTimer = 1;
-                    }
-                    else//adding items + chest
-                    {
-                        if (!treasureCaught || itemIsInstantCatch)
-                        {
-                            if (!itemIsInstantCatch) rod.doneFishing(who, true);
-
-                            //maybe extra checks will help split screen issue where menu sometimes pops up even though there's space in inventory
-                            if (!who.couldInventoryAcceptThisItem(item) || !who.addItemToInventoryBool(item)) who.addItemByMenuIfNecessary(item);
                             stageTimer = 1;
                         }
-                        else
+                        else//adding items + chest
                         {
-                            who.currentLocation.localSound("openChest");
-
-                            animations.Add(new KeyValuePair<long, TemporaryAnimatedSprite>(who.UniqueMultiplayerID, new TemporaryAnimatedSprite("LooseSprites\\Cursors", new Rectangle(64, 1920, 32, 32), 200f, 4, 0, who.Position + new Vector2(-32f, -228f), flicker: false, flipped: false, (float)who.getStandingY() / 10000f + 0.001f, 0f, Color.White, 4f, 0f, 0f, 0f)
+                            if (!treasureCaught || itemIsInstantCatch)
                             {
-                                motion = new Vector2(0f, -0.128f),
-                                timeBasedMotion = true,
-                                alpha = 0f,
-                                alphaFade = -0.002f,
-                                endFunction = rod.openTreasureMenuEndFunction,
-                                extraInfoForEndBehavior = (!who.addItemToInventoryBool(item)) ? 1 : 0
-                            }));
-                            stageTimer = 60;
-                        }
-                    }
-                    break;
-                case "Caught2":
-                    fishCaught = true;
+                                if (!itemIsInstantCatch) rod.doneFishing(who, true);
 
-                    Helper.Multiplayer.SendMessage(-1, "whichFish", modIDs: new[] { "barteke22.FishingInfoOverlays" }, new[] { who.UniqueMultiplayerID });//clear overlay
-                    break;
+                                //maybe extra checks will help split screen issue where menu sometimes pops up even though there's space in inventory
+                                if (!who.couldInventoryAcceptThisItem(item) || !who.addItemToInventoryBool(item)) who.addItemByMenuIfNecessary(item);
+                                stageTimer = 1;
+                            }
+                            else
+                            {
+                                who.currentLocation.localSound("openChest");
+
+                                animations.Add(new KeyValuePair<long, TemporaryAnimatedSprite>(who.UniqueMultiplayerID, new TemporaryAnimatedSprite("LooseSprites\\Cursors", new Rectangle(64, 1920, 32, 32), 200f, 4, 0, who.Position + new Vector2(-32f, -228f), flicker: false, flipped: false, (float)who.getStandingY() / 10000f + 0.001f, 0f, Color.White, 4f, 0f, 0f, 0f)
+                                {
+                                    motion = new Vector2(0f, -0.128f),
+                                    timeBasedMotion = true,
+                                    alpha = 0f,
+                                    alphaFade = -0.002f,
+                                    endFunction = rod.openTreasureMenuEndFunction,
+                                    extraInfoForEndBehavior = (!who.addItemToInventoryBool(item)) ? 1 : 0
+                                }));
+                                stageTimer = 60;
+                            }
+                        }
+                        break;
+                    case "Caught2":
+                        fishCaught = true;
+
+                        Helper.Multiplayer.SendMessage(-1, "whichFish", modIDs: new[] { "barteke22.FishingInfoOverlays" }, new[] { who.UniqueMultiplayerID });//clear overlay
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Monitor.Log("Handled Exception in UpdateTicking. Festival: " + Game1.isFestival() + ", Message: " + ex.Message, LogLevel.Trace);
+                EmergencyCancel();
             }
         }
 
@@ -1417,7 +1419,7 @@ namespace FishingMinigames
             foreach (SButton button in buttons)
                 Helper.Input.Suppress(button);
         }
-        private void EmergencyCancel(Farmer who)
+        public void EmergencyCancel()
         {
             endMinigameStage = 0;
             startMinigameStage = 0;

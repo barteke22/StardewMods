@@ -144,12 +144,29 @@ namespace FishingMinigames
             {
                 minigame.Value = new Minigames(this);
             }
-            minigame.Value.GameLoop_UpdateTicking(sender, e);
+
+            try
+            {
+                minigame.Value.GameLoop_UpdateTicking(sender, e);
+            }
+            catch (Exception ex)
+            {
+                Monitor.Log("Handled Exception in UpdateTicking. Festival: " + Game1.isFestival() + ", Message: " + ex.Message, LogLevel.Trace);
+                minigame.Value.EmergencyCancel();
+            }
         }
 
         private void Display_RenderedWorld(object sender, RenderedWorldEventArgs e)
         {
-            if (Game1.player.IsLocalPlayer) minigame.Value.Display_RenderedWorld(sender, e);
+            try
+            {
+                if (Game1.player.IsLocalPlayer) minigame.Value.Display_RenderedWorld(sender, e);
+            }
+            catch (Exception ex)
+            {
+                Monitor.Log("Handled Exception in RenderedWorld. Festival: " + Game1.isFestival() + ", Message: " + ex.Message, LogLevel.Trace);
+                minigame.Value.EmergencyCancel();
+            }
         }
 
 
