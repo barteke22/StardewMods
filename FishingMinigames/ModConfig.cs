@@ -1,6 +1,4 @@
-﻿using StardewModdingAPI.Utilities;
-
-namespace FishingMinigames
+﻿namespace FishingMinigames
 {
     public class ModConfig
     {

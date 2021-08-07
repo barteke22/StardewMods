@@ -300,6 +300,14 @@ namespace FishingMinigames
                 if (LocalizedContentManager.CurrentLanguageCode == 0) Minigames.metricSizes = config.ConvertToMetric;
                 else Minigames.metricSizes = false;
                 Helper.Content.InvalidateCache("Strings/StringsFromCSFiles");
+
+                //item configs
+                Minigames.itemData = new Dictionary<string, string[]>();
+                foreach (var file in Directory.GetFiles(Helper.DirectoryPath + "/itemConfigs", "*.json").Select(Path.GetFileName).OrderBy(f => f))
+                {
+                    (Helper.Data.ReadJsonFile<Dictionary<string, string[]>>("itemConfigs/" + file) ?? new Dictionary<string, string[]>()).ToList().ForEach(x => Minigames.itemData[x.Key] = x.Value);
+                } 
+                Minigames.itemData.Remove("Example Item Name");
             }
         }
     }

@@ -70,12 +70,15 @@ namespace FishingMinigames
 
         private string stage;
         private int stageTimer = -1;
+        public static Dictionary<string, float> effects; //AREA, DAMAGE, DIFFICULTY, DOUBLE, LIFE, QUALITY, SIZE, SPEED, TREASURE
 
-        private Dictionary<long, MinigameMessage> messages = new Dictionary<long, MinigameMessage>();
+
+private Dictionary<long, MinigameMessage> messages = new Dictionary<long, MinigameMessage>();
 
         //config values
         public static SoundEffect fishySound;
         public static KeybindList[] keyBinds = new KeybindList[4];
+        public static Dictionary<string, string[]> itemData;
         public static float voiceVolume;
         public static float[] voicePitch = new float[4];
         public static float[] minigameDamage = new float[4];
@@ -388,9 +391,15 @@ namespace FishingMinigames
             }
         }
 
-
         private void HereFishyFishy(Farmer who)
         {
+            effects = new Dictionary<string, float>() { { "AREA", 1f }, { "DAMAGE", 1f }, { "DIFFICULTY", 1f }, { "DOUBLE", 0f }, { "LIFE", 0f }, 
+                                                        { "QUALITY", 0f }, { "SIZE", 1f }, { "SPEED", 1f }, { "TREASURE", 0f } };//DIFFICULTY, LIFE
+            FishingRod rod = who.CurrentItem as FishingRod;
+            AddEffect(rod.Name);
+            if (rod.attachments[0] != null) AddEffect(rod.attachments[0].Name);
+            if (rod.attachments[1] != null) AddEffect(rod.attachments[1].Name);
+
             treasureCaught = false;
             hereFishying = true;
             startMinigameStage = 0;
@@ -405,7 +414,10 @@ namespace FishingMinigames
 
             CatchFish(who, x, y);
 
-            if (!itemIsInstantCatch) Helper.Multiplayer.SendMessage(whichFish, "whichFish", modIDs: new[] { "barteke22.FishingInfoOverlays" }, new[] { who.UniqueMultiplayerID });//notify overlay of which fish
+            if (!fromFishPond)
+            {
+                Helper.Multiplayer.SendMessage((whichFish < 167 || whichFish > 172) ? whichFish : 168, "whichFish", modIDs: new[] { "barteke22.FishingInfoOverlays" }, new[] { who.UniqueMultiplayerID });//notify overlay of which fish
+            }
 
             if (!fromFishPond && fishingFestivalMinigame != 2 && startMinigameStyle[screen] > 0) //add !instant + test if works in festival
             {
@@ -426,7 +438,7 @@ namespace FishingMinigames
                     else offset += (int)(140 * startMinigameScale);
                 }
                 //vanilla treasure chance calculation
-                if (fishingFestivalMinigame != 2 && who.fishCaught != null && who.fishCaught.Count() > 1 && Game1.random.NextDouble() < FishingRod.baseChanceForTreasure + who.LuckLevel * 0.005 + (((who.CurrentTool as FishingRod).getBaitAttachmentIndex() == 703) ? FishingRod.baseChanceForTreasure : 0.0) + (((who.CurrentTool as FishingRod).getBobberAttachmentIndex() == 693) ? (FishingRod.baseChanceForTreasure / 3.0) : 0.0) + who.DailyLuck / 2.0 + ((who.professions.Contains(9) ? FishingRod.baseChanceForTreasure : 0.0)))
+                if (fishingFestivalMinigame != 2 && who.fishCaught != null && who.fishCaught.Count() > 1 && Game1.random.NextDouble() < FishingRod.baseChanceForTreasure + who.LuckLevel * 0.005 + (FishingRod.baseChanceForTreasure * effects["TREASURE"]) + who.DailyLuck / 2.0 + ((who.professions.Contains(9) ? FishingRod.baseChanceForTreasure : 0.0)))
                 {
                     startMinigameData[4] = Game1.random.Next(startMinigameArrowData.Length / 2, startMinigameArrowData.Length - 1);
                 }
@@ -442,6 +454,45 @@ namespace FishingMinigames
         }
 
 
+        private void AddEffect(string itemName)
+        {
+            if (itemData.ContainsKey(itemName))
+            {
+                foreach (var pair in itemData[itemName])
+                {
+                    string effect = pair.Split(':')[0];
+                    if (effect.Length < 1 || !effects.ContainsKey(effect) || !float.TryParse(pair.Split(':')[1], out float val)) Monitor.LogOnce(itemName + "'s effect skipped, error in its item_data.json entry", LogLevel.Error);
+                    else
+                    {
+                        switch (effect)
+                        {
+                            case "DOUBLE":
+                            case "LIFE":
+                            case "QUALITY":
+                            case "TREASURE":
+                                effects[effect] += val;
+                                break;
+                            default:
+                                effects[effect] *= val;
+                                break;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                if ((who.CurrentTool as FishingRod).Name.Equals(itemName, StringComparison.Ordinal))
+                {
+                    effects["SPEED"] *= 0.8f;
+                    Monitor.LogOnce(itemName + " not found in item_data.json. Modded Rod? Defaulting to SPEED:0.8 multiplier.", LogLevel.Debug);
+                }
+                else
+                {
+                    effects["SIZE"] *= 1.1f;
+                    Monitor.LogOnce(itemName + " not found in item_data.json. Modded Item? Defaulting to SIZE:1.1 multiplier.", LogLevel.Debug);
+                }
+            }
+        }
         private void CatchFish(Farmer who, int x, int y)
         {
             FishingRod rod = who.CurrentTool as FishingRod;
@@ -530,19 +581,19 @@ namespace FishingMinigames
                 int minimumSizeContribution = 1 + who.FishingLevel / 2;
                 fishSize *= (float)Game1.random.Next(minimumSizeContribution, Math.Max(6, minimumSizeContribution)) / 5f;
 
-                if (rod.getBaitAttachmentIndex() != -1) fishSize *= 1.2f;
                 fishSize *= 1f + (float)Game1.random.Next(-10, 11) / 100f;
                 fishSize = Math.Max(0f, Math.Min(1f, fishSize));
 
 
                 fishSize = (int)((float)minFishSize + (float)(maxFishSize - minFishSize) * fishSize);
                 fishSize++;
+                fishSize *= effects["SIZE"];
             }
 
             if (rod.Name.Equals("Training Rod", StringComparison.Ordinal)) fishSize = minFishSize;
 
 
-            caughtDoubleFish = !itemIsInstantCatch && fishingFestivalMinigame == 0 && !bossFish && rod.getBaitAttachmentIndex() == 774 && Game1.random.NextDouble() < 0.1 + who.DailyLuck / 2.0;
+            caughtDoubleFish = !itemIsInstantCatch && fishingFestivalMinigame == 0 && !bossFish && effects["DOUBLE"] != 0f && Game1.random.NextDouble() < (0.1 + who.DailyLuck / 2.0) * effects["DOUBLE"];
             if (caughtDoubleFish) item.Stack = 2;
 
             bossFish = FishingRod.isFishBossFish(whichFish);
@@ -557,15 +608,10 @@ namespace FishingMinigames
 
             if (!itemIsInstantCatch)
             {
-                if (rod.Name.Equals("Training Rod", StringComparison.Ordinal))
-                {
-                    fishQuality = 0;
-                    fishSize = minFishSize;
-                }
+                if (rod.Name.Equals("Training Rod", StringComparison.Ordinal)) fishQuality = 0;
                 else
                 {
-                    fishQuality = (fishSize * (0.9 + (who.FishingLevel / 5.0)) < 0.33) ? 0 : ((fishSize * (0.9 + (who.FishingLevel / 5.0)) < 0.66) ? 1 : 2);//init quality
-                    if (rod.getBobberAttachmentIndex() == 877) fishQuality++;
+                    fishQuality = (int)effects["QUALITY"] + ((fishSize * (0.9f + (who.FishingLevel / 5.0)) < 0.33f) ? 0 : ((fishSize * (0.9f + (who.FishingLevel / 5.0f)) < 0.66f) ? 1 : 2));//init quality
 
                     if (startMinigameStyle[screen] > 0 && endMinigameStyle[screen] > 0) //minigame score reductions
                     {
@@ -614,13 +660,13 @@ namespace FishingMinigames
                     who.gainExperience(1, experience);
                     if (minigameDamage[screen] > 0 && endMinigameStyle[screen] > 0 && endMinigameStage == 8)
                     {
-                        who.takeDamage((int)((10 + (difficulty / 10) + (int)(fishSize / 5) - who.FishingLevel) * minigameDamage[screen]), true, null);
+                        who.takeDamage((int)((10 + (difficulty / 10) + (int)(fishSize / 5) - who.FishingLevel) * minigameDamage[screen] * effects["DAMAGE"]), true, null);
                         who.temporarilyInvincible = false;
                     }
                 }
 
 
-                if (startMinigameStyle[screen] == 0) treasureCaught = fishingFestivalMinigame != 2 && who.fishCaught != null && who.fishCaught.Count() > 1 && Game1.random.NextDouble() < FishingRod.baseChanceForTreasure + (double)who.LuckLevel * 0.005 + ((rod.getBaitAttachmentIndex() == 703) ? FishingRod.baseChanceForTreasure : 0.0) + ((rod.getBobberAttachmentIndex() == 693) ? (FishingRod.baseChanceForTreasure / 3.0) : 0.0) + who.DailyLuck / 2.0 + ((who.professions.Contains(9) ? FishingRod.baseChanceForTreasure : 0.0) - reduction - 0.5f);
+                if (startMinigameStyle[screen] == 0) treasureCaught = fishingFestivalMinigame != 2 && who.fishCaught != null && who.fishCaught.Count() > 1 && Game1.random.NextDouble() < FishingRod.baseChanceForTreasure + (double)who.LuckLevel * 0.005 + (FishingRod.baseChanceForTreasure * effects["TREASURE"]) + who.DailyLuck / 2.0 + ((who.professions.Contains(9) ? FishingRod.baseChanceForTreasure : 0.0) - reduction - 0.5f);
                 item.Quality = fishQuality;
             }
             else if (who.IsLocalPlayer && fishingFestivalMinigame != 2)
@@ -628,7 +674,7 @@ namespace FishingMinigames
                 who.gainExperience(1, 3);
                 if (!fromFishPond && minigameDamage[screen] > 0 && endMinigameStyle[screen] > 0 && endMinigameStage == 8)
                 {
-                    who.takeDamage((int)((16 - who.FishingLevel) * minigameDamage[screen]), true, null);
+                    who.takeDamage((int)((16 - who.FishingLevel) * minigameDamage[screen] * effects["DAMAGE"]), true, null);
                     who.temporarilyInvincible = false;
                 }
             }
@@ -833,7 +879,7 @@ namespace FishingMinigames
                 //arrows
                 Vector2 firstArrowLoc = new Vector2((int)(screenMid.X + (width / 2f)) + startMinigameTimer, screenMid.Y + (height * 0.18f));
 
-                int speed = (int)(startMinigameScale * ((who.fishCaught.Count() == 0) ? 2 : 2 + (((difficulty - who.FishingLevel) / 10f) + (fishSize / 5)) * minigameDifficulty[screen]));
+                int speed = (int)(startMinigameScale * ((who.fishCaught.Count() == 0) ? 2 : 2 + (((difficulty - who.FishingLevel) / 10f) + (fishSize / 5)) * minigameDifficulty[screen] * effects["SPEED"]));
                 if (startMinigameStage == 2) startMinigameTimer -= speed;
 
 
@@ -855,7 +901,12 @@ namespace FishingMinigames
                     {
                         if (hitAreaMid.X - (13f * scale * 0.5f) > firstArrowLoc.X + data[2])//too late - fail
                         {
-                            data[1] = 3;
+                            //if (effects["LIFE"] > 0 && Game1.random.NextDouble() < 0.34)
+                            //{
+
+                            //}
+                            //else 
+                                data[1] = 3;
                             startMinigameArrowData[i] = startMinigameArrowData[i].Replace("/0/", "/-1/");
                         }
                         else if (hitAreaMid.X - (13f * scale * 0.5f) <= firstArrowLoc.X + data[2] &&
@@ -863,8 +914,8 @@ namespace FishingMinigames
                         {
                             startMinigameData[0] = i;
 
-                            if (hitAreaMid.X - (13f * scale * 0.1f) <= firstArrowLoc.X + data[2] &&
-                                hitAreaMid.X + (13f * scale * 0.1f) >= firstArrowLoc.X + data[2]) startMinigameData[1] = 1; //+ in perfect area
+                            if (hitAreaMid.X - (13f * scale * 0.1f * effects["AREA"]) <= firstArrowLoc.X + data[2] &&
+                                hitAreaMid.X + (13f * scale * 0.1f * effects["AREA"]) >= firstArrowLoc.X + data[2]) startMinigameData[1] = 1; //+ in perfect area
                         }
                     }
 
@@ -1073,7 +1124,7 @@ namespace FishingMinigames
                 }
                 if (passed)
                 {
-                    int totalDifficulty = (int)((30f + ((endMinigameStyle[screen] == 3) ? 20f : (endMinigameStyle[screen] == 2) ? 10f : 0f)) - ((difficulty / 33f) - (fishSize / 33f) * minigameDifficulty[screen]));
+                    int totalDifficulty = (int)(((30f + ((endMinigameStyle[screen] == 3) ? 20f : (endMinigameStyle[screen] == 2) ? 10f : 0f)) - ((difficulty / 33f) - (fishSize / 33f) * minigameDifficulty[screen])) * effects["AREA"]);
 
                     if (endMinigameStage == 3 && endMinigameTimer < totalDifficulty) endMinigameStage = 10;
                     else endMinigameStage = 9;
@@ -1207,7 +1258,7 @@ namespace FishingMinigames
             }
             catch (Exception ex)
             {
-                Monitor.Log("Handled Exception in UpdateTicking. Festival: " + Game1.isFestival() + ", Message: " + ex.Message, LogLevel.Trace);
+                Monitor.Log("Handled Exception in PlayerCaughtFishEndFunction. Festival: " + Game1.isFestival() + ", Message: " + ex.Message, LogLevel.Trace);
                 EmergencyCancel();
             }
         }
@@ -1432,6 +1483,7 @@ namespace FishingMinigames
             SendMessage(who, "Clear");
             hereFishying = false;
             stage = null;
+            Helper.Multiplayer.SendMessage(-1, "whichFish", modIDs: new[] { "barteke22.FishingInfoOverlays" }, new[] { who.UniqueMultiplayerID });//clear overlay
         }
         private void ClearAnimations(Farmer who)
         {
