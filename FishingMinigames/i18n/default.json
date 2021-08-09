@@ -29,7 +29,7 @@
     "GenericMC.EndDamage": "Minigame Damage (End)",
     "GenericMC.EndDamageDesc": "If you fail the end minigame, you'll get damaged based on the fish/item difficulty, size, and this multiplier. This is a straight up multiplier, so 0 means no damage, less than 1 means less, more means more.",
     "GenericMC.Difficulty": "Minigame Difficulty (Both)",
-    "GenericMC.DifficultyDesc": "Minigame difficulty (timers) is based on your equipment, fish difficulty and size. The negatives are multiplied by this number - the higher the harder.",
+    "GenericMC.DifficultyDesc": "Minigame difficulty (timers) is based on factors like your equipment, fish difficulty and size. This is the final value mutiplier, the higher the harder.",
 
     "GenericMC.StartMinigameScale": "Minigame Scale (Start)",
     "GenericMC.StartMinigameScaleDesc": "The Start Minigame sclaes along with the zoom level, and can be fine-tuned here.",
@@ -65,7 +65,7 @@
     "net.fishing": "Fishing Net",
     "net.bamboo": "Bamboo Net",
     "net.training": "Training Net",
-    "net.traningDesc": "It's a lot easier to use than other nets, but can only catch basic fish.",
+    "net.trainingDesc": "It's a lot easier to use than other nets, but can only catch basic fish.",
     "net.fiberglass": "Fiberglass Net",
     "net.iridium": "Iridium Net",
     "net.skill": "+{0} Fishing Net Efficiency"

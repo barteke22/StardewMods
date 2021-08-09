@@ -26,6 +26,7 @@ namespace FishingMinigames
         private SpriteBatch batch;
         private SparklingText sparklingText;
         private Farmer who;
+        private int fishingLevel;
         private int screen;
         private int x;
         private int y;
@@ -60,20 +61,22 @@ namespace FishingMinigames
         private int startMinigameTimer;
         private string[] startMinigameArrowData;    //0 arrow direction, 1 colour, 2 offset, 3 current distance
         private int[] startMinigameData;            //0 current arrow, 1 perfect area?, 2 score, 3 last arrow to vanish, 4 treasure arrow, 5 fade
+        private int startMinigameDiff;
         private Texture2D[] startMinigameTextures;
         private List<string> startMinigameText;
 
         private int endMinigameStage;               //0 before, 1 fish flying, 2 input can fail, 3 input can succeed/time out, 8 failed, 9 success, 10 perfect
         private string endMinigameKey;
         private int endMinigameTimer;
+        private int endMinigameDiff;
         private int infoTimer;
 
         private string stage;
         private int stageTimer = -1;
+
+        private Dictionary<long, MinigameMessage> messages = new Dictionary<long, MinigameMessage>();
+
         public static Dictionary<string, float> effects; //AREA, DAMAGE, DIFFICULTY, DOUBLE, LIFE, QUALITY, SIZE, SPEED, TREASURE
-
-
-private Dictionary<long, MinigameMessage> messages = new Dictionary<long, MinigameMessage>();
 
         //config values
         public static SoundEffect fishySound;
@@ -109,6 +112,7 @@ private Dictionary<long, MinigameMessage> messages = new Dictionary<long, Miniga
         {
             if (Game1.emoteMenu != null) return;
             who = Game1.player;
+            fishingLevel = who.FishingLevel;
             screen = Context.ScreenId;
 
             if (infoTimer > 0 && infoTimer < 1001)//reset from bubble
@@ -143,7 +147,7 @@ private Dictionary<long, MinigameMessage> messages = new Dictionary<long, Miniga
             if (startMinigameStage > 0 && startMinigameStage < 5)//already in startMinigame
             {
                 SuppressAll(e.Pressed);
-                if (e.Pressed.Contains(SButton.Escape) || e.Pressed.Contains(SButton.ControllerB)) //cancel
+                if (startMinigameStage < 3 && (e.Pressed.Contains(SButton.Escape) || e.Pressed.Contains(SButton.ControllerB))) //cancel
                 {
                     Helper.Input.Suppress(SButton.Escape);
                     Helper.Input.Suppress(SButton.ControllerB);
@@ -342,9 +346,7 @@ private Dictionary<long, MinigameMessage> messages = new Dictionary<long, Miniga
                         {
                             endMinigameTimer++;
 
-                            int totalDifficulty = (int)(100f + ((endMinigameStyle[screen] == 3) ? 25f : 0f) - ((difficulty / 2f) - (fishSize / 10f) * minigameDifficulty[screen]));
-
-                            if (endMinigameTimer > totalDifficulty)//too late/missed/failed
+                            if (endMinigameTimer > endMinigameDiff)//too late/missed/failed
                             {
                                 PlayPause(who);
                                 drawTool = true;
@@ -393,8 +395,8 @@ private Dictionary<long, MinigameMessage> messages = new Dictionary<long, Miniga
 
         private void HereFishyFishy(Farmer who)
         {
-            effects = new Dictionary<string, float>() { { "AREA", 1f }, { "DAMAGE", 1f }, { "DIFFICULTY", 1f }, { "DOUBLE", 0f }, { "LIFE", 0f }, 
-                                                        { "QUALITY", 0f }, { "SIZE", 1f }, { "SPEED", 1f }, { "TREASURE", 0f } };//DIFFICULTY, LIFE
+            effects = new Dictionary<string, float>() { { "AREA", 1f }, { "DAMAGE", 1f }, { "DIFFICULTY", 1f }, { "DOUBLE", 0f }, { "LIFE", 0f },
+                                                        { "QUALITY", 0f }, { "SIZE", 1f }, { "SPEED", 1f }, { "TREASURE", 0f } };
             FishingRod rod = who.CurrentItem as FishingRod;
             AddEffect(rod.Name);
             if (rod.attachments[0] != null) AddEffect(rod.attachments[0].Name);
@@ -429,7 +431,7 @@ private Dictionary<long, MinigameMessage> messages = new Dictionary<long, Miniga
                 foreach (string s in translate.Get("Minigame.InfoDDR").ToString().Split(new string[] { "\n" }, StringSplitOptions.None)) startMinigameText.Add(s);
 
                 startMinigameData = new int[6];
-                startMinigameArrowData = new string[5 + (int)Math.Ceiling((difficulty + fishSize) / 3f * minigameDifficulty[screen])]; //make it minimum X (20?) and then apply diff/size - max 99
+                startMinigameArrowData = new string[5 + (int)Math.Abs(startMinigameDiff * 4.0f)]; //make it minimum X (20?) and then apply diff/size - max 99
                 int offset = 0;
                 for (int i = 0; i < startMinigameArrowData.Length; i++)
                 {
@@ -577,15 +579,15 @@ private Dictionary<long, MinigameMessage> messages = new Dictionary<long, Miniga
             //sizes
             if (maxFishSize > 0)
             {
-                fishSize = Math.Min((float)clearWaterDistance / 5f, 1f);
+                fishSize = Math.Min(clearWaterDistance / 5f, 1f);
                 int minimumSizeContribution = 1 + who.FishingLevel / 2;
-                fishSize *= (float)Game1.random.Next(minimumSizeContribution, Math.Max(6, minimumSizeContribution)) / 5f;
+                fishSize *= Game1.random.Next(minimumSizeContribution, Math.Max(6, minimumSizeContribution)) / 5f;
 
-                fishSize *= 1f + (float)Game1.random.Next(-10, 11) / 100f;
+                fishSize *= 1f + Game1.random.Next(-10, 11) / 100f;
                 fishSize = Math.Max(0f, Math.Min(1f, fishSize));
 
 
-                fishSize = (int)((float)minFishSize + (float)(maxFishSize - minFishSize) * fishSize);
+                fishSize = (int)(minFishSize + (maxFishSize - minFishSize) * fishSize);
                 fishSize++;
                 fishSize *= effects["SIZE"];
             }
@@ -597,6 +599,13 @@ private Dictionary<long, MinigameMessage> messages = new Dictionary<long, Miniga
             if (caughtDoubleFish) item.Stack = 2;
 
             bossFish = FishingRod.isFishBossFish(whichFish);
+
+            //difficulty = 110;//boss test
+            //fishSize = 51;
+
+            float modifier = (fishingLevel / 5f) - ((difficulty / 10f) - (fishSize / 40f)) + who.LuckLevel + (Game1.random.Next(0, 50) / 100f);
+            endMinigameDiff = 50 + (int)((((endMinigameStyle[screen] == 3) ? 25f : (endMinigameStyle[screen] == 2) ? 15f : 0f) + modifier) / minigameDifficulty[screen] / effects["DIFFICULTY"]);
+            startMinigameDiff = (int)(modifier * minigameDifficulty[screen] * effects["DIFFICULTY"]);
         }
 
         private void CatchFishAfterMinigame(Farmer who)
@@ -660,7 +669,7 @@ private Dictionary<long, MinigameMessage> messages = new Dictionary<long, Miniga
                     who.gainExperience(1, experience);
                     if (minigameDamage[screen] > 0 && endMinigameStyle[screen] > 0 && endMinigameStage == 8)
                     {
-                        who.takeDamage((int)((10 + (difficulty / 10) + (int)(fishSize / 5) - who.FishingLevel) * minigameDamage[screen] * effects["DAMAGE"]), true, null);
+                        who.takeDamage((int)((10 + (difficulty / 10) + (int)(fishSize / 10) - who.FishingLevel) * minigameDamage[screen] * effects["DAMAGE"]), true, null);
                         who.temporarilyInvincible = false;
                     }
                 }
@@ -869,6 +878,7 @@ private Dictionary<long, MinigameMessage> messages = new Dictionary<long, Miniga
                 if ((Game1.paused || (!Game1.game1.IsActiveNoOverlay && Program.releaseBuild)) && (Game1.options == null || Game1.options.pauseWhenOutOfFocus || Game1.paused) && Game1.multiplayerMode == 0)
                 {
                     batch.Draw(Game1.mouseCursors, screenMid, new Rectangle(322, 498, 12, 12), Color.Brown, 0f, new Vector2(6f), scale * 2f, SpriteEffects.None, 0.4f);
+                    //DebugColours(screenMid - new Vector2(width * 0.5f, height * 0.5f));
                     return;
                 }
                 //hit area rings
@@ -879,7 +889,7 @@ private Dictionary<long, MinigameMessage> messages = new Dictionary<long, Miniga
                 //arrows
                 Vector2 firstArrowLoc = new Vector2((int)(screenMid.X + (width / 2f)) + startMinigameTimer, screenMid.Y + (height * 0.18f));
 
-                int speed = (int)(startMinigameScale * ((who.fishCaught.Count() == 0) ? 2 : 2 + (((difficulty - who.FishingLevel) / 10f) + (fishSize / 5)) * minigameDifficulty[screen] * effects["SPEED"]));
+                int speed = (int)(startMinigameScale * ((who.fishCaught.Count() == 0) ? 2 : 2 - (startMinigameDiff * effects["SPEED"])));
                 if (startMinigameStage == 2) startMinigameTimer -= speed;
 
 
@@ -895,19 +905,18 @@ private Dictionary<long, MinigameMessage> messages = new Dictionary<long, Miniga
                         else startMinigameArrowData[i] = startMinigameArrowData[i].Remove(0, 1).Insert(0, (int.Parse(startMinigameArrowData[i][0].ToString()) + 1).ToString());
                     }
 
-                    int[] data = startMinigameArrowData[i].Split('/').Select(int.Parse).ToArray();//data = 0 direction, 1 colour, 2 offset from first, 3 current loc
+                    float[] data = startMinigameArrowData[i].Split('/').Select(float.Parse).ToArray();//data = 0 direction, 1 colour, 2 offset from first, 3 current loc
 
-                    if (data[1] == 0)//if empty arrow
+                    if (data[1] == 0f)//if empty arrow
                     {
                         if (hitAreaMid.X - (13f * scale * 0.5f) > firstArrowLoc.X + data[2])//too late - fail
                         {
-                            //if (effects["LIFE"] > 0 && Game1.random.NextDouble() < 0.34)
-                            //{
-
-                            //}
-                            //else 
-                                data[1] = 3;
-                            startMinigameArrowData[i] = startMinigameArrowData[i].Replace("/0/", "/-1/");
+                            if (effects["LIFE"] > 0 && i != startMinigameData[4] && Game1.random.Next(0, 2) == 0)//saved by tackle?
+                            {
+                                effects["LIFE"]--;
+                                startMinigameArrowData[i] = startMinigameArrowData[i].Replace("/0/", "/1.1/");
+                            }
+                            else startMinigameArrowData[i] = startMinigameArrowData[i].Replace("/0/", "/-1/");
                         }
                         else if (hitAreaMid.X - (13f * scale * 0.5f) <= firstArrowLoc.X + data[2] &&
                                  hitAreaMid.X + (13f * scale * 0.5f) >= firstArrowLoc.X + data[2])                          //in regular hit area
@@ -926,20 +935,23 @@ private Dictionary<long, MinigameMessage> messages = new Dictionary<long, Miniga
 
                         if (firstArrowLoc.X + data[2] - (6f * scale) >= screenMid.X - (width * 0.464f))//arrow didn't pass end
                         {
-                            Color color = (data[1] == 2) ? Color.LimeGreen : (data[1] == 1) ? Color.Orange : (data[1] == -1) ? Color.Red : (i == startMinigameData[4]) ? Color.LightPink : Color.Cyan;
-                            batch.Draw(startMinigameTextures[1], firstArrowLoc + new Vector2((data[2]), 0), new Rectangle((data[0] == 0 || data[0] == 2) ? 338 : 322, 82, 12, 12),
-                                color, 0f, new Vector2(6f), scale, (data[0] == 0) ? SpriteEffects.FlipVertically : (data[0] == 3) ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 0.4f);
-                            //treasure arrow?
-                            if (i == startMinigameData[4]) batch.Draw(Game1.mouseCursors, firstArrowLoc + new Vector2((data[2]), 0), new Rectangle((treasureCaught) ? 104 : (data[1] == -1) ? 167 : 71, 1926, 20, 26),
+                            Color color = (data[1] == 2f) ? Color.LimeGreen : ((int)data[1] == 1) ? Color.Orange : (data[1] == -1f) ? Color.Red : (i == startMinigameData[4]) ? Color.LightPink : Color.Cyan;
+                            batch.Draw(startMinigameTextures[1], firstArrowLoc + new Vector2((data[2]), 0), new Rectangle((data[0] == 0f || data[0] == 2f) ? 338 : 322, 82, 12, 12),
+                                color, 0f, new Vector2(6f), scale, (data[0] == 0f) ? SpriteEffects.FlipVertically : (data[0] == 3f) ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 0.4f);
+                            //treasure arrow
+                            if (i == startMinigameData[4]) batch.Draw(Game1.mouseCursors, firstArrowLoc + new Vector2((data[2]), 0), new Rectangle((treasureCaught) ? 104 : (data[1] == -1f) ? 167 : 71, 1926, 20, 26),
                                 Color.White, 0f, new Vector2(9f, 14f), scale * 0.2f, SpriteEffects.None, 0.41f);
+                            //saved arrow
+                            if (data[1] == 1.1f) batch.Draw(Game1.objectSpriteSheet, firstArrowLoc + new Vector2((data[2]), 0), new Rectangle(291, 612, 9, 9),
+                                    Color.White, 0f, new Vector2(4.5f), scale * 0.3f, SpriteEffects.None, 0.42f);
                         }
-                        else if (i + 1 > startMinigameData[3])//update score on new arrow passed end
+                        else if (i + 1 > startMinigameData[3])//update score when new arrow passes end
                         {
                             startMinigameData[3] = i + 1;
                             startMinigameData[2] = 0;
                             for (int j = 0; j < i + 1; j++)
                             {
-                                startMinigameData[2] += int.Parse(startMinigameArrowData[j].Split('/')[1]);
+                                startMinigameData[2] += (int)float.Parse(startMinigameArrowData[j].Split('/')[1]);
                             }
                         }
                     }
@@ -951,11 +963,11 @@ private Dictionary<long, MinigameMessage> messages = new Dictionary<long, Miniga
                 //score count
                 batch.DrawString(Game1.smallFont, startMinigameData[2].ToString(), screenMid + new Vector2(width * -0.41f, height * 0.19f),
                     ((startMinigameData[2] < startMinigameArrowData.Length * 0.4f) ? Color.Crimson :
-                    (startMinigameData[2] < startMinigameArrowData.Length * 0.8f) ? Color.Red :
+                    (startMinigameData[2] < startMinigameArrowData.Length * 0.8f) ? Color.Tomato :
                     (startMinigameData[2] < startMinigameArrowData.Length) ? Color.Orange :
                     (startMinigameData[2] < startMinigameArrowData.Length * 1.2f) ? Color.Yellow :
-                    (startMinigameData[2] < startMinigameArrowData.Length * 1.5f) ? Color.LimeGreen :
-                    (startMinigameData[2] < startMinigameArrowData.Length * 1.9f) ? Color.Green : Color.Purple) * opacity,
+                    (startMinigameData[2] < startMinigameArrowData.Length * 1.5f) ? Color.GreenYellow :
+                    (startMinigameData[2] < startMinigameArrowData.Length * 1.9f) ? Color.LimeGreen : Color.Purple) * (opacity / 3f),
                     0f, Game1.smallFont.MeasureString(startMinigameData[2].ToString()) / 2f, scale * 0.28f, SpriteEffects.None, 0.51f);
                 //arrows left count
                 batch.DrawString(Game1.smallFont, arrowsLeft.ToString(), screenMid + new Vector2(width * 0.41f, height * 0.19f), Color.DarkTurquoise * opacity, 0f, Game1.smallFont.MeasureString(arrowsLeft.ToString()) / 2f, scale * 0.28f, SpriteEffects.None, 0.51f);
@@ -998,6 +1010,11 @@ private Dictionary<long, MinigameMessage> messages = new Dictionary<long, Miniga
                         if (startMinigameData[1] == 1) startMinigameArrowData[startMinigameData[0]] = startMinigameArrowData[startMinigameData[0]].Replace("/0/", "/2/");//perfect?
                         else startMinigameArrowData[startMinigameData[0]] = startMinigameArrowData[startMinigameData[0]].Replace("/0/", "/1/");
                     }
+                    else if (effects["LIFE"] > 0 && startMinigameData[0] != startMinigameData[4] && Game1.random.Next(0, 2) == 0)//saved by tackle?
+                    {
+                        effects["LIFE"]--;
+                        startMinigameArrowData[startMinigameData[0]] = startMinigameArrowData[startMinigameData[0]].Replace("/0/", "/1.1/");
+                    }
                     else startMinigameArrowData[startMinigameData[0]] = startMinigameArrowData[startMinigameData[0]].Replace("/0/", "/-1/");
                 }
                 //else negative point if hit when arrow outside box? maybe if 2 in a row to avoid spam cheeze? can do it by changing data into list and adding red arrows
@@ -1032,7 +1049,6 @@ private Dictionary<long, MinigameMessage> messages = new Dictionary<long, Miniga
                 endMinigameTimer = 0;
                 who.PlayFishBiteChime();
 
-                string sprite = "LooseSprites\\Cursors";
                 Rectangle rect = new Rectangle(395, 497, 3, 8);
                 Vector2 offset = new Vector2(-7.5f, 0);
                 Color color = Color.White;
@@ -1073,7 +1089,7 @@ private Dictionary<long, MinigameMessage> messages = new Dictionary<long, Miniga
                         endMinigameKey = temp[Game1.random.Next(0, temp.Length)].ToString().ToUpper();
                         return;
                 }
-                Game1.screenOverlayTempSprites.Add(new TemporaryAnimatedSprite(sprite, rect, new Vector2(who.getStandingX() - Game1.viewport.X, who.getStandingY() - 136 - Game1.viewport.Y) + offset, flipped: false, 0.02f, color)
+                Game1.screenOverlayTempSprites.Add(new TemporaryAnimatedSprite("LooseSprites\\Cursors", rect, new Vector2(who.getStandingX() - Game1.viewport.X, who.getStandingY() - 136 - Game1.viewport.Y) + offset, flipped: false, 0.02f, color)
                 {
                     scale = 5f,
                     scaleChange = -0.01f,
@@ -1124,9 +1140,7 @@ private Dictionary<long, MinigameMessage> messages = new Dictionary<long, Miniga
                 }
                 if (passed)
                 {
-                    int totalDifficulty = (int)(((30f + ((endMinigameStyle[screen] == 3) ? 20f : (endMinigameStyle[screen] == 2) ? 10f : 0f)) - ((difficulty / 33f) - (fishSize / 33f) * minigameDifficulty[screen])) * effects["AREA"]);
-
-                    if (endMinigameStage == 3 && endMinigameTimer < totalDifficulty) endMinigameStage = 10;
+                    if (endMinigameStage == 3 && endMinigameTimer < endMinigameDiff * effects["AREA"] * 0.2f) endMinigameStage = 10;
                     else endMinigameStage = 9;
 
                     ClearAnimations(who);
@@ -1467,8 +1481,11 @@ private Dictionary<long, MinigameMessage> messages = new Dictionary<long, Miniga
 
         protected void SuppressAll(IEnumerable<SButton> buttons)
         {
-            foreach (SButton button in buttons)
-                Helper.Input.Suppress(button);
+            if (Game1.activeClickableMenu == null)
+            {
+                foreach (SButton button in buttons)
+                    Helper.Input.Suppress(button);
+            }
         }
         public void EmergencyCancel()
         {
@@ -1673,6 +1690,33 @@ private Dictionary<long, MinigameMessage> messages = new Dictionary<long, Miniga
                             }
                             break;
                     }
+                }
+            }
+        }
+
+        private void DebugColours(Vector2 startPos)
+        {
+            batch.Draw(startMinigameTextures[0], new Vector2(950, 500), null, Color.Black, 0f, new Vector2(69f, 37f), 20f, SpriteEffects.None, 0.4f);
+
+            Vector2 pos = new Vector2(0);
+            List<Color> predefinedColors = new List<Color>();
+            System.Reflection.PropertyInfo[] properties = typeof(Color).GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+            foreach (System.Reflection.PropertyInfo propertyInfo in properties)
+            {
+                if (propertyInfo.GetGetMethod() != null && propertyInfo.PropertyType == typeof(Color))
+                {
+                    Color color = (Color)propertyInfo.GetValue(null, null);
+                    predefinedColors.Add(color);
+                }
+            };
+            for (int i = 0; i < predefinedColors.Count; i++)
+            {
+                batch.DrawString(Game1.smallFont, i.ToString(), startPos + pos, predefinedColors[i], 0f, Vector2.Zero, 2f, SpriteEffects.None, 0.51f);
+                pos.X += 100f;
+                if (pos.X == 1400)
+                {
+                    pos.X = 0f;
+                    pos.Y += 70f;
                 }
             }
         }

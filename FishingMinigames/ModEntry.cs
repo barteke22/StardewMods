@@ -92,9 +92,9 @@ namespace FishingMinigames
                 new string[] { translate.Get("GenericMC.Disabled"), translate.Get("GenericMC.EndMinigameStyle1"), translate.Get("GenericMC.EndMinigameStyle2"), translate.Get("GenericMC.EndMinigameStyle3") });
 
             GenericMC.RegisterClampedOption(ModManifest, translate.Get("GenericMC.EndDamage"), translate.Get("GenericMC.EndDamageDesc"),
-                () => config.EndMinigameDamage[screen], (float val) => config.EndMinigameDamage[screen] = val, 0f, 2f);
+                () => config.EndMinigameDamage[screen], (float val) => config.EndMinigameDamage[screen] = val, 0.1f, 2f);
             GenericMC.RegisterClampedOption(ModManifest, translate.Get("GenericMC.Difficulty"), translate.Get("GenericMC.DifficultyDesc"),
-                () => config.MinigameDifficulty[screen], (float val) => config.MinigameDifficulty[screen] = val, 0f, 2f);
+                () => config.MinigameDifficulty[screen], (float val) => config.MinigameDifficulty[screen] = val, 0.1f, 2f);
 
             if (screen == 0)//only page 0
             {
