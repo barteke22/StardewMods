@@ -26,17 +26,14 @@
     "Training Rod": [
         "SPEED:0.5"
     ],
-    "Fishing Rod": [
-        "SPEED:1.0"
-    ],
-    "Bamboo Rod": [
-        "SPEED:0.9"
+    "Bamboo Pole": [
+        "SPEED:1.0"//no bonus
     ],
     "Fiberglass Rod": [
         "SPEED:0.8"
     ],
     "Iridium Rod": [
-        "SPEED:0.7"
+        "SPEED:0.6"
     ],
 
     //bait
@@ -44,14 +41,14 @@
         "SIZE:1.1"
     ],
     "Magnet": [
-        "SIZE:1.1",
+        "SIZE:0.9",
         "TREASURE:1.0"
     ],
     "Wild Bait": [
         "SIZE:1.2",
         "DOUBLE:1.2" //by default it's 1.0, but felt a bit weak with the speed you can gain fish at
     ],
-    "Magic Bait": [ //GetFish(): enables fish of any season/time
+    "Magic Bait": [ //GetFish(): enables fish of any season/time/weather
         "SIZE:1.3"
     ],
 
@@ -79,7 +76,7 @@
     "Treasure Hunter": [
         "TREASURE:0.333"
     ],
-    "Barbed Hook": [
+    "Barbed Hook": [//Barbed Megaphone?
         "AREA:1.1",
         "DIFFICULTY:0.8",
         "LIFE:2"

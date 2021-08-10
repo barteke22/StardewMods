@@ -1,4 +1,5 @@
 ﻿using GenericModConfigMenu;
+using Harmony;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
@@ -32,6 +33,14 @@ namespace FishingMinigames
             helper.Events.GameLoop.GameLaunched += GenericModConfigMenuIntegration;
             helper.Events.GameLoop.SaveLoaded += GameLoop_SaveLoaded;
             helper.Events.Multiplayer.ModMessageReceived += OnModMessageReceived;
+
+            //var harmony = HarmonyInstance.Create(this.ModManifest.UniqueID);
+
+            //// example patch, you'll need to edit this for your patch
+            //harmony.Patch(
+            //   original: AccessTools.Method(typeof(StardewValley.Tools.FishingRod), nameof(StardewValley.Tools.FishingRod.des)),
+            //   prefix: new HarmonyMethod(typeof(ObjectPatches), nameof(ObjectPatches.CanBePlacedHere_Prefix))
+            //);
         }
         private void GenericModConfigMenuIntegration(object sender, GameLaunchedEventArgs e)     //Generic Mod Config Menu API
         {
@@ -92,7 +101,7 @@ namespace FishingMinigames
                 new string[] { translate.Get("GenericMC.Disabled"), translate.Get("GenericMC.EndMinigameStyle1"), translate.Get("GenericMC.EndMinigameStyle2"), translate.Get("GenericMC.EndMinigameStyle3") });
 
             GenericMC.RegisterClampedOption(ModManifest, translate.Get("GenericMC.EndDamage"), translate.Get("GenericMC.EndDamageDesc"),
-                () => config.EndMinigameDamage[screen], (float val) => config.EndMinigameDamage[screen] = val, 0.1f, 2f);
+                () => config.EndMinigameDamage[screen], (float val) => config.EndMinigameDamage[screen] = val, 0f, 2f);
             GenericMC.RegisterClampedOption(ModManifest, translate.Get("GenericMC.Difficulty"), translate.Get("GenericMC.DifficultyDesc"),
                 () => config.MinigameDifficulty[screen], (float val) => config.MinigameDifficulty[screen] = val, 0.1f, 2f);
 
@@ -174,31 +183,13 @@ namespace FishingMinigames
         /// <summary>Get whether this instance can edit the given asset.</summary>
         public bool CanEdit<T>(IAssetInfo asset)
         {
-            if (asset.AssetNameEquals("TileSheets/tools") || asset.AssetNameEquals("Strings/StringsFromCSFiles")) return true;
+            if (asset.AssetNameEquals("TileSheets/tools") || asset.AssetNameEquals("Maps/springobjects") || asset.AssetNameEquals("Strings/StringsFromCSFiles") || asset.AssetNameEquals("Data/ObjectInformation")) return true;
             return false;
         }
         /// <summary>Edits the asset if CanEdit</summary>
         public void Edit<T>(IAssetData asset)
         {
-            if (asset.AssetNameEquals("TileSheets/tools"))
-            {
-                var editor = asset.AsImage();
-
-                Texture2D sourceImage;
-                try
-                {
-                    sourceImage = Helper.Content.Load<Texture2D>("assets/rod_sprites.png", ContentSource.ModFolder);
-                    editor.PatchImage(sourceImage, targetArea: new Rectangle(128, 0, 64, 16));
-                    sourceImage = Helper.Content.Load<Texture2D>("assets/rod_farmer.png", ContentSource.ModFolder);
-                    editor.PatchImage(sourceImage, targetArea: new Rectangle(0, 289, 295, 95));
-                    sourceImage.Dispose();
-                }
-                catch (Exception)
-                {
-                    this.Monitor.Log("Could not load images for the fishing nets! Are the assets missing? Ignore if you removed them intentionally.", LogLevel.Warn);
-                }
-            }
-            else
+            if (asset.AssetNameEquals("Strings/StringsFromCSFiles"))
             {
                 translate = Helper.Translation;
                 IDictionary<string, string> data = asset.AsDictionary<string, string>().Data;
@@ -212,7 +203,10 @@ namespace FishingMinigames
                                 data[itemID] = translate.Get("net.fishing");
                                 break;
                             case "FishingRod.cs.trainingRodDescription":
-                                data[itemID] = translate.Get("net.trainingDesc");
+                                data[itemID] = AddEffectDescriptions("Training Rod", translate.Get("net.trainingDesc"));
+                                break;
+                            case "FishingRod.cs.14042":
+                                Minigames.rodDescription = data[itemID];
                                 break;
                             case "FishingRod.cs.14045":
                                 data[itemID] = translate.Get("net.bamboo");
@@ -232,22 +226,176 @@ namespace FishingMinigames
                             case "FishingRod.cs.14083":
                                 if (config.ConvertToMetric) data[itemID] = "{0} cm";
                                 break;
-                            default:
-                                break;
                         }
                     }
                     catch (Exception)
                     {
-                        this.Monitor.Log("Could not load string for Rod to Net change, line: " + data[itemID] + ". Are the translations missing? Ignore if you removed them intentionally.", LogLevel.Warn);
+                        Monitor.Log("Could not load string for Rod to Net change, line: " + data[itemID] + ". Are the translations missing? Ignore if you removed them intentionally.", LogLevel.Warn);
+                    }
+                }
+
+            }
+            else if (asset.AssetNameEquals("Data/ObjectInformation"))
+            {
+                translate = Helper.Translation;
+                IDictionary<int, string> data = asset.AsDictionary<int, string>().Data;
+                foreach (int itemID in data.Keys.ToArray())
+                {
+                    try
+                    {
+                        string[] itemData = data[itemID].Split('/');
+                        switch (itemID)
+                        {
+                            //bait
+                            case 685:
+                                itemData[5] = AddEffectDescriptions("Bait");
+                                break;
+                            case 703:
+                                itemData[5] = AddEffectDescriptions("Magnet", itemData[5]);
+                                break;
+                            case 774:
+                                itemData[5] = AddEffectDescriptions("Wild Bait", itemData[5]);
+                                break;
+                            case 908:
+                                itemData[5] = AddEffectDescriptions("Magic Bait", itemData[5]);
+                                break;
+                            //tackle
+                            case 686:
+                                itemData[4] = "Spinner Megaphone";
+                                itemData[5] = AddEffectDescriptions("Spinner");
+                                break;
+                            case 687:
+                                itemData[4] = "Dressed Megaphone";
+                                itemData[5] = AddEffectDescriptions("Dressed Spinner");
+                                break;
+                            case 694:
+                                itemData[4] = "Trap Megaphone";
+                                itemData[5] = AddEffectDescriptions("Trap Bobber");
+                                break;
+                            case 695:
+                                itemData[4] = "Cork Megaphone";
+                                itemData[5] = AddEffectDescriptions("Cork Bobber");
+                                break;
+                            case 692:
+                                itemData[4] = "Lead Megaphone";
+                                itemData[5] = AddEffectDescriptions("Lead Bobber");
+                                break;
+                            case 693:
+                                itemData[4] = "Treasure Megaphone";
+                                itemData[5] = AddEffectDescriptions("Treasure Hunter");
+                                break;
+                            case 691:
+                                itemData[4] = "Barbed Megaphone";
+                                itemData[5] = AddEffectDescriptions("Barbed Hook");
+                                break;
+                            case 856:
+                                itemData[4] = "Curiosity Megaphone";
+                                itemData[5] = AddEffectDescriptions("Curiosity Lure", itemData[5]);
+                                break;
+                            case 877:
+                                itemData[4] = "Quality Megaphone";
+                                itemData[5] = AddEffectDescriptions("Quality Bobber");
+                                break;
+                        }
+                        data[itemID] = string.Join("/", itemData);
+                    }
+                    catch (Exception)
+                    {
+                        Monitor.Log("Could not load string for Rod to Net change, line: " + data[itemID] + ". Are the translations missing? Ignore if you removed them intentionally.", LogLevel.Warn);
                     }
                 }
             }
+            else
+            {
+                var editor = asset.AsImage();
+
+                Texture2D sourceImage;
+                try
+                {
+                    if (asset.AssetNameEquals("Maps/springobjects"))
+                    {
+                        sourceImage = Helper.Content.Load<Texture2D>("assets/bait_magnet.png", ContentSource.ModFolder);
+                        editor.PatchImage(sourceImage, targetArea: new Rectangle(112, 464, 16, 16));
+                        sourceImage = Helper.Content.Load<Texture2D>("assets/tackle_basic.png", ContentSource.ModFolder);
+                        editor.PatchImage(sourceImage, targetArea: new Rectangle(304, 448, 80, 16));
+                        sourceImage = Helper.Content.Load<Texture2D>("assets/tackle_curiosity.png", ContentSource.ModFolder);
+                        editor.PatchImage(sourceImage, targetArea: new Rectangle(256, 560, 16, 16));
+                        sourceImage = Helper.Content.Load<Texture2D>("assets/tackle_quality.png", ContentSource.ModFolder);
+                        editor.PatchImage(sourceImage, targetArea: new Rectangle(208, 576, 16, 16));
+                        sourceImage = Helper.Content.Load<Texture2D>("assets/tackle_spinners.png", ContentSource.ModFolder);
+                        editor.PatchImage(sourceImage, targetArea: new Rectangle(224, 448, 32, 16));
+                    }
+                    else
+                    {
+                        sourceImage = Helper.Content.Load<Texture2D>("assets/rod_sprites.png", ContentSource.ModFolder);
+                        editor.PatchImage(sourceImage, targetArea: new Rectangle(128, 0, 64, 16));
+                        sourceImage = Helper.Content.Load<Texture2D>("assets/rod_farmer.png", ContentSource.ModFolder);
+                        editor.PatchImage(sourceImage, targetArea: new Rectangle(0, 289, 295, 95));
+                    }
+                    sourceImage.Dispose();
+                }
+                catch (Exception)
+                {
+                    Monitor.Log("Could not load images for the " + ((asset.AssetNameEquals("Maps/springobjects")) ? "bait/tackles" : "fishing nets") + "! Are the assets missing? Ignore if you removed them intentionally.", LogLevel.Warn);
+                }
+            }
+        }
+        public string AddEffectDescriptions(string itemName, string initialText = null)
+        {
+            foreach (string effectPair in Minigames.itemData[itemName])
+            {
+                string value = "";
+                float tempVal = float.Parse(effectPair.Split(':')[1]);
+                switch (effectPair.Split(':')[0])
+                {
+                    case "DAMAGE":
+                    case "DIFFICULTY":
+                    case "SPEED":
+                        if (1f - tempVal == 0f) continue;
+                        if (initialText != null) initialText += "\n";
+                        value = ((1f - tempVal) * 100f).ToString();
+                        break;
+                    case "AREA":
+                    case "SIZE":
+                        if (tempVal - 1f == 0f) continue;
+                        if (initialText != null) initialText += "\n";
+                        value = ((tempVal - 1f) * 100f).ToString();
+                        break;
+                    case "DOUBLE":
+                        if (tempVal == 0f) continue;
+                        if (initialText != null) initialText += "\n";
+                        value = (tempVal * 100f).ToString();
+                        break;
+                    case "LIFE":
+                    case "QUALITY":
+                        if (tempVal == 0f) continue;
+                        if (initialText != null) initialText += "\n";
+                        value = tempVal.ToString();
+                        break;
+                    case "TREASURE":
+                        if (tempVal == 0f) continue;
+                        if (initialText != null) initialText += "\n";
+                        value = (tempVal * StardewValley.Tools.FishingRod.baseChanceForTreasure * 100f).ToString("0.#");
+                        break;
+                }
+                initialText += translate.Get("Effects." + effectPair.Split(':')[0]).Tokens(new { val = value });
+            }
+            return initialText;
         }
 
 
         private void UpdateConfig()
         {
             config = Helper.ReadConfig<ModConfig>();
+
+            //item configs
+            Minigames.itemData = new Dictionary<string, string[]>();
+            foreach (var file in Directory.GetFiles(Helper.DirectoryPath + "/itemConfigs", "*.json").Select(Path.GetFileName).OrderBy(f => f))
+            {
+                (Helper.Data.ReadJsonFile<Dictionary<string, string[]>>("itemConfigs/" + file) ?? new Dictionary<string, string[]>()).ToList().ForEach(x => Minigames.itemData[x.Key] = x.Value);
+            }
+            Minigames.itemData.Remove("Example Item Name");
+
 
             try
             {
@@ -300,14 +448,6 @@ namespace FishingMinigames
                 if (LocalizedContentManager.CurrentLanguageCode == 0) Minigames.metricSizes = config.ConvertToMetric;
                 else Minigames.metricSizes = false;
                 Helper.Content.InvalidateCache("Strings/StringsFromCSFiles");
-
-                //item configs
-                Minigames.itemData = new Dictionary<string, string[]>();
-                foreach (var file in Directory.GetFiles(Helper.DirectoryPath + "/itemConfigs", "*.json").Select(Path.GetFileName).OrderBy(f => f))
-                {
-                    (Helper.Data.ReadJsonFile<Dictionary<string, string[]>>("itemConfigs/" + file) ?? new Dictionary<string, string[]>()).ToList().ForEach(x => Minigames.itemData[x.Key] = x.Value);
-                } 
-                Minigames.itemData.Remove("Example Item Name");
             }
         }
     }

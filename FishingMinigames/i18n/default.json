@@ -62,6 +62,16 @@
     "Minigame.InfoDDR": "Match Arrow direction when inside the circle \n with Arrow Keys, WASD, or DPad. \n\n Your final score will decide \n if you manage to get the fish's attention.",
 
 
+    "Effects.AREA": "Expands the perfect area by {{val}}%",
+    "Effects.DAMAGE": "Damage taken reduced by {{val}}%",
+    "Effects.DIFFICULTY": "Minigame difficulty reduced by {{val}}%",
+    "Effects.DOUBLE": "Double fish chance +{{val}}% of daily luck.",
+    "Effects.LIFE": "50% chance of fixing a mistake, up to {{val}} times per minigame.",
+    "Effects.QUALITY": "Attracted fish will be of {{val}} higher quality than normal.",
+    "Effects.SIZE": "Attracts {{val}}% larger fish.",
+    "Effects.SPEED": "Decreases minigame speed by {{val}}%",
+    "Effects.TREASURE": "Adds {{val}}% to treasure chance.",
+
     "net.fishing": "Fishing Net",
     "net.bamboo": "Bamboo Net",
     "net.training": "Training Net",

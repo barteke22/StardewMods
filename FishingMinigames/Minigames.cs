@@ -18,6 +18,7 @@ namespace FishingMinigames
 {
     public class Minigames
     {
+        private ModEntry entry;
         private IMonitor Monitor;
         private IModHelper Helper;
         private IManifest ModManifest;
@@ -55,6 +56,7 @@ namespace FishingMinigames
         private float itemSpriteSize;
         private Rectangle sourceRect;
         private bool drawTool;
+        private bool drawAttachments;
         private int fishingFestivalMinigame;        //0 none, 1 fall16, 2 winter8
 
         private int startMinigameStage;             //0 before, 1 fade in, 2 playing, 3 show score, 5 fail, 6-10 = score
@@ -75,8 +77,9 @@ namespace FishingMinigames
         private int stageTimer = -1;
 
         private Dictionary<long, MinigameMessage> messages = new Dictionary<long, MinigameMessage>();
+        private Dictionary<string, float> effects; //AREA, DAMAGE, DIFFICULTY, DOUBLE, LIFE, QUALITY, SIZE, SPEED, TREASURE
 
-        public static Dictionary<string, float> effects; //AREA, DAMAGE, DIFFICULTY, DOUBLE, LIFE, QUALITY, SIZE, SPEED, TREASURE
+        public static string rodDescription;
 
         //config values
         public static SoundEffect fishySound;
@@ -101,6 +104,7 @@ namespace FishingMinigames
 
         public Minigames(ModEntry entry)
         {
+            this.entry = entry;
             this.Helper = entry.Helper;
             this.Monitor = entry.Monitor;
             this.ModManifest = entry.ModManifest;
@@ -152,7 +156,7 @@ namespace FishingMinigames
                     Helper.Input.Suppress(SButton.Escape);
                     Helper.Input.Suppress(SButton.ControllerB);
                     startMinigameStage = 5;
-                    SwingAndEmote(who, 2);
+                    DrawAndEmote(who, 2);
                     EmergencyCancel();
                     return;
                 }
@@ -203,13 +207,23 @@ namespace FishingMinigames
 
         public void GameLoop_UpdateTicking(object sender, UpdateTickingEventArgs e) //adds item to inv
         {
-            if (Game1.isFestival())
+            who = Game1.player;
+            //update rod description
+            if (!Game1.eventUp && who.CurrentItem is FishingRod && !hereFishying && e.IsOneSecond && who.CurrentTool.UpgradeLevel != 1)
+            {
+                FishingRod rod = who.CurrentTool as FishingRod;
+                string description = entry.AddEffectDescriptions((who.CurrentTool as FishingRod).Name, rodDescription);
+                if (rod.attachments[0] != null) description = description + "\n" + rod.attachments[0].DisplayName + ":\n" + entry.AddEffectDescriptions(rod.attachments[0].Name);
+                if (rod.attachments[1] != null) description = description + "\n" + rod.attachments[1].DisplayName + ":\n" + rod.attachments[1].getDescription();
+                rod.description = description;
+            }
+
+            if (Game1.isFestival() && e.IsOneSecond)
             {
                 fishingFestivalMinigame = 0;
                 string data = Helper.Reflection.GetField<Dictionary<string, string>>(Game1.CurrentEvent, "festivalData").GetValue()["file"];
                 if (data != null)
                 {
-                    who = Game1.player;
                     int timer = 0;
                     if (data.Equals("fall16") && Game1.currentMinigame is StardewValley.Minigames.FishingGame)
                     {
@@ -286,15 +300,17 @@ namespace FishingMinigames
         {
             if (batch == null) batch = e.SpriteBatch;
             who = Game1.player;
+
             foreach (Farmer other in Game1.getAllFarmers())//draw tool for tool anims & bubble for other players
             {
                 if (messages.ContainsKey(other.UniqueMultiplayerID))
                 {
-                    if (messages[other.UniqueMultiplayerID].drawTool) Game1.drawTool(other);
+                    if (messages[other.UniqueMultiplayerID].drawAttachments) DrawAndEmote(other, 4);//draw bait and tackle
+                    else if (messages[other.UniqueMultiplayerID].drawTool) Game1.drawTool(other);//tool
                     if (messages[other.UniqueMultiplayerID].stage != null)
                     {
-                        if (messages[other.UniqueMultiplayerID].stage.Equals("CaughtBubble", StringComparison.Ordinal)) CaughtBubble(other);
-                        else if (messages[other.UniqueMultiplayerID].stage.Equals("Playing", StringComparison.Ordinal)) SwingAndEmote(other, 3);
+                        if (messages[other.UniqueMultiplayerID].stage.Equals("CaughtBubble", StringComparison.Ordinal)) CaughtBubble(other);//bubble
+                        else if (messages[other.UniqueMultiplayerID].stage.Equals("Playing", StringComparison.Ordinal)) DrawAndEmote(other, 3);//controller
                     }
                 }
             }
@@ -390,6 +406,7 @@ namespace FishingMinigames
 
                 if (drawTool) Game1.drawTool(who);//draw tool for tool animations
                 if (infoTimer > 0) CaughtBubble(who);//bubble
+                if (drawAttachments) DrawAndEmote(who, 4);//draw bait and tackle
             }
         }
 
@@ -696,6 +713,8 @@ namespace FishingMinigames
             {
                 case null:
                     if (fishySound != null && !Context.IsSplitScreen) fishySound.Play(voiceVolume, voicePitch[screen], 0);
+
+                    if ((who.CurrentTool as FishingRod).getBaitAttachmentIndex() != -1 || (who.CurrentTool as FishingRod).getBobberAttachmentIndex() != -1) drawAttachments = true;
                     SendMessage(who);
 
                     who.CanMove = true;
@@ -726,6 +745,7 @@ namespace FishingMinigames
                     break;
 
                 case "Starting2":
+                    drawAttachments = false;
                     SendMessage(who, "Clear");
 
                     who.stopJittering();
@@ -845,7 +865,7 @@ namespace FishingMinigames
                     stage = null;
                     if (startMinigameStage == 5)
                     {
-                        SwingAndEmote(who, 2);
+                        DrawAndEmote(who, 2);
                         EmergencyCancel();
                     }
                     else HereFishyAnimation(who, x, y);
@@ -1145,7 +1165,7 @@ namespace FishingMinigames
 
                     ClearAnimations(who);
                     SendMessage(who, "ClearAnim");
-                    SwingAndEmote(who, 0);
+                    DrawAndEmote(who, 0);
                     SendMessage(who, "Swing");
                     endMinigameTimer = 0;
                 }
@@ -1220,7 +1240,7 @@ namespace FishingMinigames
                                     who.currentLocation.localSound("newRecord");
                                 }
                             }
-                            SwingAndEmote(who, 2);
+                            DrawAndEmote(who, 2);
                         }
 
 
@@ -1278,7 +1298,7 @@ namespace FishingMinigames
         }
 
 
-        private void SwingAndEmote(Farmer who, int which) //could maybe move this to animations
+        private void DrawAndEmote(Farmer who, int which) //could maybe move this to animations
         {
 
             if (which < 2)
@@ -1343,6 +1363,15 @@ namespace FishingMinigames
                 batch.Draw(Game1.emoteSpriteSheet, who.getLocalPosition(Game1.viewport) + new Vector2(0f, -160f),
                     new Rectangle(52 * 16 % Game1.emoteSpriteSheet.Width, 52 * 16 / Game1.emoteSpriteSheet.Width * 16, 16, 16),
                     Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0f);
+            }
+            else if (which == 4)
+            {
+                FishingRod rod = who.CurrentTool as FishingRod;
+                Vector2 position = new Vector2(who.Position.X - Game1.viewport.X, who.Position.Y - Game1.viewport.Y) + new Vector2(0, who.yJumpOffset * 2f) + who.jitter;
+                if (rod.getBaitAttachmentIndex() != -1) batch.Draw(Game1.objectSpriteSheet, position + new Vector2(-26f + ((who.FacingDirection == 0) ? 0 : 4f), -70f),
+                    Game1.getSourceRectForStandardTileSheet(Game1.objectSpriteSheet, rod.getBaitAttachmentIndex(), 16, 16), Color.White, -0.6f, Vector2.Zero, 2f, SpriteEffects.None, 0.98f);
+                if (rod.getBobberAttachmentIndex() != -1) batch.Draw(Game1.objectSpriteSheet, position + new Vector2(48f - ((who.FacingDirection == 0) ? 0 : 4f), -88f),
+                    Game1.getSourceRectForStandardTileSheet(Game1.objectSpriteSheet, rod.getBobberAttachmentIndex(), 16, 16), Color.White, 0f, Vector2.Zero, 3f, SpriteEffects.None, 0.98f);
             }
         }
 
@@ -1540,7 +1569,7 @@ namespace FishingMinigames
                 stack = item.Stack;
                 furniture = item is Furniture;
             }
-            Helper.Multiplayer.SendMessage(new MinigameMessage(who, stageRequested, voicePitch[screen], drawTool, whichFish, fishQuality, maxFishSize, fishSize, itemSpriteSize,
+            Helper.Multiplayer.SendMessage(new MinigameMessage(who, stageRequested, voicePitch[screen], drawTool, drawAttachments, whichFish, fishQuality, maxFishSize, fishSize, itemSpriteSize,
                 stack, recordSize, furniture, sourceRect, x, y), "Animation", modIDs: new[] { ModManifest.UniqueID }, IDs);
         }
 
@@ -1667,7 +1696,7 @@ namespace FishingMinigames
                             {
                                 xVelocity = (who.Position.X - x) / t;
                             }
-                            animations.Add(new KeyValuePair<long, TemporaryAnimatedSprite>(who.UniqueMultiplayerID, new TemporaryAnimatedSprite((message.furniture) ? Furniture.furnitureTexture.ToString() : "Maps\\springobjects", message.sourceRect, t, 1, 0, new Vector2(x, y), false, false, y / 10000f, 0f, Color.White, 4f, 0f, 0f, 0f, false)
+                            animations.Add(new KeyValuePair<long, TemporaryAnimatedSprite>(who.UniqueMultiplayerID, new TemporaryAnimatedSprite((message.furniture) ? Furniture.furnitureTexture.ToString() : "Maps\\springobjects", message.sourceRect, t, 1, 0, new Vector2(x, y), false, false, y / 10000f, 0f, Color.White, message.itemSpriteSize, 0f, 0f, 0f, false)
                             {
                                 motion = new Vector2(xVelocity, -velocity),
                                 acceleration = new Vector2(0f, gravity),
@@ -1677,7 +1706,7 @@ namespace FishingMinigames
                             int delay = 25;
                             for (int i = 1; i < message.count; i++)
                             {
-                                animations.Add(new KeyValuePair<long, TemporaryAnimatedSprite>(who.UniqueMultiplayerID, new TemporaryAnimatedSprite("Maps\\springobjects", message.sourceRect, t, 1, 0, new Vector2(x, y), false, false, y / 10000f, 0f, Color.White, 4f, 0f, 0f, 0f, false)
+                                animations.Add(new KeyValuePair<long, TemporaryAnimatedSprite>(who.UniqueMultiplayerID, new TemporaryAnimatedSprite("Maps\\springobjects", message.sourceRect, t, 1, 0, new Vector2(x, y), false, false, y / 10000f, 0f, Color.White, message.itemSpriteSize, 0f, 0f, 0f, false)
                                 {
                                     delayBeforeAnimationStart = delay,
                                     motion = new Vector2(xVelocity, -velocity),
@@ -1729,6 +1758,7 @@ public class MinigameMessage
     public string stage;
     public float voicePitch;
     public bool drawTool;
+    public bool drawAttachments;
     public int whichFish;
     public int fishQuality;
     public int maxFishSize;
@@ -1749,12 +1779,13 @@ public class MinigameMessage
         this.sourceRect = new Rectangle();
     }
 
-    public MinigameMessage(Farmer whichPlayer, string stage, float voice, bool drawTool, int whichFish, int fishQuality, int maxFishSize, float fishSize, float itemSpriteSize, int count, bool recordSize, bool furniture, Rectangle sourceRec, int x, int y)
+    public MinigameMessage(Farmer whichPlayer, string stage, float voice, bool drawTool, bool drawAttachments, int whichFish, int fishQuality, int maxFishSize, float fishSize, float itemSpriteSize, int count, bool recordSize, bool furniture, Rectangle sourceRec, int x, int y)
     {
         this.multiplayerID = whichPlayer.UniqueMultiplayerID;
         this.stage = stage;
         this.voicePitch = voice;
         this.drawTool = drawTool;
+        this.drawAttachments = drawAttachments;
         this.whichFish = whichFish;
         this.fishQuality = fishQuality;
         this.maxFishSize = maxFishSize;
