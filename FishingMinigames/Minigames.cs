@@ -22,6 +22,7 @@ namespace FishingMinigames
         private IMonitor Monitor;
         private IModHelper Helper;
         private IManifest ModManifest;
+        private ITranslationHelper translate;
 
         private List<KeyValuePair<long, TemporaryAnimatedSprite>> animations = new List<KeyValuePair<long, TemporaryAnimatedSprite>>();
         private SpriteBatch batch;
@@ -108,6 +109,7 @@ namespace FishingMinigames
             this.Helper = entry.Helper;
             this.Monitor = entry.Monitor;
             this.ModManifest = entry.ModManifest;
+            this.translate = entry.Helper.Translation;
         }
 
 
@@ -442,9 +444,8 @@ namespace FishingMinigames
             {
                 //starting minigame init
                 who.CanMove = false;
-                ITranslationHelper translate = Helper.Translation;
                 startMinigameTextures = new Texture2D[] { Game1.content.Load<Texture2D>("LooseSprites\\boardGameBorder"), Game1.content.Load<Texture2D>("LooseSprites\\CraneGame") };
-                startMinigameText = new List<string>() { translate.Get("Minigame.Score") };
+                startMinigameText = new List<string>();
                 foreach (string s in translate.Get("Minigame.InfoDDR").ToString().Split(new string[] { "\n" }, StringSplitOptions.None)) startMinigameText.Add(s);
 
                 startMinigameData = new int[6];
@@ -642,10 +643,10 @@ namespace FishingMinigames
                     if (startMinigameStyle[screen] > 0 && endMinigameStyle[screen] > 0) //minigame score reductions
                     {
                         if (startMinigameStage == 10) reduction -= 0.4f;
-                        else if (startMinigameStage == 9) reduction += 0.3f;
-                        else if (startMinigameStage == 8) reduction += 0.5f;
-                        else if (startMinigameStage == 7) reduction += 0.7f;
-                        else if (startMinigameStage == 6) reduction += 0.8f;
+                        else if (startMinigameStage == 9) reduction += 0.33f;
+                        else if (startMinigameStage == 8) reduction += 0.6f;
+                        else if (startMinigameStage == 7) reduction += 0.8f;
+                        //else if (startMinigameStage == 6) reduction += 0.8f;
                         if (endMinigameStage == 10) reduction -= 0.4f;
                         else if (endMinigameStage == 9) reduction += 0.6f;
                         else if (endMinigameStage == 8) reduction += 0.8f;
@@ -653,9 +654,10 @@ namespace FishingMinigames
                     else if (startMinigameStyle[screen] > 0)
                     {
                         if (startMinigameStage == 10) reduction -= 1f;
-                        else if (startMinigameStage == 9) reduction += 0f;
-                        else if (startMinigameStage < 9) reduction += 1f;
-                        else if (startMinigameStage == 6) reduction += 2f;
+                        //else if (startMinigameStage == 9) reduction += 0f;//0 isn't needed
+                        else if (startMinigameStage == 8) reduction += 1f;
+                        else if (startMinigameStage == 7) reduction += 2f;
+                        //else if (startMinigameStage == 6) reduction += 2f;
                     }
                     else if (endMinigameStyle[screen] > 0)
                     {
@@ -889,7 +891,7 @@ namespace FishingMinigames
             {
                 //info
                 Vector2 textLoc = new Vector2(0f, height * -0.44f);
-                for (int i = 1; i < startMinigameText.Count; i++)
+                for (int i = 0; i < startMinigameText.Count; i++)
                 {
                     batch.DrawString(Game1.tinyFont, startMinigameText[i], screenMid + (textLoc += new Vector2(0f, height * 0.05f)), Color.AntiqueWhite * opacity, 0f, new Vector2(Game1.tinyFont.MeasureString(startMinigameText[i]).X / 2f, 0f), scale * 0.1f, SpriteEffects.None, 0.4f);
                 }
@@ -982,19 +984,66 @@ namespace FishingMinigames
                 batch.Draw(Game1.mouseCursors, screenMid + new Vector2(width * -0.464f, height * 0.18f), new Rectangle(301, 288, 15, 15), Color.DodgerBlue * ((scale < 0.95f) ? scale : 0.95f), 0f, new Vector2(0f, 7.5f), scale, SpriteEffects.FlipHorizontally, 0.5f);
                 //score count
                 batch.DrawString(Game1.smallFont, startMinigameData[2].ToString(), screenMid + new Vector2(width * -0.41f, height * 0.19f),
-                    ((startMinigameData[2] < startMinigameArrowData.Length * 0.4f) ? Color.Crimson :
-                    (startMinigameData[2] < startMinigameArrowData.Length * 0.8f) ? Color.Tomato :
-                    (startMinigameData[2] < startMinigameArrowData.Length) ? Color.Orange :
-                    (startMinigameData[2] < startMinigameArrowData.Length * 1.2f) ? Color.Yellow :
-                    (startMinigameData[2] < startMinigameArrowData.Length * 1.5f) ? Color.GreenYellow :
+                    ((startMinigameData[2] < startMinigameArrowData.Length * 0.38f) ? Color.Crimson :
+                    (startMinigameData[2] < startMinigameArrowData.Length * 0.76f) ? Color.DarkOrange ://tomato
+                    //(startMinigameData[2] < startMinigameArrowData.Length * 0.76f) ? Color.Orange :
+                    (startMinigameData[2] < startMinigameArrowData.Length * 1.14f) ? Color.Yellow :
+                    (startMinigameData[2] < startMinigameArrowData.Length * 1.52f) ? Color.GreenYellow :
                     (startMinigameData[2] < startMinigameArrowData.Length * 1.9f) ? Color.LimeGreen : Color.Purple) * (opacity / 3f),
                     0f, Game1.smallFont.MeasureString(startMinigameData[2].ToString()) / 2f, scale * 0.28f, SpriteEffects.None, 0.51f);
                 //arrows left count
                 batch.DrawString(Game1.smallFont, arrowsLeft.ToString(), screenMid + new Vector2(width * 0.41f, height * 0.19f), Color.DarkTurquoise * opacity, 0f, Game1.smallFont.MeasureString(arrowsLeft.ToString()) / 2f, scale * 0.28f, SpriteEffects.None, 0.51f);
             }
-            else
+            else//final score screen
             {
-                batch.DrawString(Game1.smallFont, startMinigameText[0] + ": " + startMinigameData[2], screenMid, Color.AntiqueWhite * opacity, 0f, Game1.smallFont.MeasureString(startMinigameText[0] + ": " + startMinigameData[2]) / 2f, scale * 0.5f, SpriteEffects.None, 0.4f);
+                Color color = (startMinigameData[2] < startMinigameArrowData.Length * 0.38f) ? Color.Crimson :
+                    (startMinigameData[2] < startMinigameArrowData.Length * 0.76f) ? Color.DarkOrange ://tomato
+                    //(startMinigameData[2] < startMinigameArrowData.Length * 0.76f) ? Color.Orange :
+                    (startMinigameData[2] < startMinigameArrowData.Length * 1.14f) ? Color.Yellow :
+                    (startMinigameData[2] < startMinigameArrowData.Length * 1.52f) ? Color.GreenYellow :
+                    (startMinigameData[2] < startMinigameArrowData.Length * 1.9f) ? Color.LimeGreen : Color.Purple;
+
+                //text
+                string score = translate.Get("Minigame.Score") + " " + ((startMinigameData[2] < 0) ? "@ 0" : startMinigameData[2].ToString());
+                string score2 = translate.Get("Minigame.Score2") + " " + (int)Math.Ceiling(startMinigameArrowData.Length * 0.76f);
+                string scoreX = (color == Color.Purple) ? Game1.content.LoadString("Strings\\UI:BobberBar_Perfect") : translate.Get("Minigame.Score_" + ((color == Color.Crimson) ? 0 : (color == Color.Yellow || color == Color.GreenYellow) ? 2 : (color == Color.LimeGreen) ? 3 : 2));
+                batch.DrawString(Game1.smallFont, score, screenMid + new Vector2(0f, -0.28f * height), color * (opacity / 3f), 0f, Game1.smallFont.MeasureString(score) / 2f, scale * 0.4f, SpriteEffects.None, 0.4f);
+                batch.DrawString(Game1.smallFont, score2, screenMid + new Vector2(0f, -0.14f * height), color * (opacity / 3f), 0f, Game1.smallFont.MeasureString(score2) / 2f, scale * 0.3f, SpriteEffects.None, 0.4f);
+                batch.DrawString(Game1.smallFont, scoreX, screenMid + new Vector2(0f, 0.02f * height), color * (opacity / 3f), 0f, Game1.smallFont.MeasureString(scoreX) / 2f, scale * 0.3f, SpriteEffects.None, 0.4f);
+
+                //bar
+                Rectangle whitePixel = new Rectangle(36, 1875, 1, 1);
+                batch.Draw(Game1.mouseCursors, new Rectangle((int)(screenMid.X + (width * -0.403f)), (int)(screenMid.Y + (height * 0.184f)), (int)(0.806f * width), (int)(7f * scale)),
+                    whitePixel, Color.Black * (opacity / 3f), 0f, Vector2.Zero, SpriteEffects.None, 0.4f);
+
+                Rectangle bounds = new Rectangle((int)(screenMid.X + (width * -0.4f)), (int)(screenMid.Y + (height * 0.19f)), (int)(0.38f * 0.4f * width), (int)(6f * scale));
+                batch.Draw(Game1.mouseCursors, bounds, whitePixel, Color.Crimson * (opacity / 3f), 0f, Vector2.Zero, SpriteEffects.None, 0.5f);
+                bounds.X += bounds.Width;
+                batch.Draw(Game1.mouseCursors, bounds, whitePixel, Color.DarkOrange * (opacity / 3f), 0f, Vector2.Zero, SpriteEffects.None, 0.5f);//tomato
+                //bounds.X += bounds.Width;
+                //batch.Draw(Game1.mouseCursors, bounds, whitePixel, Color.Orange * (opacity / 3f), 0f, Vector2.Zero, SpriteEffects.None, 0.5f);
+                bounds.X += bounds.Width;
+                batch.Draw(Game1.mouseCursors, new Rectangle(bounds.X, (int)(screenMid.Y + (height * 0.185f)), (int)(0.3f * scale), (int)(6.8f * scale)), 
+                    whitePixel, Color.LimeGreen * (opacity / 3f), 0f, Vector2.Zero, SpriteEffects.None, 0.4f);
+                batch.Draw(Game1.mouseCursors, bounds, whitePixel, Color.Yellow * (opacity / 3f), 0f, Vector2.Zero, SpriteEffects.None, 0.5f);
+                bounds.X += bounds.Width;
+                batch.Draw(Game1.mouseCursors, bounds, whitePixel, Color.GreenYellow * (opacity / 3f), 0f, Vector2.Zero, SpriteEffects.None, 0.5f);
+                bounds.X += bounds.Width;
+                batch.Draw(Game1.mouseCursors, bounds, whitePixel, Color.LimeGreen * (opacity / 3f), 0f, Vector2.Zero, SpriteEffects.None, 0.5f);
+                bounds.X += bounds.Width;
+                bounds.Width = (int)(0.1f * 0.4f * width);
+                batch.Draw(Game1.mouseCursors, bounds, whitePixel, Color.Purple * (opacity / 3f), 0f, Vector2.Zero, SpriteEffects.None, 0.5f);
+
+                for (float i = 0; i < 0.799f * width; i += (1f / (startMinigameArrowData.Length * 2f)) * 0.799f * width)
+                {
+                    batch.Draw(Game1.mouseCursors, new Rectangle((int)(screenMid.X + (width * -0.4f) + i), (int)(screenMid.Y + (height * 0.19f)), (int)(0.15f * scale), (int)(6f * scale)),
+                        whitePixel, Color.Gray * (opacity / 3f), 0f, Vector2.Zero, SpriteEffects.None, 0.4f);
+                }
+                batch.Draw(Game1.mouseCursors, screenMid + new Vector2(width * -0.4f + ((startMinigameData[2] < 1) ? 0 : (int)((startMinigameData[2] / (startMinigameArrowData.Length * 2f)) * 0.799f * width)), height * 0.2f),
+                    new Rectangle(146, 1830, 9, 17), Color.Black * (opacity / 3f), 0f, new Vector2(4.5f, 17), 0.4f * scale, SpriteEffects.None, 0.5f);
+                batch.Draw(Game1.mouseCursors, screenMid + new Vector2(width * -0.4f + ((startMinigameData[2] < 1) ? 0 : (int)((startMinigameData[2] / (startMinigameArrowData.Length * 2f)) * 0.799f * width)), height * 0.19f),
+                    new Rectangle(146, 1830, 9, 17), color * (opacity / 3f), 0f, new Vector2(4.5f, 17), 0.3f * scale, SpriteEffects.None, 0.6f);
+
                 if (startMinigameStage < 5) startMinigameStage = 3;
             }
         }
@@ -1043,12 +1092,12 @@ namespace FishingMinigames
             {
                 startMinigameData[5] = 60;
 
-                if (startMinigameData[2] < startMinigameArrowData.Length * 0.8f) startMinigameStage = 5;
+                if (startMinigameData[2] < startMinigameArrowData.Length * 0.76f) startMinigameStage = 5;
                 else
                 {
-                    if (startMinigameData[2] < startMinigameArrowData.Length) startMinigameStage = 6;
-                    else if (startMinigameData[2] < startMinigameArrowData.Length * 1.2f) startMinigameStage = 7;
-                    else if (startMinigameData[2] < startMinigameArrowData.Length * 1.5f) startMinigameStage = 8;
+                    //if (startMinigameData[2] < startMinigameArrowData.Length * 0.951f) startMinigameStage = 6;
+                    if (startMinigameData[2] < startMinigameArrowData.Length * 1.14f) startMinigameStage = 7;
+                    else if (startMinigameData[2] < startMinigameArrowData.Length * 1.52f) startMinigameStage = 8;
                     else if (startMinigameData[2] < startMinigameArrowData.Length * 1.9f) startMinigameStage = 9;
                     else startMinigameStage = 10;
                 }

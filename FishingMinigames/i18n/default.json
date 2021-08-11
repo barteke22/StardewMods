@@ -58,7 +58,12 @@
     "GenericMC.SplitScreen4": "Split Screen 4: Bottom Right",
 
 
-    "Minigame.Score": "Score",
+    "Minigame.Score": "Score:",
+    "Minigame.Score2": "out of at least",//Score: X   out of at least Y
+    "Minigame.Score_0": "Epic Fail!",
+    "Minigame.Score_1": "Failure!",
+    "Minigame.Score_2": "Success!",
+    "Minigame.Score_3": "Great Success!",
     "Minigame.InfoDDR": "Match Arrow direction when inside the circle \n with Arrow Keys, WASD, or DPad. \n\n Your final score will decide \n if you manage to get the fish's attention.",
 
 
