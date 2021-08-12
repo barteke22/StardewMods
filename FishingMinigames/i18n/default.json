@@ -15,7 +15,7 @@
     "GenericMC.KeyBindsDesc": "Button(s) used to trigger the minigame. If the same as Tool Use buttons, the Vanilla Fishing Minigame will be overwritten by this. \nSupports Mouse, Keyboard and Controller. Individual keys are separated by commas, combos are separated by the + sign. \nExample of 3 keys: MouseRight, Shift + K, ControllerX \nFor key names, see: https://stardewcommunitywiki.com/Modding:Player_Guide/Key_Bindings",
 
     "GenericMC.StartMinigameStyle": "Minigame Style (Start)",
-    "GenericMC.StartMinigameStyleDesc": "This minigame determines whether you catch the fish at all (non-fish catches skip this part), and contributes to total score. \nDDR Arrows: The classic rhythm game where you match arrow directions with your Movement buttons as they reach a specific area. \n??? \n???",
+    "GenericMC.StartMinigameStyleDesc": "This minigame determines whether you catch the fish at all (non-fish catches skip this part), and contributes to total score. \nDDR Arrows: The classic rhythm game where you match arrow directions with your Movement buttons as they reach a specific area. \nMinigame2: WIP \nMinigame3: WIP",
     "GenericMC.StartMinigameStyle1": "DDR Arrows",
     "GenericMC.StartMinigameStyle2": "todo",
     "GenericMC.StartMinigameStyle3": "todo",

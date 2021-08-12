@@ -113,7 +113,6 @@ namespace FishingMinigames
         }
 
 
-
         public void Input_ButtonsChanged(object sender, ButtonsChangedEventArgs e)  //this.Monitor.Log(locationName, LogLevel.Debug);
         {
             if (Game1.emoteMenu != null) return;
@@ -141,7 +140,16 @@ namespace FishingMinigames
                 }
             }
 
-
+            //if (e.Pressed.Contains(SButton.Z))
+            //{
+            //    List<string> cue = new List<string>() { "coin", "button1", "newRecord", "fishSlap", "FishHit", "cast",  "crit",
+            //        "openChest", "fireball", "pickUpItem", "newArtifact", "jingle1", "reward", };
+            //    Monitor.Log(cue[test], LogLevel.Alert);
+            //    Game1.playSound(cue[test]);
+            //    if (test == cue.Count - 1) test = -1;
+            //    test++;
+            //    return;
+            //}
             if (e.Pressed.Contains(SButton.F5) && Context.IsWorldReady)
             {
                 EmergencyCancel();
@@ -157,7 +165,7 @@ namespace FishingMinigames
                 {
                     Helper.Input.Suppress(SButton.Escape);
                     Helper.Input.Suppress(SButton.ControllerB);
-                    startMinigameStage = 5;
+                    startMinigameStage = 4;
                     DrawAndEmote(who, 2);
                     EmergencyCancel();
                     return;
@@ -381,6 +389,8 @@ namespace FishingMinigames
                                 who.FarmerSprite.loop = true;
                                 who.FarmerSprite.loopThisAnimation = true;
                                 who.Sprite.currentFrame = 94;
+                                stage = "Caught1";
+                                stageTimer = 20;
                             }
                         }
                     }
@@ -829,7 +839,7 @@ namespace FishingMinigames
                         motion = new Vector2(xVelocity, -velocity),
                         acceleration = new Vector2(0f, gravity),
                         extraInfoForEndBehavior = 1,
-                        endFunction = new TemporaryAnimatedSprite.endBehavior(PlayerCaughtFishEndFunction),
+                        //endFunction = new TemporaryAnimatedSprite.endBehavior(PlayerCaughtFishEndFunction),
                         timeBasedMotion = true,
                         endSound = "tinyWhip"
                     }));
@@ -857,7 +867,11 @@ namespace FishingMinigames
             if (startMinigameStage == 1)//fade in (opacity calc)
             {
                 startMinigameData[5]++;
-                if (startMinigameData[5] == 300) startMinigameStage = 2;
+                if (startMinigameData[5] == 300)
+                {
+                    startMinigameStage = 2;
+                    Game1.playSound("FishHit");
+                }
             }
             else if (startMinigameStage > 4)//fade out and continue
             {
@@ -937,8 +951,13 @@ namespace FishingMinigames
                             {
                                 effects["LIFE"]--;
                                 startMinigameArrowData[i] = startMinigameArrowData[i].Replace("/0/", "/1.1/");
+                                Game1.playSound("button1");
                             }
-                            else startMinigameArrowData[i] = startMinigameArrowData[i].Replace("/0/", "/-1/");
+                            else
+                            {
+                                startMinigameArrowData[i] = startMinigameArrowData[i].Replace("/0/", "/-1/");
+                                Game1.playSound("crit");
+                            }
                         }
                         else if (hitAreaMid.X - (13f * scale * 0.5f) <= firstArrowLoc.X + data[2] &&
                                  hitAreaMid.X + (13f * scale * 0.5f) >= firstArrowLoc.X + data[2])                          //in regular hit area
@@ -1003,10 +1022,12 @@ namespace FishingMinigames
                     (startMinigameData[2] < startMinigameArrowData.Length * 1.52f) ? Color.GreenYellow :
                     (startMinigameData[2] < startMinigameArrowData.Length * 1.9f) ? Color.LimeGreen : Color.Purple;
 
+                if ((startMinigameStage < 3) && color != Color.Crimson && color != Color.DarkOrange) Game1.playSound("reward");
+
                 //text
                 string score = translate.Get("Minigame.Score") + " " + ((startMinigameData[2] < 0) ? "@ 0" : startMinigameData[2].ToString());
                 string score2 = translate.Get("Minigame.Score2") + " " + (int)Math.Ceiling(startMinigameArrowData.Length * 0.76f);
-                string scoreX = (color == Color.Purple) ? Game1.content.LoadString("Strings\\UI:BobberBar_Perfect") : translate.Get("Minigame.Score_" + ((color == Color.Crimson) ? 0 : (color == Color.Yellow || color == Color.GreenYellow) ? 2 : (color == Color.LimeGreen) ? 3 : 2));
+                string scoreX = (color == Color.Purple) ? Game1.content.LoadString("Strings\\UI:BobberBar_Perfect") : translate.Get("Minigame.Score_" + ((color == Color.Crimson) ? 0 : (color == Color.Yellow || color == Color.GreenYellow) ? 2 : (color == Color.LimeGreen) ? 3 : 1));
                 batch.DrawString(Game1.smallFont, score, screenMid + new Vector2(0f, -0.28f * height), color * (opacity / 3f), 0f, Game1.smallFont.MeasureString(score) / 2f, scale * 0.4f, SpriteEffects.None, 0.4f);
                 batch.DrawString(Game1.smallFont, score2, screenMid + new Vector2(0f, -0.14f * height), color * (opacity / 3f), 0f, Game1.smallFont.MeasureString(score2) / 2f, scale * 0.3f, SpriteEffects.None, 0.4f);
                 batch.DrawString(Game1.smallFont, scoreX, screenMid + new Vector2(0f, 0.02f * height), color * (opacity / 3f), 0f, Game1.smallFont.MeasureString(scoreX) / 2f, scale * 0.3f, SpriteEffects.None, 0.4f);
@@ -1073,18 +1094,31 @@ namespace FishingMinigames
                     {
                         if (startMinigameData[0] == startMinigameData[4])//treasure arrow?
                         {
-                            who.currentLocation.localSound("coin");
                             treasureCaught = true;
+                            Game1.playSound("coin");
                         }
-                        if (startMinigameData[1] == 1) startMinigameArrowData[startMinigameData[0]] = startMinigameArrowData[startMinigameData[0]].Replace("/0/", "/2/");//perfect?
-                        else startMinigameArrowData[startMinigameData[0]] = startMinigameArrowData[startMinigameData[0]].Replace("/0/", "/1/");
+                        if (startMinigameData[1] == 1)//perfect?
+                        {
+                            startMinigameArrowData[startMinigameData[0]] = startMinigameArrowData[startMinigameData[0]].Replace("/0/", "/2/");
+                            Game1.playSound("newArtifact");
+                        }
+                        else
+                        {
+                            startMinigameArrowData[startMinigameData[0]] = startMinigameArrowData[startMinigameData[0]].Replace("/0/", "/1/");
+                            Game1.playSound("jingle1");
+                        }
                     }
                     else if (effects["LIFE"] > 0 && startMinigameData[0] != startMinigameData[4] && Game1.random.Next(0, 2) == 0)//saved by tackle?
                     {
                         effects["LIFE"]--;
                         startMinigameArrowData[startMinigameData[0]] = startMinigameArrowData[startMinigameData[0]].Replace("/0/", "/1.1/");
+                        Game1.playSound("button1");
                     }
-                    else startMinigameArrowData[startMinigameData[0]] = startMinigameArrowData[startMinigameData[0]].Replace("/0/", "/-1/");
+                    else
+                    {
+                        startMinigameArrowData[startMinigameData[0]] = startMinigameArrowData[startMinigameData[0]].Replace("/0/", "/-1/");
+                        Game1.playSound("crit");
+                    }
                 }
                 //else negative point if hit when arrow outside box? maybe if 2 in a row to avoid spam cheeze? can do it by changing data into list and adding red arrows
             }
@@ -1092,7 +1126,11 @@ namespace FishingMinigames
             {
                 startMinigameData[5] = 60;
 
-                if (startMinigameData[2] < startMinigameArrowData.Length * 0.76f) startMinigameStage = 5;
+                if (startMinigameData[2] < startMinigameArrowData.Length * 0.76f)
+                {
+                    startMinigameStage = 5;
+                    Game1.playSound("fishEscape");
+                }
                 else
                 {
                     //if (startMinigameData[2] < startMinigameArrowData.Length * 0.951f) startMinigameStage = 6;
@@ -1220,7 +1258,6 @@ namespace FishingMinigames
                 }
                 else //button press, too early or wrong
                 {
-                    Game1.playSound("fishEscape");
                     endMinigameStage = 3;
                     endMinigameTimer = 1000;
                 }
@@ -1231,7 +1268,7 @@ namespace FishingMinigames
         {
             try
             {
-                if (forceStage == 1) stage = "Caught1";
+                //if (forceStage == 1) stage = "Caught1";
 
                 FishingRod rod = who.CurrentTool as FishingRod;
                 Helper.Reflection.GetField<Farmer>(rod, "lastUser").SetValue(who);
@@ -1253,6 +1290,7 @@ namespace FishingMinigames
                         {
                             if (endMinigameStage == 8)//water on face
                             {
+                                who.currentLocation.playSoundAt("fishSlap", who.getTileLocation());
                                 animations.Add(new KeyValuePair<long, TemporaryAnimatedSprite>(who.UniqueMultiplayerID, new TemporaryAnimatedSprite(10, who.Position - new Vector2(0, 120), Color.Blue)
                                 {
                                     motion = new Vector2(0f, 0.12f),
@@ -1347,7 +1385,7 @@ namespace FishingMinigames
         }
 
 
-        private void DrawAndEmote(Farmer who, int which) //could maybe move this to animations
+        private void DrawAndEmote(Farmer who, int which)
         {
 
             if (which < 2)
@@ -1356,6 +1394,7 @@ namespace FishingMinigames
                 {
                     if (endMinigameStage == 10) showPerfect = true;
                     who.completelyStopAnimatingOrDoingAction();
+                    who.currentLocation.playSoundAt("cast", who.getTileLocation());
                     (who.CurrentTool as FishingRod).setTimingCastAnimation(who);
                     switch (oldFacingDirection)
                     {
