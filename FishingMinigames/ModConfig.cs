@@ -6,6 +6,7 @@
         public int[] VoicePitch { get; set; }
         public string[] Voice_Test_Ignore_Me { get; set; }//internal for voice setting change check
         public string[] KeyBinds { get; set; } = { "MouseLeft, Space, ControllerX", "MouseLeft, Space, ControllerX", "MouseLeft, Space, ControllerX", "MouseLeft, Space, ControllerX" };
+        public bool[] FreeAim { get; set; } = { false, false, false, false };
         public int[] StartMinigameStyle { get; set; } = { 1, 1, 1, 1 };
         public int[] EndMinigameStyle { get; set; } = { 2, 2, 2, 2 };
         public float StartMinigameScale { get; set; } = 1f;

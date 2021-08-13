@@ -53,6 +53,8 @@ namespace FishingMinigames
 
         private bool hereFishying;
         private bool itemIsInstantCatch;
+        private int maxDistance;
+        private float voiceVolumePersonal;
         private int oldFacingDirection;
         private float itemSpriteSize;
         private Rectangle sourceRect;
@@ -74,6 +76,9 @@ namespace FishingMinigames
         private int endMinigameDiff;
         private int infoTimer;
 
+        private Vector2 aimTile;
+        private Vector2 aimTileTemp;
+        private bool keybindHeld;
         private string stage;
         private int stageTimer = -1;
 
@@ -89,6 +94,7 @@ namespace FishingMinigames
         public static float voiceVolume;
         public static float[] voicePitch = new float[4];
         public static float[] minigameDamage = new float[4];
+        public static bool[] freeAim = new bool[4];
         public static int[] startMinigameStyle = new int[4];
         public static int[] endMinigameStyle = new int[4];
         public static float startMinigameScale;
@@ -96,7 +102,6 @@ namespace FishingMinigames
         public static bool metricSizes;
         public static int[] festivalMode = new int[4];
         public static float[] minigameDifficulty = new float[4];
-
 
 
         /*  
@@ -118,6 +123,12 @@ namespace FishingMinigames
             if (Game1.emoteMenu != null) return;
             who = Game1.player;
             fishingLevel = who.FishingLevel;
+            voiceVolumePersonal = 0;
+            if (voiceVolume > 0f)
+            {
+                voiceVolumePersonal = Math.Min((voiceVolume * 0.80f) + (fishingLevel * voiceVolume * 0.018f), (voiceVolume * 0.98f));
+                if (fishingLevel > 10) voiceVolumePersonal += Math.Min((fishingLevel - 10) * voiceVolume * 0.004f, (voiceVolume * 0.02f));
+            }
             screen = Context.ScreenId;
 
             if (infoTimer > 0 && infoTimer < 1001)//reset from bubble
@@ -182,34 +193,45 @@ namespace FishingMinigames
             {
                 if (keyBinds[screen].JustPressed())
                 {
-                    if (Context.IsWorldReady && Context.CanPlayerMove && who.CurrentItem is FishingRod)
+                    if (freeAim[screen])
                     {
-                        if (fishingFestivalMinigame == 1) FestivalGameSkip(who);
+                        Vector2 mouse = Game1.currentCursorTile;
+                        TryFishingHere(mouse);
+                    }
+                    else aimTileTemp = new Vector2(who.getTileLocation().X + ((who.FacingDirection == 3) ? -1f : (who.FacingDirection == 1) ? 1f : 0f), 
+                                                   who.getTileLocation().Y + ((who.FacingDirection == 0) ? -1f : (who.FacingDirection == 2) ? 1f : 0f)) * 64f;
+                }
+            }
+        }
+        private void TryFishingHere(Vector2 mouse)
+        {
+            if (Context.IsWorldReady && Context.CanPlayerMove && who.CurrentItem is FishingRod)
+            {
+                if (fishingFestivalMinigame == 1) FestivalGameSkip(who);
 
-                        else if (!hereFishying)
+                else if (!hereFishying)
+                {
+                    try
+                    {
+                        perfect = false;
+                        oldFacingDirection = who.getGeneralDirectionTowards(new Vector2(mouse.X * 64, mouse.Y * 64));
+                        who.faceDirection(oldFacingDirection);
+
+
+                        if (who.currentLocation.canFishHere() && who.currentLocation.isTileFishable((int)mouse.X, (int)mouse.Y)
+                                                              && Math.Abs(who.getTileLocation().X - (int)mouse.X) <= maxDistance + 1
+                                                              && Math.Abs(who.getTileLocation().Y - (int)mouse.Y) <= maxDistance)
                         {
-                            try
-                            {
-                                perfect = false;
-                                Vector2 mouse = Game1.currentCursorTile;
-                                oldFacingDirection = who.getGeneralDirectionTowards(new Vector2(mouse.X * 64, mouse.Y * 64));
-                                who.faceDirection(oldFacingDirection);
-
-
-                                if (who.currentLocation.canFishHere() && who.currentLocation.isTileFishable((int)mouse.X, (int)mouse.Y))
-                                {
-                                    x = (int)mouse.X * 64;
-                                    y = (int)mouse.Y * 64;
-                                    Game1.stats.timesFished++;
-                                    HereFishyFishy(who);
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                Monitor.Log("Canceled fishing because: " + ex.Message, LogLevel.Error);
-                                EmergencyCancel();
-                            }
+                            x = (int)mouse.X * 64;
+                            y = (int)mouse.Y * 64;
+                            Game1.stats.timesFished++;
+                            HereFishyFishy(who);
                         }
+                    }
+                    catch (Exception ex)
+                    {
+                        Monitor.Log("Canceled fishing because: " + ex.Message, LogLevel.Error);
+                        EmergencyCancel();
                     }
                 }
             }
@@ -330,11 +352,41 @@ namespace FishingMinigames
             else if (startMinigameStage > 4 && startMinigameData[5] > 0) StartMinigameDraw(batch);
             else
             {
+                maxDistance = (who.FishingLevel > 14) ? 7 : (who.FishingLevel > 7) ? 6 : (who.FishingLevel > 3) ? 5 : (who.FishingLevel > 0) ? 4 : 3;
+                if (freeAim[screen]) aimTile = Game1.currentCursorTile;
                 //draw mouse target on water
-                if (!Game1.eventUp && !Game1.menuUp && who.CurrentItem is FishingRod && (!hereFishying || infoTimer > 0) && who.currentLocation.isTileFishable((int)Game1.currentCursorTile.X, (int)Game1.currentCursorTile.Y))
+                if (!Game1.eventUp && !Game1.menuUp && who.CurrentItem is FishingRod && (!hereFishying || infoTimer > 0))
                 {
-                    e.SpriteBatch.Draw(Game1.mouseCursors, new Vector2(((Game1.getMouseX() / 64) * 64), ((Game1.getMouseY() / 64) * 64)), new Rectangle(652, 204, 44, 44), new Color(0, 255, 0, 0.4f), 0f, Vector2.Zero, 1.45f, SpriteEffects.None, 1f);
+                    if (!freeAim[screen]) {
+                        if (keyBinds[screen].IsDown()
+                        || Helper.Input.IsSuppressed(Game1.options.useToolButton[0].ToSButton())
+                        || Helper.Input.IsSuppressed(Game1.options.useToolButton[1].ToSButton())
+                        || Helper.Input.IsSuppressed(SButton.ControllerX))
+                        {
+                            float speed = 2f + (who.FishingLevel / 3f);
+                                 if (who.FacingDirection == 3 && who.getTileLocation().X - aimTile.X < maxDistance + 1) aimTileTemp.X -= speed;
+                            else if (who.FacingDirection == 1 && aimTile.X - who.getTileLocation().X < maxDistance + 1) aimTileTemp.X += speed;
+                            else if (who.FacingDirection == 0 && who.getTileLocation().Y - aimTile.Y < maxDistance)     aimTileTemp.Y -= speed;
+                            else if (who.FacingDirection == 2 && aimTile.Y - who.getTileLocation().Y < maxDistance)     aimTileTemp.Y += speed;
+
+                            aimTile = new Vector2((int)(aimTileTemp.X / 64f), (int)(aimTileTemp.Y / 64f));
+                            keybindHeld = true;
+                        }
+                        else if (keybindHeld)
+                        {
+                            keybindHeld = false;
+                            TryFishingHere(aimTile);
+                        }
+                    }
+
+                    if ((freeAim[screen] || keybindHeld) && who.currentLocation.isTileFishable((int)aimTile.X, (int)aimTile.Y)
+                    && Math.Abs(who.getTileLocation().X - aimTile.X) <= maxDistance + 1
+                    && Math.Abs(who.getTileLocation().Y - aimTile.Y) <= maxDistance)
+                    {
+                        e.SpriteBatch.Draw(Game1.mouseCursors, new Vector2((int)aimTile.X * 64 - Game1.viewport.X, (int)aimTile.Y * 64 - Game1.viewport.Y), new Rectangle(652, 204, 44, 44), new Color(0, 255, 0, 0.4f), 0f, Vector2.Zero, 1.45f, SpriteEffects.None, 1f);
+                    }
                 }
+
                 //draw fish flying
                 for (int i = animations.Count - 1; i >= 0; i--)
                 {
@@ -439,7 +491,7 @@ namespace FishingMinigames
             if (who.IsLocalPlayer && fishingFestivalMinigame != 2)
             {
                 float oldStamina = who.Stamina;
-                who.Stamina -= 8f - (float)who.FishingLevel * 0.1f;
+                who.Stamina -= 8f - (float)fishingLevel * 0.1f;
                 who.checkForExhaustion(oldStamina);
             }
 
@@ -608,7 +660,7 @@ namespace FishingMinigames
             if (maxFishSize > 0)
             {
                 fishSize = Math.Min(clearWaterDistance / 5f, 1f);
-                int minimumSizeContribution = 1 + who.FishingLevel / 2;
+                int minimumSizeContribution = 1 + fishingLevel / 2;
                 fishSize *= Game1.random.Next(minimumSizeContribution, Math.Max(6, minimumSizeContribution)) / 5f;
 
                 fishSize *= 1f + Game1.random.Next(-10, 11) / 100f;
@@ -648,7 +700,7 @@ namespace FishingMinigames
                 if (rod.Name.Equals("Training Rod", StringComparison.Ordinal)) fishQuality = 0;
                 else
                 {
-                    fishQuality = (int)effects["QUALITY"] + ((fishSize * (0.9f + (who.FishingLevel / 5.0)) < 0.33f) ? 0 : ((fishSize * (0.9f + (who.FishingLevel / 5.0f)) < 0.66f) ? 1 : 2));//init quality
+                    fishQuality = (int)effects["QUALITY"] + ((fishSize * (0.9f + (fishingLevel / 5.0)) < 0.33f) ? 0 : ((fishSize * (0.9f + (fishingLevel / 5.0f)) < 0.66f) ? 1 : 2));//init quality
 
                     if (startMinigameStyle[screen] > 0 && endMinigameStyle[screen] > 0) //minigame score reductions
                     {
@@ -698,7 +750,7 @@ namespace FishingMinigames
                     who.gainExperience(1, experience);
                     if (minigameDamage[screen] > 0 && endMinigameStyle[screen] > 0 && endMinigameStage == 8)
                     {
-                        who.takeDamage((int)((10 + (difficulty / 10) + (int)(fishSize / 10) - who.FishingLevel) * minigameDamage[screen] * effects["DAMAGE"]), true, null);
+                        who.takeDamage((int)((10 + (difficulty / 10) + (int)(fishSize / 10) - fishingLevel) * minigameDamage[screen] * effects["DAMAGE"]), true, null);
                         who.temporarilyInvincible = false;
                     }
                 }
@@ -712,7 +764,7 @@ namespace FishingMinigames
                 who.gainExperience(1, 3);
                 if (!fromFishPond && minigameDamage[screen] > 0 && endMinigameStyle[screen] > 0 && endMinigameStage == 8)
                 {
-                    who.takeDamage((int)((16 - who.FishingLevel) * minigameDamage[screen] * effects["DAMAGE"]), true, null);
+                    who.takeDamage((int)((16 - fishingLevel) * minigameDamage[screen] * effects["DAMAGE"]), true, null);
                     who.temporarilyInvincible = false;
                 }
             }
@@ -724,7 +776,7 @@ namespace FishingMinigames
             switch (stage)
             {
                 case null:
-                    if (fishySound != null && !Context.IsSplitScreen) fishySound.Play(voiceVolume, voicePitch[screen], 0);
+                    if (fishySound != null && !Context.IsSplitScreen) fishySound.Play(voiceVolumePersonal, voicePitch[screen], 0);
 
                     if ((who.CurrentTool as FishingRod).getBaitAttachmentIndex() != -1 || (who.CurrentTool as FishingRod).getBobberAttachmentIndex() != -1) drawAttachments = true;
                     SendMessage(who);
@@ -745,7 +797,7 @@ namespace FishingMinigames
                     break;
 
                 case "Starting1":
-                    if (startMinigameStyle[screen] + endMinigameStyle[screen] == 0 && Game1.random.Next(who.FishingLevel, 20) > 16)
+                    if (startMinigameStyle[screen] + endMinigameStyle[screen] == 0 && Game1.random.Next(fishingLevel, 20) > 16)
                     {
                         showPerfect = true;
                     }
@@ -1005,7 +1057,7 @@ namespace FishingMinigames
                 batch.DrawString(Game1.smallFont, startMinigameData[2].ToString(), screenMid + new Vector2(width * -0.41f, height * 0.19f),
                     ((startMinigameData[2] < startMinigameArrowData.Length * 0.38f) ? Color.Crimson :
                     (startMinigameData[2] < startMinigameArrowData.Length * 0.76f) ? Color.DarkOrange ://tomato
-                    //(startMinigameData[2] < startMinigameArrowData.Length * 0.76f) ? Color.Orange :
+                                                                                                       //(startMinigameData[2] < startMinigameArrowData.Length * 0.76f) ? Color.Orange :
                     (startMinigameData[2] < startMinigameArrowData.Length * 1.14f) ? Color.Yellow :
                     (startMinigameData[2] < startMinigameArrowData.Length * 1.52f) ? Color.GreenYellow :
                     (startMinigameData[2] < startMinigameArrowData.Length * 1.9f) ? Color.LimeGreen : Color.Purple) * (opacity / 3f),
@@ -1017,7 +1069,7 @@ namespace FishingMinigames
             {
                 Color color = (startMinigameData[2] < startMinigameArrowData.Length * 0.38f) ? Color.Crimson :
                     (startMinigameData[2] < startMinigameArrowData.Length * 0.76f) ? Color.DarkOrange ://tomato
-                    //(startMinigameData[2] < startMinigameArrowData.Length * 0.76f) ? Color.Orange :
+                                                                                                       //(startMinigameData[2] < startMinigameArrowData.Length * 0.76f) ? Color.Orange :
                     (startMinigameData[2] < startMinigameArrowData.Length * 1.14f) ? Color.Yellow :
                     (startMinigameData[2] < startMinigameArrowData.Length * 1.52f) ? Color.GreenYellow :
                     (startMinigameData[2] < startMinigameArrowData.Length * 1.9f) ? Color.LimeGreen : Color.Purple;
@@ -1044,7 +1096,7 @@ namespace FishingMinigames
                 //bounds.X += bounds.Width;
                 //batch.Draw(Game1.mouseCursors, bounds, whitePixel, Color.Orange * (opacity / 3f), 0f, Vector2.Zero, SpriteEffects.None, 0.5f);
                 bounds.X += bounds.Width;
-                batch.Draw(Game1.mouseCursors, new Rectangle(bounds.X, (int)(screenMid.Y + (height * 0.185f)), (int)(0.3f * scale), (int)(6.8f * scale)), 
+                batch.Draw(Game1.mouseCursors, new Rectangle(bounds.X, (int)(screenMid.Y + (height * 0.185f)), (int)(0.3f * scale), (int)(6.8f * scale)),
                     whitePixel, Color.LimeGreen * (opacity / 3f), 0f, Vector2.Zero, SpriteEffects.None, 0.4f);
                 batch.Draw(Game1.mouseCursors, bounds, whitePixel, Color.Yellow * (opacity / 3f), 0f, Vector2.Zero, SpriteEffects.None, 0.5f);
                 bounds.X += bounds.Width;
@@ -1522,8 +1574,6 @@ namespace FishingMinigames
                 string sizeString = Game1.content.LoadString("Strings\\StringsFromCSFiles:FishingRod.cs.14083", (metricSizes || LocalizedContentManager.CurrentLanguageCode != 0) ? Math.Round(fishSize * 2.54f) : (fishSize));
                 batch.DrawString(Game1.smallFont, sizeString, Game1.GlobalToLocal(Game1.viewport, who.Position + new Vector2(-80f - Game1.smallFont.MeasureString(sizeString).X / 2f, -77f - offset)), recordSize ? Color.Blue : Game1.textColor, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0.1f);
             }
-            //fishing net
-            batch.Draw(Game1.toolSpriteSheet, Game1.GlobalToLocal(Game1.viewport, who.Position + new Vector2(+22f, +17f)), Game1.getSourceRectForStandardTileSheet(Game1.toolSpriteSheet, who.CurrentTool.IndexOfMenuItemView, 16, 16), Color.White, -3f, new Vector2(8f, 8f), 4f, SpriteEffects.None, 0f);
 
             //item(s) in hand
             if (!furniture)
@@ -1532,7 +1582,10 @@ namespace FishingMinigames
 
                 if (caughtDoubleFish) batch.Draw(Game1.objectSpriteSheet, Game1.GlobalToLocal(Game1.viewport, who.Position + new Vector2(4f, -44f)), sourceRect, Color.White, (fishSize == -1 || whichFish == 800 || whichFish == 798 || whichFish == 149 || whichFish == 151) ? 1f : 2.6f, new Vector2(8f, 8f), itemSpriteSize, SpriteEffects.None, 0.1f);
             }
-            else batch.Draw(Furniture.furnitureTexture, Game1.GlobalToLocal(Game1.viewport, who.Position + new Vector2(0f, -56f)), sourceRect, Color.White, 0f, new Vector2(8f, 8f), 2.25f, SpriteEffects.None, 0.1f);
+            else batch.Draw(Furniture.furnitureTexture, Game1.GlobalToLocal(Game1.viewport, who.Position + new Vector2(10f, -56f)), sourceRect, Color.White, 0f, new Vector2(8f, 8f), 2.25f, SpriteEffects.None, 0.1f);
+
+            //fishing net
+            batch.Draw(Game1.toolSpriteSheet, Game1.GlobalToLocal(Game1.viewport, who.Position + new Vector2(+22f, +17f)), Game1.getSourceRectForStandardTileSheet(Game1.toolSpriteSheet, who.CurrentTool.IndexOfMenuItemView, 16, 16), Color.White, -3f, new Vector2(8f, 8f), 4f, SpriteEffects.None, 0.1f);
         }
 
         private void FestivalGameSkip(Farmer who)
@@ -1543,7 +1596,7 @@ namespace FishingMinigames
                 hereFishying = true;
                 who.FacingDirection = 3;
 
-                if (fishySound != null) fishySound.Play(voiceVolume, voicePitch[screen], 0);
+                if (fishySound != null) fishySound.Play(voiceVolumePersonal, voicePitch[screen], 0);
                 who.synchronizedJump(8f);
 
                 stage = "Festival1";
@@ -1679,6 +1732,13 @@ namespace FishingMinigames
                     }
                     if (who == null) return;
 
+                    float voiceVolumePersonal = 0;
+                    if (voiceVolume > 0f)
+                    {
+                        voiceVolumePersonal = Math.Min((voiceVolume * 0.80f) + (who.FishingLevel * voiceVolume * 0.018f), (voiceVolume * 0.98f));
+                        if (who.FishingLevel > 10) voiceVolumePersonal += Math.Min((who.FishingLevel - 10) * voiceVolume * 0.004f, (voiceVolume * 0.02f));
+                    }
+
                     int x = message.x;
                     int y = message.y;
 
@@ -1729,13 +1789,13 @@ namespace FishingMinigames
                                     if (Helper.Multiplayer.GetConnectedPlayer(message.multiplayerID).IsSplitScreen)
                                     {
                                         int screen2 = (int)Helper.Multiplayer.GetConnectedPlayer(message.multiplayerID).ScreenID;
-                                        fishySound.Play(voiceVolume, message.voicePitch, (screen2 == 0 || screen2 == 2) ? -1f : 1f); //if local split screen, screen 0 and 2 play on left, 1, 3 on right, * distance on other side
+                                        fishySound.Play(voiceVolumePersonal, message.voicePitch, (screen2 == 0 || screen2 == 2) ? -1f : 1f); //if local split screen, screen 0 and 2 play on left, 1, 3 on right, * distance on other side
                                         if (((screen == 0 || screen == 2) && (screen2 == 1 || screen2 == 3)) ||
-                                            ((screen == 1 || screen == 3) && (screen2 == 0 || screen2 == 2))) fishySound.Play(volume * voiceVolume, message.voicePitch, (screen == 0 || screen == 2) ? -1f : 1f);
+                                            ((screen == 1 || screen == 3) && (screen2 == 0 || screen2 == 2))) fishySound.Play(volume * voiceVolumePersonal, message.voicePitch, (screen == 0 || screen == 2) ? -1f : 1f);
                                     }
-                                    else fishySound.Play(volume * voiceVolume, message.voicePitch, (screen == 0 || screen == 2) ? -1f : 1f); //if split screen, but sender is not split screen (same as above * distance)
+                                    else fishySound.Play(volume * voiceVolumePersonal, message.voicePitch, (screen == 0 || screen == 2) ? -1f : 1f); //if split screen, but sender is not split screen (same as above * distance)
                                 }
-                                else fishySound.Play(volume * voiceVolume, message.voicePitch, 0); //not scplit screen, won't do directional sound as it can be annoying
+                                else fishySound.Play(volume * voiceVolumePersonal, message.voicePitch, 0); //not scplit screen, won't do directional sound as it can be annoying
                             }
                             who.completelyStopAnimatingOrDoingAction();
                             who.jitterStrength = 2f;

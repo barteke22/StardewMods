@@ -27,6 +27,7 @@ namespace FishingMinigames
             UpdateConfig();
 
             helper.Events.Display.RenderedWorld += Display_RenderedWorld;
+            helper.Events.Display.RenderedHud += Display_RenderedHud;
             helper.Events.GameLoop.UpdateTicking += GameLoop_UpdateTicking;
             helper.Events.Input.ButtonsChanged += Input_ButtonsChanged;
             helper.Events.GameLoop.GameLaunched += GenericModConfigMenuIntegration;
@@ -41,6 +42,12 @@ namespace FishingMinigames
             //   prefix: new HarmonyMethod(typeof(ObjectPatches), nameof(ObjectPatches.CanBePlacedHere_Prefix))
             //);
         }
+
+        private void Display_RenderedHud(object sender, RenderedHudEventArgs e)
+        {
+            
+        }
+
         private void GenericModConfigMenuIntegration(object sender, GameLaunchedEventArgs e)     //Generic Mod Config Menu API
         {
             if (Context.IsSplitScreen) return;
@@ -88,6 +95,9 @@ namespace FishingMinigames
 
             GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.KeyBinds"), translate.Get("GenericMC.KeyBindsDesc"),
                 () => config.KeyBinds[screen], (string val) => config.KeyBinds[screen] = val);
+
+            GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.FreeAim"), translate.Get("GenericMC.FreeAimDesc"),
+                () => config.FreeAim[screen], (bool val) => config.FreeAim[screen] = val);
 
             GenericMC.RegisterChoiceOption(ModManifest, translate.Get("GenericMC.StartMinigameStyle"), translate.Get("GenericMC.StartMinigameStyleDesc"),
                 () => (config.StartMinigameStyle[screen] == 0) ? translate.Get("GenericMC.Disabled") : (config.StartMinigameStyle[screen] == 1) ? translate.Get("GenericMC.StartMinigameStyle1") : (config.StartMinigameStyle[screen] == 2) ? translate.Get("GenericMC.StartMinigameStyle2") : translate.Get("GenericMC.StartMinigameStyle3"),
@@ -410,7 +420,7 @@ namespace FishingMinigames
                 if (!config.Voice_Test_Ignore_Me[i].Equals(config.VoiceVolume + "/" + config.VoicePitch[i], StringComparison.Ordinal)) //play voice and save it if changed
                 {
                     config.Voice_Test_Ignore_Me[i] = config.VoiceVolume + "/" + config.VoicePitch[i];
-                    Minigames.fishySound.Play(config.VoiceVolume / 100f, config.VoicePitch[i] / 100f, 0f);
+                    Minigames.fishySound.Play(config.VoiceVolume / 100f * 0.98f, config.VoicePitch[i] / 100f, 0f);
                     Helper.WriteConfig(config);
                 }
 
@@ -432,6 +442,7 @@ namespace FishingMinigames
 
                 if (Context.IsWorldReady)
                 {
+                    Minigames.freeAim[i] = config.FreeAim[i];
                     Minigames.startMinigameStyle[i] = config.StartMinigameStyle[i];
                     Minigames.endMinigameStyle[i] = config.EndMinigameStyle[i];
                     Minigames.minigameDamage[i] = config.EndMinigameDamage[i];
