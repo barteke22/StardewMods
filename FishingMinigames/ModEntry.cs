@@ -1,4 +1,5 @@
 ﻿using GenericModConfigMenu;
+using Harmony;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
@@ -6,19 +7,20 @@ using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
+using StardewValley.Menus;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 
 namespace FishingMinigames
 {
     public class ModEntry : Mod, IAssetEditor
     {
-        ITranslationHelper translate;
+        public static ITranslationHelper translate;
         public static ModConfig config;
         private readonly PerScreen<Minigames> minigame = new PerScreen<Minigames>();
-
 
 
 
@@ -27,25 +29,14 @@ namespace FishingMinigames
             UpdateConfig();
 
             helper.Events.Display.RenderedWorld += Display_RenderedWorld;
-            helper.Events.Display.RenderedHud += Display_RenderedHud;
             helper.Events.GameLoop.UpdateTicking += GameLoop_UpdateTicking;
             helper.Events.Input.ButtonsChanged += Input_ButtonsChanged;
             helper.Events.GameLoop.GameLaunched += GenericModConfigMenuIntegration;
             helper.Events.GameLoop.SaveLoaded += GameLoop_SaveLoaded;
             helper.Events.Multiplayer.ModMessageReceived += OnModMessageReceived;
 
-            //var harmony = HarmonyInstance.Create(this.ModManifest.UniqueID);
-
-            //// example patch, you'll need to edit this for your patch
-            //harmony.Patch(
-            //   original: AccessTools.Method(typeof(StardewValley.Tools.FishingRod), nameof(StardewValley.Tools.FishingRod.des)),
-            //   prefix: new HarmonyMethod(typeof(ObjectPatches), nameof(ObjectPatches.CanBePlacedHere_Prefix))
-            //);
-        }
-
-        private void Display_RenderedHud(object sender, RenderedHudEventArgs e)
-        {
-            
+            var harmony = HarmonyInstance.Create(ModManifest.UniqueID);//this might summon Cthulhu
+            harmony.PatchAll();
         }
 
         private void GenericModConfigMenuIntegration(object sender, GameLaunchedEventArgs e)     //Generic Mod Config Menu API
@@ -214,9 +205,9 @@ namespace FishingMinigames
                             case "FishingRod.cs.trainingRodDescription":
                                 data[itemID] = AddEffectDescriptions("Training Rod", translate.Get("net.trainingDesc"));
                                 break;
-                            case "FishingRod.cs.14042":
-                                Minigames.rodDescription = data[itemID];
-                                break;
+                            //case "FishingRod.cs.14042":
+                            //    Minigames.rodDescription = data[itemID];
+                            //    break;
                             case "FishingRod.cs.14045":
                                 data[itemID] = translate.Get("net.bamboo");
                                 break;
@@ -349,7 +340,7 @@ namespace FishingMinigames
                 }
             }
         }
-        public string AddEffectDescriptions(string itemName, string initialText = null)
+        public static string AddEffectDescriptions(string itemName, string initialText = null)
         {
             foreach (string effectPair in Minigames.itemData[itemName])
             {
@@ -458,6 +449,36 @@ namespace FishingMinigames
                 if (LocalizedContentManager.CurrentLanguageCode == 0) Minigames.metricSizes = config.ConvertToMetric;
                 else Minigames.metricSizes = false;
                 Helper.Content.InvalidateCache("Strings/StringsFromCSFiles");
+            }
+        }
+    }
+}
+
+
+
+[HarmonyPatch(typeof(Tool), "getDescription")]
+class Patch
+{
+    static void Postfix(ref string __result, ref Tool __instance)
+    {
+        if (__instance is StardewValley.Tools.FishingRod)
+        {
+            string desc = Game1.content.LoadString("Strings\\StringsFromCSFiles:FishingRod.cs.14042");
+            if (__instance.UpgradeLevel == 0)//bamboo
+            {
+                desc += "\n" + FishingMinigames.ModEntry.AddEffectDescriptions(__instance.Name);
+                if (desc.EndsWith("\n")) desc = desc.Substring(0, desc.Length - 1);
+                __result = Game1.parseText(desc, Game1.smallFont, desc.Length * 10);
+            }
+            else if (__instance.UpgradeLevel != 1)//fiber/iridium
+            {
+                desc += "\n" + FishingMinigames.ModEntry.AddEffectDescriptions(__instance.Name);
+
+                if (__instance.attachments[0] != null) desc += "\n\n" + __instance.attachments[0].DisplayName + ":\n" + FishingMinigames.ModEntry.AddEffectDescriptions(__instance.attachments[0].Name);
+                if (__instance.attachments[1] != null) desc += "\n\n" + __instance.attachments[1].DisplayName + ":\n" + FishingMinigames.ModEntry.AddEffectDescriptions(__instance.attachments[1].Name);
+
+                if (desc.EndsWith("\n")) desc = desc.Substring(0, desc.Length - 1);
+                __result = Game1.parseText(desc, Game1.smallFont, desc.Length * 10);
             }
         }
     }

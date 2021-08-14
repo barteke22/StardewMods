@@ -240,16 +240,6 @@ namespace FishingMinigames
         public void GameLoop_UpdateTicking(object sender, UpdateTickingEventArgs e) //adds item to inv
         {
             who = Game1.player;
-            //update rod description
-            if (!Game1.eventUp && who.CurrentItem is FishingRod && !hereFishying && e.IsOneSecond && who.CurrentTool.UpgradeLevel != 1)
-            {
-                FishingRod rod = who.CurrentTool as FishingRod;
-                string description = entry.AddEffectDescriptions((who.CurrentTool as FishingRod).Name, rodDescription);
-                if (rod.attachments[0] != null) description = description + "\n" + rod.attachments[0].DisplayName + ":\n" + entry.AddEffectDescriptions(rod.attachments[0].Name);
-                if (rod.attachments[1] != null) description = description + "\n" + rod.attachments[1].DisplayName + ":\n" + rod.attachments[1].getDescription();
-                rod.description = description;
-            }
-
             if (Game1.isFestival() && e.IsOneSecond)
             {
                 fishingFestivalMinigame = 0;
