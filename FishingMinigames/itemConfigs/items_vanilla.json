@@ -21,13 +21,17 @@
     //SIZE      = fish size                                                     1.0           * X            higher = better
     //SPEED     = minigame speed                                                1.0           * X            higher = harder
     //TREASURE  = treasure base chance multiplier                               0.0           + X            higher = better
+    
+    //UNBREAKING= % chance of bait/tacle not being consumed per cast.           0             + X            higher = better, up to 100% per item type
+    //UNBREAKING is added automatically if you have the Everlasting Baits and Unbreakable Tackles mod.
+    //You can add it manually to a bait/tackle if you don't have it, for a similar effect, but that mod is more lore friendly (recommended), even though the dialogue might not be accurate to this mod.
 
     //rods
     "Training Rod": [
         "SPEED:0.5"
     ],
     "Bamboo Pole": [
-        "SPEED:1.0"//no bonus
+        "SPEED:1.0" //no bonus
     ],
     "Fiberglass Rod": [
         "SPEED:0.8"
@@ -42,6 +46,7 @@
     ],
     "Magnet": [
         "SIZE:0.9",
+        "UNBREAKING:100",
         "TREASURE:1.0"
     ],
     "Wild Bait": [
@@ -76,7 +81,7 @@
     "Treasure Hunter": [
         "TREASURE:0.333"
     ],
-    "Barbed Hook": [//Barbed Megaphone?
+    "Barbed Hook": [ //Barbed Megaphone?
         "AREA:1.1",
         "DIFFICULTY:0.8",
         "LIFE:2"

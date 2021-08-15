@@ -93,12 +93,12 @@ namespace FishingMinigames
             GenericMC.RegisterChoiceOption(ModManifest, translate.Get("GenericMC.StartMinigameStyle"), translate.Get("GenericMC.StartMinigameStyleDesc"),
                 () => (config.StartMinigameStyle[screen] == 0) ? translate.Get("GenericMC.Disabled") : (config.StartMinigameStyle[screen] == 1) ? translate.Get("GenericMC.StartMinigameStyle1") : (config.StartMinigameStyle[screen] == 2) ? translate.Get("GenericMC.StartMinigameStyle2") : translate.Get("GenericMC.StartMinigameStyle3"),
                 (string val) => config.StartMinigameStyle[screen] = Int32.Parse((val.Equals(translate.Get("GenericMC.Disabled"), StringComparison.Ordinal)) ? "0" : (val.Equals(translate.Get("GenericMC.StartMinigameStyle1"), StringComparison.Ordinal)) ? "1" : (val.Equals(translate.Get("GenericMC.StartMinigameStyle2"), StringComparison.Ordinal)) ? "2" : "3"),
-                new string[] { translate.Get("GenericMC.Disabled"), translate.Get("GenericMC.StartMinigameStyle1"), translate.Get("GenericMC.StartMinigameStyle2"), translate.Get("GenericMC.StartMinigameStyle3") });//small 'hack' so options appear as name strings, while config.json stores them as integers
+                new string[] { translate.Get("GenericMC.Disabled"), translate.Get("GenericMC.StartMinigameStyle1") });//, translate.Get("GenericMC.StartMinigameStyle2"), translate.Get("GenericMC.StartMinigameStyle3") });//small 'hack' so options appear as name strings, while config.json stores them as integers
 
             GenericMC.RegisterChoiceOption(ModManifest, translate.Get("GenericMC.EndMinigameStyle"), translate.Get("GenericMC.EndMinigameStyleDesc"),
                 () => (config.EndMinigameStyle[screen] == 0) ? translate.Get("GenericMC.Disabled") : (config.EndMinigameStyle[screen] == 1) ? translate.Get("GenericMC.EndMinigameStyle1") : (config.EndMinigameStyle[screen] == 2) ? translate.Get("GenericMC.EndMinigameStyle2") : translate.Get("GenericMC.EndMinigameStyle3"),
                 (string val) => config.EndMinigameStyle[screen] = Int32.Parse((val.Equals(translate.Get("GenericMC.Disabled"), StringComparison.Ordinal)) ? "0" : (val.Equals(translate.Get("GenericMC.EndMinigameStyle1"), StringComparison.Ordinal)) ? "1" : (val.Equals(translate.Get("GenericMC.EndMinigameStyle2"), StringComparison.Ordinal)) ? "2" : "3"),
-                new string[] { translate.Get("GenericMC.Disabled"), translate.Get("GenericMC.EndMinigameStyle1") });//, translate.Get("GenericMC.EndMinigameStyle2"), translate.Get("GenericMC.EndMinigameStyle3") });
+                new string[] { translate.Get("GenericMC.Disabled"), translate.Get("GenericMC.EndMinigameStyle1"), translate.Get("GenericMC.EndMinigameStyle2"), translate.Get("GenericMC.EndMinigameStyle3") });
 
             GenericMC.RegisterClampedOption(ModManifest, translate.Get("GenericMC.EndDamage"), translate.Get("GenericMC.EndDamageDesc"),
                 () => config.EndMinigameDamage[screen], (float val) => config.EndMinigameDamage[screen] = val, 0f, 2f);
@@ -368,7 +368,8 @@ namespace FishingMinigames
                         break;
                     case "LIFE":
                     case "QUALITY":
-                        if (tempVal == 0f) continue;
+                    case "UNBREAKING":
+                        if (tempVal == 0f || itemName.EndsWith("Rod") || itemName.EndsWith("Pole")) continue;
                         if (initialText != null) initialText += "\n";
                         value = tempVal.ToString();
                         break;
@@ -474,8 +475,16 @@ class Patch
             {
                 desc += "\n" + FishingMinigames.ModEntry.AddEffectDescriptions(__instance.Name);
 
-                if (__instance.attachments[0] != null) desc += "\n\n" + __instance.attachments[0].DisplayName + ":\n" + FishingMinigames.ModEntry.AddEffectDescriptions(__instance.attachments[0].Name);
-                if (__instance.attachments[1] != null) desc += "\n\n" + __instance.attachments[1].DisplayName + ":\n" + FishingMinigames.ModEntry.AddEffectDescriptions(__instance.attachments[1].Name);
+                if (__instance.attachments[0] != null)
+                {
+                    desc += "\n\n" + __instance.attachments[0].DisplayName + ((__instance.attachments[0].quality == 0) ? "" : " (" + FishingMinigames.ModEntry.translate.Get("mods.infinite") + ")")
+                           + ":\n" + FishingMinigames.ModEntry.AddEffectDescriptions(__instance.attachments[0].Name);
+                }
+                if (__instance.attachments[1] != null)
+                {
+                    desc += "\n\n" + __instance.attachments[1].DisplayName + ((__instance.attachments[1].quality == 0) ? "" : " (" + FishingMinigames.ModEntry.translate.Get("mods.infinite") + ")")
+                           + ":\n" + FishingMinigames.ModEntry.AddEffectDescriptions(__instance.attachments[1].Name);
+                }
 
                 if (desc.EndsWith("\n")) desc = desc.Substring(0, desc.Length - 1);
                 __result = Game1.parseText(desc, Game1.smallFont, desc.Length * 10);

@@ -61,8 +61,9 @@
     "GenericMC.SplitScreen4": "Split Screen 4: Bottom Right",
 
 
+    //Score: X out of at least Y  =   Fail/Success!
     "Minigame.Score": "Score:",
-    "Minigame.Score2": "out of at least", //Score: X   out of at least Y
+    "Minigame.Score2": "out of at least",
     "Minigame.Score_0": "Epic Fail!",
     "Minigame.Score_1": "Failure!",
     "Minigame.Score_2": "Success!",
@@ -79,6 +80,7 @@
     "Effects.SIZE": "Attracts {{val}}% larger fish.",
     "Effects.SPEED": "Decreases minigame speed by {{val}}%",
     "Effects.TREASURE": "Adds {{val}}% to treasure chance.",
+    "Effects.UNBREAKING": "{{val}}% chance of not being consumed.",
 
     "net.fishing": "Fishing Net",
     "net.bamboo": "Bamboo Net",
@@ -86,5 +88,9 @@
     "net.trainingDesc": "It's a lot easier to use than other nets, but can only catch basic fish.",
     "net.fiberglass": "Fiberglass Net",
     "net.iridium": "Iridium Net",
-    "net.skill": "+{0} Fishing Net Efficiency"
+    "net.skill": "+{0} Fishing Net Efficiency",
+
+
+    //everlasting baits and tackles
+    "mods.infinite": "infinite"
 }
