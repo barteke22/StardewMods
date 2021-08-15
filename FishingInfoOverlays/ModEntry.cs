@@ -56,7 +56,7 @@ namespace StardewMods
                 try
                 {
                     GenericMCPerScreen(GenericMC, 0);
-                    GenericMC.RegisterPageLabel(ModManifest, translate.Get("GenericMC.barColors"), "", translate.Get("GenericMC.barColors"));
+                    GenericMC.RegisterPageLabel(ModManifest, translate.Get("GenericMC.barColors"), translate.Get("GenericMC.barColors"), translate.Get("GenericMC.barColors"));
 
                     for (int i = 2; i < 5; i++)
                     {
