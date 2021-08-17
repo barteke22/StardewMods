@@ -10,6 +10,7 @@
         public int[] StartMinigameStyle { get; set; } = { 1, 1, 1, 1 };
         public int[] EndMinigameStyle { get; set; } = { 2, 2, 2, 2 };
         public float StartMinigameScale { get; set; } = 1f;
+        public bool[] EndLoseTreasureIfFailed { get; set; } = { true, true, true, true };
         public float[] EndMinigameDamage { get; set; } = { 1f, 1f, 1f, 1f };
         public float[] MinigameDifficulty { get; set; } = { 1f, 1f, 1f, 1f };
         public bool ConvertToMetric { get; set; } = false;

@@ -100,6 +100,8 @@ namespace FishingMinigames
                 (string val) => config.EndMinigameStyle[screen] = Int32.Parse((val.Equals(translate.Get("GenericMC.Disabled"), StringComparison.Ordinal)) ? "0" : (val.Equals(translate.Get("GenericMC.EndMinigameStyle1"), StringComparison.Ordinal)) ? "1" : (val.Equals(translate.Get("GenericMC.EndMinigameStyle2"), StringComparison.Ordinal)) ? "2" : "3"),
                 new string[] { translate.Get("GenericMC.Disabled"), translate.Get("GenericMC.EndMinigameStyle1"), translate.Get("GenericMC.EndMinigameStyle2"), translate.Get("GenericMC.EndMinigameStyle3") });
 
+            GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.EndLoseTreasure"), translate.Get("GenericMC.EndLoseTreasureDesc"),
+                () => config.EndLoseTreasureIfFailed[screen], (bool val) => config.EndLoseTreasureIfFailed[screen] = val);
             GenericMC.RegisterClampedOption(ModManifest, translate.Get("GenericMC.EndDamage"), translate.Get("GenericMC.EndDamageDesc"),
                 () => config.EndMinigameDamage[screen], (float val) => config.EndMinigameDamage[screen] = val, 0f, 2f);
             GenericMC.RegisterClampedOption(ModManifest, translate.Get("GenericMC.Difficulty"), translate.Get("GenericMC.DifficultyDesc"),
@@ -437,6 +439,7 @@ namespace FishingMinigames
                     Minigames.freeAim[i] = config.FreeAim[i];
                     Minigames.startMinigameStyle[i] = config.StartMinigameStyle[i];
                     Minigames.endMinigameStyle[i] = config.EndMinigameStyle[i];
+                    Minigames.endCanLoseTreasure[i] = config.EndLoseTreasureIfFailed[i];
                     Minigames.minigameDamage[i] = config.EndMinigameDamage[i];
                     Minigames.minigameDifficulty[i] = config.MinigameDifficulty[i];
                     Minigames.festivalMode[i] = config.FestivalMode[i];

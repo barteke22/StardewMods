@@ -15,7 +15,7 @@
     "GenericMC.KeyBindsDesc": "Button(s) used to trigger the minigame. If the same as Tool Use buttons, the Vanilla Fishing Minigame will be overwritten by this. \nSupports Mouse, Keyboard and Controller. Individual keys are separated by commas, combos like LeftShift + K are NOT supported for keybind minigames. \nExample of 3 keys: MouseRight, LeftShift + K, ControllerX \nFor key names, see: https://stardewcommunitywiki.com/Modding:Player_Guide/Key_Bindings",
 
     "GenericMC.FreeAim": "Free Aim",
-    "GenericMC.FreeAimDesc": "Disabled: You can aim in front of you by holding your keybind, and control the direction with your facing direction while holding the keybind.\nEnabled: Allows you to simply click any tile you can reach (within your fishing level) with the cursor.\nFishable tiles will be highlighted in both modes, Free Aim might not be very controller friendly.",
+    "GenericMC.FreeAimDesc": "Disabled: You can aim in front of you on a grid by holding your keybind, and control the which tile with WASD, Arrow Keys, or DPad.\nEnabled: Allows you to simply click any tile you can reach (within your fishing level) with the cursor.\nFishable tiles will be highlighted in both modes, Free Aim might not be very controller friendly, as the cursor position resets when accesing menus.",
 
     "GenericMC.StartMinigameStyle": "Minigame Style (Start)",
     "GenericMC.StartMinigameStyleDesc": "This minigame determines whether you catch the fish at all (non-fish catches skip this part), and contributes to total score. \nDDR Arrows: The classic rhythm game where you match arrow directions with your Movement buttons as they reach a specific area. \nMinigame2: WIP \nMinigame3: WIP",
@@ -29,6 +29,8 @@
     "GenericMC.EndMinigameStyle2": "Matching Arrow",
     "GenericMC.EndMinigameStyle3": "Matching Letter",
 
+    "GenericMC.EndLoseTreasure": "Lose Treasure On Fail (End)",
+    "GenericMC.EndLoseTreasureDesc": "If you fail the End Minigame, you'll lose any potential treasure. This is mainly recommended if you don't have a Start Minigame enabled, as you'll otherwise receive treasure for nothing.",
     "GenericMC.EndDamage": "Minigame Damage (End)",
     "GenericMC.EndDamageDesc": "If you fail the end minigame, you'll get damaged based on the fish/item difficulty, size, and this multiplier. This is a straight up multiplier, so 0 means no damage, less than 1 means less, more means more.",
     "GenericMC.Difficulty": "Minigame Difficulty (Both)",
