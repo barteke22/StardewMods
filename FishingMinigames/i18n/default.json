@@ -15,7 +15,7 @@
     "GenericMC.KeyBindsDesc": "Button(s) used to trigger the minigame. If the same as Tool Use buttons, the Vanilla Fishing Minigame will be overwritten by this. \nSupports Mouse, Keyboard and Controller. Individual keys are separated by commas, combos like LeftShift + K are NOT supported for keybind minigames. \nExample of 3 keys: MouseRight, LeftShift + K, ControllerX \nFor key names, see: https://stardewcommunitywiki.com/Modding:Player_Guide/Key_Bindings",
 
     "GenericMC.FreeAim": "Free Aim",
-    "GenericMC.FreeAimDesc": "Disabled: You can aim in front of you on a grid by holding your keybind, and control the which tile with WASD, Arrow Keys, or DPad.\nEnabled: Allows you to simply click any tile you can reach (within your fishing level) with the cursor.\nFishable tiles will be highlighted in both modes, Free Aim might not be very controller friendly, as the cursor position resets when accesing menus.",
+    "GenericMC.FreeAimDesc": "Disabled: You can aim in front of you on a grid by holding your keybind, and control which tile with WASD, Arrow Keys, or DPad.\nEnabled: Allows you to simply click any tile you can reach (within your fishing level) with the cursor.\nFishable tiles will be highlighted in both modes. Free Aim might not be very controller friendly, as the cursor position resets when accesing menus. It might also be less balanced, as it allows further diagonal aim.",
 
     "GenericMC.StartMinigameStyle": "Minigame Style (Start)",
     "GenericMC.StartMinigameStyleDesc": "This minigame determines whether you catch the fish at all (non-fish catches skip this part), and contributes to total score. \nDDR Arrows: The classic rhythm game where you match arrow directions with your Movement buttons as they reach a specific area. \nMinigame2: WIP \nMinigame3: WIP",
@@ -61,6 +61,10 @@
     "GenericMC.SplitScreen2": "Split Screen 2: (Top) Right",
     "GenericMC.SplitScreen3": "Split Screen 3: Bottom Left",
     "GenericMC.SplitScreen4": "Split Screen 4: Bottom Right",
+
+    "GenericMC.Colors": "Color Customization",
+    "GenericMC.ColorsDesc": "There's a preview if you access this after loading a game save. Press \"Save\" to update the preview.",
+    "GenericMC.MinigameColor": "Minigame Color",
 
 
     //Score: X out of at least Y  =   Fail/Success!

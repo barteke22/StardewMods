@@ -16,6 +16,7 @@
         public bool ConvertToMetric { get; set; } = false;
         public bool RealisticSizes { get; set; } = true;
         public int[] FestivalMode { get; set; } = { 2, 2, 2, 2 };
+        public int[] MinigameColorRGB { get; set; } = { 0, 255, 255 };
 
 
         public ModConfig()

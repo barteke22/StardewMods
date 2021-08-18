@@ -21,14 +21,19 @@ namespace FishingMinigames
         public static ITranslationHelper translate;
         public static ModConfig config;
         private readonly PerScreen<Minigames> minigame = new PerScreen<Minigames>();
+        private string colorPage;
 
 
 
         public override void Entry(IModHelper helper)
         {
+            translate = Helper.Translation;
             UpdateConfig();
+            Minigames.startMinigameTextures = new Texture2D[] { Game1.content.Load<Texture2D>("LooseSprites\\boardGameBorder"), Game1.content.Load<Texture2D>("LooseSprites\\CraneGame") };
+            colorPage = translate.Get("GenericMC.Colors");
 
             helper.Events.Display.RenderedWorld += Display_RenderedWorld;
+            helper.Events.Display.RenderedActiveMenu += Display_RenderedActiveMenu;
             helper.Events.GameLoop.UpdateTicking += GameLoop_UpdateTicking;
             helper.Events.Input.ButtonsChanged += Input_ButtonsChanged;
             helper.Events.GameLoop.GameLaunched += GenericModConfigMenuIntegration;
@@ -42,7 +47,6 @@ namespace FishingMinigames
         private void GenericModConfigMenuIntegration(object sender, GameLaunchedEventArgs e)     //Generic Mod Config Menu API
         {
             if (Context.IsSplitScreen) return;
-            translate = Helper.Translation;
             var GenericMC = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
             if (GenericMC != null)
             {
@@ -61,6 +65,8 @@ namespace FishingMinigames
                         () => config.VoiceVolume, (int val) => config.VoiceVolume = val, 0, 100);
 
                     GenericMCPerScreen(GenericMC, 0);
+                    GenericMC.RegisterPageLabel(ModManifest, translate.Get("GenericMC.Colors"), translate.Get("GenericMC.Colors"), translate.Get("GenericMC.Colors"));
+
                     for (int i = 2; i < 5; i++)
                     {
                         GenericMC.RegisterPageLabel(ModManifest, translate.Get("GenericMC.SplitScreen" + i), translate.Get("GenericMC.SplitScreenDesc"), translate.Get("GenericMC.SplitScreen" + i));
@@ -68,6 +74,13 @@ namespace FishingMinigames
                     GenericMCPerScreen(GenericMC, 1);
                     GenericMCPerScreen(GenericMC, 2);
                     GenericMCPerScreen(GenericMC, 3);
+
+                    GenericMC.StartNewPage(ModManifest, translate.Get("GenericMC.Colors"));
+                    GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.ColorsDesc"));
+                    GenericMC.RegisterLabel(ModManifest, translate.Get("GenericMC.MinigameColor"), "");
+                    GenericMC.RegisterClampedOption(ModManifest, "R", "", () => config.MinigameColorRGB[0], (int val) => config.MinigameColorRGB[0] = val, 0, 255);
+                    GenericMC.RegisterClampedOption(ModManifest, "G", "", () => config.MinigameColorRGB[1], (int val) => config.MinigameColorRGB[1] = val, 0, 255);
+                    GenericMC.RegisterClampedOption(ModManifest, "B", "", () => config.MinigameColorRGB[2], (int val) => config.MinigameColorRGB[2] = val, 0, 255);
                 }
                 catch (Exception)
                 {
@@ -128,6 +141,27 @@ namespace FishingMinigames
                 new string[] { translate.Get("GenericMC.FestivalModeVanilla"), translate.Get("GenericMC.FestivalModeSimple"), translate.Get("GenericMC.FestivalModePerfectOnly") });
         }
 
+        private void Display_RenderedActiveMenu(object sender, RenderedActiveMenuEventArgs e)
+        {
+            var GenericMC = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
+            if (GenericMC != null)
+            {
+                GenericMC.TryGetCurrentMenu(out IManifest mod, out string page);
+                if (mod == ModManifest && page != null && page.Equals(colorPage, StringComparison.Ordinal))
+                {
+                    Vector2 screenMid = new Vector2(Game1.graphics.GraphicsDevice.Viewport.Width / 2, Game1.graphics.GraphicsDevice.Viewport.Height / 1.5f);
+                    Color minigameColor = new Color(config.MinigameColorRGB[0], config.MinigameColorRGB[1], config.MinigameColorRGB[2]);
+
+                    e.SpriteBatch.Draw(Game1.mouseCursors, screenMid, new Rectangle(31, 1870, 73, 49), minigameColor, 0f, new Vector2(36.5f, 22.5f), 4f, SpriteEffects.None, 0.2f);
+                    e.SpriteBatch.Draw(Minigames.startMinigameTextures[0], screenMid, null, minigameColor, 0f, new Vector2(69f, 37f), 2f, SpriteEffects.None, 0.3f);
+                    e.SpriteBatch.Draw(Minigames.startMinigameTextures[1], screenMid + new Vector2(-50f, 0f), new Rectangle(355, 86, 26, 26), minigameColor, 0f, new Vector2(13f), 1f, SpriteEffects.None, 0.4f);
+
+                    e.SpriteBatch.Draw(Minigames.startMinigameTextures[1], screenMid + new Vector2(50f, 0), new Rectangle(322, 82, 12, 12), minigameColor, 0f, new Vector2(6f), 2f, SpriteEffects.None, 0.4f);
+                    e.SpriteBatch.Draw(Game1.mouseCursors, screenMid, new Rectangle(301, 288, 15, 15), minigameColor * 0.95f, 0f, new Vector2(7.5f, 7.5f), 2f, SpriteEffects.None, 0.5f);
+                    e.SpriteBatch.DrawString(Game1.smallFont, "5", screenMid, minigameColor, 0f, Game1.smallFont.MeasureString("5") / 2f, 1f, SpriteEffects.None, 0.51f);
+                }
+            }
+        }
 
         private void GameLoop_SaveLoaded(object sender, SaveLoadedEventArgs e)
         {
@@ -450,6 +484,7 @@ namespace FishingMinigames
                 Minigames.voiceVolume = config.VoiceVolume / 100f;
                 Minigames.startMinigameScale = config.StartMinigameScale;
                 Minigames.realisticSizes = config.RealisticSizes;
+                Minigames.minigameColor = new Color(config.MinigameColorRGB[0], config.MinigameColorRGB[1], config.MinigameColorRGB[2]);
                 if (LocalizedContentManager.CurrentLanguageCode == 0) Minigames.metricSizes = config.ConvertToMetric;
                 else Minigames.metricSizes = false;
                 Helper.Content.InvalidateCache("Strings/StringsFromCSFiles");
