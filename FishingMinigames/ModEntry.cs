@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Object = StardewValley.Object;
 
 namespace FishingMinigames
 {
@@ -29,9 +30,12 @@ namespace FishingMinigames
         {
             translate = Helper.Translation;
             UpdateConfig();
-            Minigames.startMinigameTextures = new Texture2D[] { Game1.content.Load<Texture2D>("LooseSprites\\boardGameBorder"), Game1.content.Load<Texture2D>("LooseSprites\\CraneGame") };
-            colorPage = translate.Get("GenericMC.Colors");
+            Minigames.startMinigameTextures = new Texture2D[] {
+                Game1.content.Load<Texture2D>("LooseSprites\\boardGameBorder"),
+                Game1.content.Load<Texture2D>("LooseSprites\\CraneGame"),
+                Game1.content.Load<Texture2D>("LooseSprites\\buildingPlacementTiles") };
 
+            helper.Events.Display.Rendered += Display_Rendered;
             helper.Events.Display.RenderedWorld += Display_RenderedWorld;
             helper.Events.Display.RenderedActiveMenu += Display_RenderedActiveMenu;
             helper.Events.GameLoop.UpdateTicking += GameLoop_UpdateTicking;
@@ -44,9 +48,12 @@ namespace FishingMinigames
             harmony.PatchAll();
         }
 
+
         private void GenericModConfigMenuIntegration(object sender, GameLaunchedEventArgs e)     //Generic Mod Config Menu API
         {
             if (Context.IsSplitScreen) return;
+            colorPage = translate.Get("GenericMC.Colors");
+
             var GenericMC = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
             if (GenericMC != null)
             {
@@ -66,11 +73,13 @@ namespace FishingMinigames
 
                     GenericMCPerScreen(GenericMC, 0);
                     GenericMC.RegisterPageLabel(ModManifest, translate.Get("GenericMC.Colors"), translate.Get("GenericMC.Colors"), translate.Get("GenericMC.Colors"));
+                    GenericMC.RegisterPageLabel(ModManifest, translate.Get("GenericMC.ItemData"), translate.Get("GenericMC.ItemData"), translate.Get("GenericMC.ItemData"));
 
                     for (int i = 2; i < 5; i++)
                     {
                         GenericMC.RegisterPageLabel(ModManifest, translate.Get("GenericMC.SplitScreen" + i), translate.Get("GenericMC.SplitScreenDesc"), translate.Get("GenericMC.SplitScreen" + i));
                     }
+
                     GenericMCPerScreen(GenericMC, 1);
                     GenericMCPerScreen(GenericMC, 2);
                     GenericMCPerScreen(GenericMC, 3);
@@ -81,6 +90,24 @@ namespace FishingMinigames
                     GenericMC.RegisterClampedOption(ModManifest, "R", "", () => config.MinigameColorRGB[0], (int val) => config.MinigameColorRGB[0] = val, 0, 255);
                     GenericMC.RegisterClampedOption(ModManifest, "G", "", () => config.MinigameColorRGB[1], (int val) => config.MinigameColorRGB[1] = val, 0, 255);
                     GenericMC.RegisterClampedOption(ModManifest, "B", "", () => config.MinigameColorRGB[2], (int val) => config.MinigameColorRGB[2] = val, 0, 255);
+
+                    GenericMC.StartNewPage(ModManifest, translate.Get("GenericMC.ItemData"));
+                    GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.ItemDataDesc1"));
+                    GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.ItemDataDesc2"));
+                    GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.ItemDataDesc3"));
+                    GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.ItemDataDesc4"));
+
+                    foreach (var item in config.SeeInfoForBelowData)
+                    {
+                        GenericMC.RegisterLabel(ModManifest, item.Key, "");
+                        foreach (var effect in item.Value)
+                        {
+                            GenericMC.RegisterClampedOption(ModManifest, effect.Key, translate.Get("Effects." + effect.Key).Tokens(new { val = "X" }),
+                                () => config.SeeInfoForBelowData[item.Key][effect.Key], (float val) => config.SeeInfoForBelowData[item.Key][effect.Key] = (int)Math.Round(val), 
+                                (effect.Key.Equals("QUALITY", StringComparison.Ordinal) ? -4 : effect.Key.Equals("LIFE", StringComparison.Ordinal) ? 0 : -100),
+                                (effect.Key.Equals("QUALITY", StringComparison.Ordinal) ? 4 : effect.Key.Equals("LIFE", StringComparison.Ordinal) ? 50 : 300));
+                        }
+                    }
                 }
                 catch (Exception)
                 {
@@ -136,9 +163,9 @@ namespace FishingMinigames
                 GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.FestivalDesc2"));
             }
             GenericMC.RegisterChoiceOption(ModManifest, translate.Get("GenericMC.FestivalMode"), translate.Get("GenericMC.FestivalModeDesc"),
-                () => (config.FestivalMode[screen] == 0) ? translate.Get("GenericMC.FestivalModeVanilla") : (config.FestivalMode[screen] == 1) ? translate.Get("GenericMC.FestivalModeSimple") : translate.Get("GenericMC.FestivalModePerfectOnly"),
-                (string val) => config.FestivalMode[screen] = Int32.Parse((val.Equals(translate.Get("GenericMC.FestivalModeVanilla"), StringComparison.Ordinal)) ? "0" : (val.Equals(translate.Get("GenericMC.FestivalModeSimple"), StringComparison.Ordinal)) ? "1" : "2"),
-                new string[] { translate.Get("GenericMC.FestivalModeVanilla"), translate.Get("GenericMC.FestivalModeSimple"), translate.Get("GenericMC.FestivalModePerfectOnly") });
+                () => (config.FestivalMode[screen] == 0) ? translate.Get("GenericMC.FestivalModeVanilla") : (config.FestivalMode[screen] == 1) ? translate.Get("GenericMC.FestivalModeSimple") : (config.FestivalMode[screen] == 2) ? translate.Get("GenericMC.FestivalModePerfectOnly") : translate.Get("GenericMC.FestivalModeStartOnly"),
+                (string val) => config.FestivalMode[screen] = Int32.Parse((val.Equals(translate.Get("GenericMC.FestivalModeVanilla"), StringComparison.Ordinal)) ? "0" : (val.Equals(translate.Get("GenericMC.FestivalModeSimple"), StringComparison.Ordinal)) ? "1" : (val.Equals(translate.Get("GenericMC.FestivalModePerfectOnly"), StringComparison.Ordinal)) ? "2" : "3"),
+                new string[] { translate.Get("GenericMC.FestivalModeVanilla"), translate.Get("GenericMC.FestivalModeSimple"), translate.Get("GenericMC.FestivalModePerfectOnly"), translate.Get("GenericMC.FestivalModeStartOnly") });
         }
 
         private void Display_RenderedActiveMenu(object sender, RenderedActiveMenuEventArgs e)
@@ -147,6 +174,7 @@ namespace FishingMinigames
             if (GenericMC != null)
             {
                 GenericMC.TryGetCurrentMenu(out IManifest mod, out string page);
+
                 if (mod == ModManifest && page != null && page.Equals(colorPage, StringComparison.Ordinal))
                 {
                     Vector2 screenMid = new Vector2(Game1.graphics.GraphicsDevice.Viewport.Width / 2, Game1.graphics.GraphicsDevice.Viewport.Height / 1.5f);
@@ -201,11 +229,23 @@ namespace FishingMinigames
             }
         }
 
-        private void Display_RenderedWorld(object sender, RenderedWorldEventArgs e)
+        private void Display_Rendered(object sender, RenderedEventArgs e)//festival 1
         {
             try
             {
-                if (Game1.player.IsLocalPlayer) minigame.Value.Display_RenderedWorld(sender, e);
+                if (minigame.Value.fishingFestivalMinigame == 1) minigame.Value.Display_RenderedAll(e.SpriteBatch);
+            }
+            catch (Exception ex)
+            {
+                Monitor.Log("Handled Exception in Rendered. Festival: " + Game1.isFestival() + ", Message: " + ex.Message, LogLevel.Trace);
+                minigame.Value.EmergencyCancel();
+            }
+        }
+        private void Display_RenderedWorld(object sender, RenderedWorldEventArgs e)//regular
+        {
+            try
+            {
+                if (minigame.Value.fishingFestivalMinigame != 1) minigame.Value.Display_RenderedAll(e.SpriteBatch);
             }
             catch (Exception ex)
             {
@@ -378,44 +418,11 @@ namespace FishingMinigames
         }
         public static string AddEffectDescriptions(string itemName, string initialText = null)
         {
-            foreach (string effectPair in Minigames.itemData[itemName])
+            foreach (var effect in config.SeeInfoForBelowData[itemName])
             {
-                string value = "";
-                float tempVal = float.Parse(effectPair.Split(':')[1]);
-                switch (effectPair.Split(':')[0])
-                {
-                    case "DAMAGE":
-                    case "DIFFICULTY":
-                    case "SPEED":
-                        if (1f - tempVal == 0f) continue;
-                        if (initialText != null) initialText += "\n";
-                        value = ((1f - tempVal) * 100f).ToString();
-                        break;
-                    case "AREA":
-                    case "SIZE":
-                        if (tempVal - 1f == 0f) continue;
-                        if (initialText != null) initialText += "\n";
-                        value = ((tempVal - 1f) * 100f).ToString();
-                        break;
-                    case "DOUBLE":
-                        if (tempVal == 0f) continue;
-                        if (initialText != null) initialText += "\n";
-                        value = (tempVal * 100f).ToString();
-                        break;
-                    case "LIFE":
-                    case "QUALITY":
-                    case "UNBREAKING":
-                        if (tempVal == 0f || itemName.EndsWith("Rod") || itemName.EndsWith("Pole")) continue;
-                        if (initialText != null) initialText += "\n";
-                        value = tempVal.ToString();
-                        break;
-                    case "TREASURE":
-                        if (tempVal == 0f) continue;
-                        if (initialText != null) initialText += "\n";
-                        value = (tempVal * StardewValley.Tools.FishingRod.baseChanceForTreasure * 100f).ToString("0.#");
-                        break;
-                }
-                initialText += translate.Get("Effects." + effectPair.Split(':')[0]).Tokens(new { val = value });
+                if (effect.Value == 0) continue;
+                if (initialText != null) initialText += "\n";
+                initialText += translate.Get("Effects." + effect.Key).Tokens(new { val = effect.Value });
             }
             return initialText;
         }
@@ -426,12 +433,12 @@ namespace FishingMinigames
             config = Helper.ReadConfig<ModConfig>();
 
             //item configs
-            Minigames.itemData = new Dictionary<string, string[]>();
-            foreach (var file in Directory.GetFiles(Helper.DirectoryPath + "/itemConfigs", "*.json").Select(Path.GetFileName).OrderBy(f => f))
-            {
-                (Helper.Data.ReadJsonFile<Dictionary<string, string[]>>("itemConfigs/" + file) ?? new Dictionary<string, string[]>()).ToList().ForEach(x => Minigames.itemData[x.Key] = x.Value);
-            }
-            Minigames.itemData.Remove("Example Item Name");
+            //Minigames.itemData = new Dictionary<string, string[]>();
+            //foreach (var file in Directory.GetFiles(Helper.DirectoryPath + "/itemConfigs", "*.json").Select(Path.GetFileName).OrderBy(f => f))
+            //{
+            //    (Helper.Data.ReadJsonFile<Dictionary<string, string[]>>("itemConfigs/" + file) ?? new Dictionary<string, string[]>()).ToList().ForEach(x => Minigames.itemData[x.Key] = x.Value);
+            //}
+            Minigames.itemData = config.SeeInfoForBelowData;
 
 
             try
@@ -500,19 +507,14 @@ class Patch
 {
     static void Postfix(ref string __result, ref Tool __instance)
     {
-        if (__instance is StardewValley.Tools.FishingRod)
+        if (__instance is StardewValley.Tools.FishingRod && __instance.UpgradeLevel != 1)//bamboo+ (except training)
         {
             string desc = Game1.content.LoadString("Strings\\StringsFromCSFiles:FishingRod.cs.14042");
-            if (__instance.UpgradeLevel == 0)//bamboo
-            {
-                desc += "\n" + FishingMinigames.ModEntry.AddEffectDescriptions(__instance.Name);
-                if (desc.EndsWith("\n")) desc = desc.Substring(0, desc.Length - 1);
-                __result = Game1.parseText(desc, Game1.smallFont, desc.Length * 10);
-            }
-            else if (__instance.UpgradeLevel != 1)//fiber/iridium
-            {
-                desc += "\n" + FishingMinigames.ModEntry.AddEffectDescriptions(__instance.Name);
 
+            desc += "\n" + FishingMinigames.ModEntry.AddEffectDescriptions(__instance.Name);
+
+            if (__instance.UpgradeLevel > 1)//fiber/iridium
+            {
                 if (__instance.attachments[0] != null)
                 {
                     desc += "\n\n" + __instance.attachments[0].DisplayName + ((__instance.attachments[0].quality == 0) ? "" : " (" + FishingMinigames.ModEntry.translate.Get("mods.infinite") + ")")
@@ -523,10 +525,14 @@ class Patch
                     desc += "\n\n" + __instance.attachments[1].DisplayName + ((__instance.attachments[1].quality == 0) ? "" : " (" + FishingMinigames.ModEntry.translate.Get("mods.infinite") + ")")
                            + ":\n" + FishingMinigames.ModEntry.AddEffectDescriptions(__instance.attachments[1].Name);
                 }
-
-                if (desc.EndsWith("\n")) desc = desc.Substring(0, desc.Length - 1);
-                __result = Game1.parseText(desc, Game1.smallFont, desc.Length * 10);
             }
+            if (desc.EndsWith("\n")) desc = desc.Substring(0, desc.Length - 1);
+            __result = Game1.parseText(desc, Game1.smallFont, desc.Length * 10);
         }
     }
+}
+
+class DummyMenu
+{
+
 }
