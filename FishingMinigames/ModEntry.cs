@@ -7,13 +7,10 @@ using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
-using StardewValley.Menus;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using Object = StardewValley.Object;
 
 namespace FishingMinigames
 {
@@ -23,6 +20,8 @@ namespace FishingMinigames
         public static ModConfig config;
         private readonly PerScreen<Minigames> minigame = new PerScreen<Minigames>();
         private string colorPage;
+        private Dictionary<string, string> displayNames = new Dictionary<string, string>();
+        private bool canStartEditingAssets = false; 
 
 
 
@@ -52,6 +51,9 @@ namespace FishingMinigames
         private void GenericModConfigMenuIntegration(object sender, GameLaunchedEventArgs e)     //Generic Mod Config Menu API
         {
             if (Context.IsSplitScreen) return;
+            canStartEditingAssets = true;
+            Helper.Content.InvalidateCache("Strings/StringsFromCSFiles");
+            Helper.Content.InvalidateCache("Data/ObjectInformation");
             colorPage = translate.Get("GenericMC.Colors");
 
             var GenericMC = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
@@ -99,7 +101,7 @@ namespace FishingMinigames
 
                     foreach (var item in config.SeeInfoForBelowData)
                     {
-                        GenericMC.RegisterLabel(ModManifest, item.Key, "");
+                        GenericMC.RegisterLabel(ModManifest, displayNames[item.Key], item.Key);
                         foreach (var effect in item.Value)
                         {
                             GenericMC.RegisterClampedOption(ModManifest, effect.Key, translate.Get("Effects." + effect.Key).Tokens(new { val = "X" }),
@@ -259,7 +261,7 @@ namespace FishingMinigames
         /// <summary>Get whether this instance can edit the given asset.</summary>
         public bool CanEdit<T>(IAssetInfo asset)
         {
-            if (asset.AssetNameEquals("TileSheets/tools") || asset.AssetNameEquals("Maps/springobjects") || asset.AssetNameEquals("Strings/StringsFromCSFiles") || asset.AssetNameEquals("Data/ObjectInformation")) return true;
+            if (canStartEditingAssets && (asset.AssetNameEquals("TileSheets/tools") || asset.AssetNameEquals("Maps/springobjects") || asset.AssetNameEquals("Strings/StringsFromCSFiles") || asset.AssetNameEquals("Data/ObjectInformation"))) return true;
             return false;
         }
         /// <summary>Edits the asset if CanEdit</summary>
@@ -276,32 +278,38 @@ namespace FishingMinigames
                         switch (itemID)
                         {
                             case "FishingRod.cs.14041":
-                                data[itemID] = translate.Get("net.fishing");
+                                data[itemID] = translate.Get("Rod.Fishing");
+                                break;
+                            case "FishingRod.cs.14042":
+                                data[itemID] = translate.Get("Rod.FishingDesc");
                                 break;
                             case "FishingRod.cs.trainingRodDescription":
-                                data[itemID] = AddEffectDescriptions("Training Rod", translate.Get("net.trainingDesc"));
+                                data[itemID] = AddEffectDescriptions("Training Rod", translate.Get("Rod.TrainingDesc"));
                                 break;
-                            //case "FishingRod.cs.14042":
-                            //    Minigames.rodDescription = data[itemID];
-                            //    break;
                             case "FishingRod.cs.14045":
-                                data[itemID] = translate.Get("net.bamboo");
+                                data[itemID] = translate.Get("Bamboo Pole");
+                                displayNames["Bamboo Pole"] = data[itemID];
                                 break;
                             case "FishingRod.cs.14046":
-                                data[itemID] = translate.Get("net.training");
+                                data[itemID] = translate.Get("Training Rod");
+                                displayNames["Training Rod"] = data[itemID];
                                 break;
                             case "FishingRod.cs.14047":
-                                data[itemID] = translate.Get("net.fiberglass");
+                                data[itemID] = translate.Get("Fiberglass Rod");
+                                displayNames["Fiberglass Rod"] = data[itemID];
                                 break;
                             case "FishingRod.cs.14048":
-                                data[itemID] = translate.Get("net.iridium");
+                                data[itemID] = translate.Get("Iridium Rod");
+                                displayNames["Iridium Rod"] = data[itemID];
                                 break;
                             case "SkillPage.cs.11598":
-                                data[itemID] = translate.Get("net.skill");
+                                data[itemID] = translate.Get("Rod.Skill");
                                 break;
                             case "FishingRod.cs.14083":
                                 if (config.ConvertToMetric) data[itemID] = "{0} cm";
                                 break;
+                            default:
+                                continue;
                         }
                     }
                     catch (Exception)
@@ -323,61 +331,39 @@ namespace FishingMinigames
                         switch (itemID)
                         {
                             //bait
-                            case 685:
-                                itemData[5] = AddEffectDescriptions("Bait");
+                            case 685://bait
+                                itemData[5] = AddEffectDescriptions(itemData[0]);
                                 break;
-                            case 703:
-                                itemData[5] = AddEffectDescriptions("Magnet", itemData[5]);
-                                break;
-                            case 774:
-                                itemData[5] = AddEffectDescriptions("Wild Bait", itemData[5]);
-                                break;
-                            case 908:
-                                itemData[5] = AddEffectDescriptions("Magic Bait", itemData[5]);
+                            case 703://magnet
+                            case 774://wild bait
+                            case 908://magic bait
+                                itemData[5] = AddEffectDescriptions(itemData[0], itemData[5]);
                                 break;
                             //tackle
-                            case 686:
-                                itemData[4] = "Spinner Megaphone";
-                                itemData[5] = AddEffectDescriptions("Spinner");
+                            case 686://spinner
+                            case 687://dressed
+                            case 694://trap
+                            case 695://cork
+                            case 692://lead
+                            case 693://treasure
+                            case 691://barbed
+                            case 877://quality
+                                itemData[4] = translate.Get(itemData[0]);
+                                itemData[5] = AddEffectDescriptions(itemData[0]);
                                 break;
-                            case 687:
-                                itemData[4] = "Dressed Megaphone";
-                                itemData[5] = AddEffectDescriptions("Dressed Spinner");
+                            case 856://curiosity
+                                itemData[4] = translate.Get(itemData[0]);
+                                itemData[5] = AddEffectDescriptions(itemData[0], itemData[5]);
                                 break;
-                            case 694:
-                                itemData[4] = "Trap Megaphone";
-                                itemData[5] = AddEffectDescriptions("Trap Bobber");
-                                break;
-                            case 695:
-                                itemData[4] = "Cork Megaphone";
-                                itemData[5] = AddEffectDescriptions("Cork Bobber");
-                                break;
-                            case 692:
-                                itemData[4] = "Lead Megaphone";
-                                itemData[5] = AddEffectDescriptions("Lead Bobber");
-                                break;
-                            case 693:
-                                itemData[4] = "Treasure Megaphone";
-                                itemData[5] = AddEffectDescriptions("Treasure Hunter");
-                                break;
-                            case 691:
-                                itemData[4] = "Barbed Megaphone";
-                                itemData[5] = AddEffectDescriptions("Barbed Hook");
-                                break;
-                            case 856:
-                                itemData[4] = "Curiosity Megaphone";
-                                itemData[5] = AddEffectDescriptions("Curiosity Lure", itemData[5]);
-                                break;
-                            case 877:
-                                itemData[4] = "Quality Megaphone";
-                                itemData[5] = AddEffectDescriptions("Quality Bobber");
-                                break;
+                            default:
+                                continue;
                         }
                         data[itemID] = string.Join("/", itemData);
+                                displayNames[itemData[0]] = translate.Get(itemData[0]);
                     }
                     catch (Exception)
                     {
-                        Monitor.Log("Could not load string for Rod to Net change, line: " + data[itemID] + ". Are the translations missing? Ignore if you removed them intentionally.", LogLevel.Warn);
+                        Monitor.LogOnce("Could not load string for Rod to Net change, line: " + data[itemID] + ". Are the translations missing? Ignore if you removed them intentionally.", LogLevel.Warn);
                     }
                 }
             }
@@ -517,12 +503,12 @@ class Patch
             {
                 if (__instance.attachments[0] != null)
                 {
-                    desc += "\n\n" + __instance.attachments[0].DisplayName + ((__instance.attachments[0].quality == 0) ? "" : " (" + FishingMinigames.ModEntry.translate.Get("mods.infinite") + ")")
+                    desc += "\n\n" + __instance.attachments[0].DisplayName + ((__instance.attachments[0].quality == 0) ? "" : " (" + FishingMinigames.ModEntry.translate.Get("Mods.Infinite") + ")")
                            + ":\n" + FishingMinigames.ModEntry.AddEffectDescriptions(__instance.attachments[0].Name);
                 }
                 if (__instance.attachments[1] != null)
                 {
-                    desc += "\n\n" + __instance.attachments[1].DisplayName + ((__instance.attachments[1].quality == 0) ? "" : " (" + FishingMinigames.ModEntry.translate.Get("mods.infinite") + ")")
+                    desc += "\n\n" + __instance.attachments[1].DisplayName + ((__instance.attachments[1].quality == 0) ? "" : " (" + FishingMinigames.ModEntry.translate.Get("Mods.Infinite") + ")")
                            + ":\n" + FishingMinigames.ModEntry.AddEffectDescriptions(__instance.attachments[1].Name);
                 }
             }

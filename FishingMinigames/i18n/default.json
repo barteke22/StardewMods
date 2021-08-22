@@ -98,15 +98,33 @@
     "Effects.UNBREAKING": "{{val}}% chance of not being consumed.",
 
 
-    "net.fishing": "Fishing Net",
-    "net.bamboo": "Bamboo Net",
-    "net.training": "Training Net",
-    "net.trainingDesc": "It's a lot easier to use than other nets, but can only catch basic fish.",
-    "net.fiberglass": "Fiberglass Net",
-    "net.iridium": "Iridium Net",
-    "net.skill": "+{0} Fishing Net Efficiency",
+    //rods -> nets
+    "Bamboo Pole":     "Bamboo Net",
+    "Training Rod":    "Training Net",
+    "Fiberglass Rod":  "Fiberglass Net",
+    "Iridium Rod":     "Iridium Net",
+    //baits - only needed so GMCM can get the right DisplayNames
+    "Bait":            "Bait",
+    "Magnet":          "Magnet",
+    "Wild Bait":       "Wild Bait",
+    "Magic Bait":      "Magic Bait",
+    //tackle -> megaphone
+    "Spinner":         "Spinner Megaphone",
+    "Dressed Spinner": "Dressed Megaphone",
+    "Trap Bobber":     "Trap Megaphone",
+    "Cork Bobber":     "Cork Megaphone",
+    "Lead Bobber":     "Lead Megaphone",
+    "Treasure Hunter": "Treasure Megaphone",
+    "Barbed Hook":     "Barbed Megaphone",
+    "Curiosity Lure":  "Curiosity Megaphone",
+    "Quality Bobber":  "Quality Megaphone",
+    //misc
+    "Rod.Fishing": "Fishing Net",
+    "Rod.FishingDesc": "Holding this net grants you the confidence needed to start fishing.",
+    "Rod.TrainingDesc": "It's a lot easier to use than other nets, but can only catch basic fish.",
+    "Rod.Skill": "+{0} Fishing Net Efficiency",
 
 
-    //everlasting baits and tackles
-    "mods.infinite": "infinite"
+    //everlasting baits and tackles mod
+    "Mods.Infinite": "infinite"
 }
