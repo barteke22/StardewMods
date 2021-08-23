@@ -19,9 +19,8 @@ namespace FishingMinigames
         public static ITranslationHelper translate;
         public static ModConfig config;
         private readonly PerScreen<Minigames> minigame = new PerScreen<Minigames>();
-        private string colorPage;
         private Dictionary<string, string> displayNames = new Dictionary<string, string>();
-        private bool canStartEditingAssets = false; 
+        private bool canStartEditingAssets = false;
 
 
 
@@ -36,7 +35,6 @@ namespace FishingMinigames
 
             helper.Events.Display.Rendered += Display_Rendered;
             helper.Events.Display.RenderedWorld += Display_RenderedWorld;
-            helper.Events.Display.RenderedActiveMenu += Display_RenderedActiveMenu;
             helper.Events.GameLoop.UpdateTicking += GameLoop_UpdateTicking;
             helper.Events.Input.ButtonsChanged += Input_ButtonsChanged;
             helper.Events.GameLoop.GameLaunched += GenericModConfigMenuIntegration;
@@ -54,7 +52,6 @@ namespace FishingMinigames
             canStartEditingAssets = true;
             Helper.Content.InvalidateCache("Strings/StringsFromCSFiles");
             Helper.Content.InvalidateCache("Data/ObjectInformation");
-            colorPage = translate.Get("GenericMC.Colors");
 
             var GenericMC = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
             if (GenericMC != null)
@@ -87,11 +84,7 @@ namespace FishingMinigames
                     GenericMCPerScreen(GenericMC, 3);
 
                     GenericMC.StartNewPage(ModManifest, translate.Get("GenericMC.Colors"));
-                    GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.ColorsDesc"));
-                    GenericMC.RegisterLabel(ModManifest, translate.Get("GenericMC.MinigameColor"), "");
-                    GenericMC.RegisterClampedOption(ModManifest, "R", "", () => config.MinigameColorRGB[0], (int val) => config.MinigameColorRGB[0] = val, 0, 255);
-                    GenericMC.RegisterClampedOption(ModManifest, "G", "", () => config.MinigameColorRGB[1], (int val) => config.MinigameColorRGB[1] = val, 0, 255);
-                    GenericMC.RegisterClampedOption(ModManifest, "B", "", () => config.MinigameColorRGB[2], (int val) => config.MinigameColorRGB[2] = val, 0, 255);
+                    GenericMCColorPicker(GenericMC, ModManifest, translate.Get("GenericMC.MinigameColor"), "");
 
                     GenericMC.StartNewPage(ModManifest, translate.Get("GenericMC.ItemData"));
                     GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.ItemDataDesc1"));
@@ -105,7 +98,7 @@ namespace FishingMinigames
                         foreach (var effect in item.Value)
                         {
                             GenericMC.RegisterClampedOption(ModManifest, effect.Key, translate.Get("Effects." + effect.Key).Tokens(new { val = "X" }),
-                                () => config.SeeInfoForBelowData[item.Key][effect.Key], (float val) => config.SeeInfoForBelowData[item.Key][effect.Key] = (int)Math.Round(val), 
+                                () => config.SeeInfoForBelowData[item.Key][effect.Key], (float val) => config.SeeInfoForBelowData[item.Key][effect.Key] = (int)Math.Round(val),
                                 (effect.Key.Equals("QUALITY", StringComparison.Ordinal) ? -4 : effect.Key.Equals("LIFE", StringComparison.Ordinal) ? 0 : -100),
                                 (effect.Key.Equals("QUALITY", StringComparison.Ordinal) ? 4 : effect.Key.Equals("LIFE", StringComparison.Ordinal) ? 50 : 300));
                         }
@@ -169,28 +162,91 @@ namespace FishingMinigames
                 (string val) => config.FestivalMode[screen] = Int32.Parse((val.Equals(translate.Get("GenericMC.FestivalModeVanilla"), StringComparison.Ordinal)) ? "0" : (val.Equals(translate.Get("GenericMC.FestivalModeSimple"), StringComparison.Ordinal)) ? "1" : (val.Equals(translate.Get("GenericMC.FestivalModePerfectOnly"), StringComparison.Ordinal)) ? "2" : "3"),
                 new string[] { translate.Get("GenericMC.FestivalModeVanilla"), translate.Get("GenericMC.FestivalModeSimple"), translate.Get("GenericMC.FestivalModePerfectOnly"), translate.Get("GenericMC.FestivalModeStartOnly") });
         }
-
-        private void Display_RenderedActiveMenu(object sender, RenderedActiveMenuEventArgs e)
+        private void GenericMCColorPicker(IGenericModConfigMenuApi GenericMC, IManifest mod, string optionName, string optionDesc)
         {
-            var GenericMC = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
-            if (GenericMC != null)
-            {
-                GenericMC.TryGetCurrentMenu(out IManifest mod, out string page);
-
-                if (mod == ModManifest && page != null && page.Equals(colorPage, StringComparison.Ordinal))
+            Func<Vector2, object, object> colorPickerUpdate =
+                (Vector2 pos, object state_) =>
                 {
-                    Vector2 screenMid = new Vector2(Game1.graphics.GraphicsDevice.Viewport.Width / 2, Game1.graphics.GraphicsDevice.Viewport.Height / 1.5f);
-                    Color minigameColor = new Color(config.MinigameColorRGB[0], config.MinigameColorRGB[1], config.MinigameColorRGB[2]);
+                    var state = state_ as MinigameColor;
+                    if (state == null) state = new MinigameColor() { color = config.MinigameColor, pos = pos, whichSlider = 0 };
 
-                    e.SpriteBatch.Draw(Game1.mouseCursors, screenMid, new Rectangle(31, 1870, 73, 49), minigameColor, 0f, new Vector2(36.5f, 22.5f), 4f, SpriteEffects.None, 0.2f);
-                    e.SpriteBatch.Draw(Minigames.startMinigameTextures[0], screenMid, null, minigameColor, 0f, new Vector2(69f, 37f), 2f, SpriteEffects.None, 0.3f);
-                    e.SpriteBatch.Draw(Minigames.startMinigameTextures[1], screenMid + new Vector2(-50f, 0f), new Rectangle(355, 86, 26, 26), minigameColor, 0f, new Vector2(13f), 1f, SpriteEffects.None, 0.4f);
+                    KeybindList click = KeybindList.Parse("MouseLeft");
+                    int width = Math.Min(Game1.uiViewport.Width / 4, 400);
 
-                    e.SpriteBatch.Draw(Minigames.startMinigameTextures[1], screenMid + new Vector2(50f, 0), new Rectangle(322, 82, 12, 12), minigameColor, 0f, new Vector2(6f), 2f, SpriteEffects.None, 0.4f);
-                    e.SpriteBatch.Draw(Game1.mouseCursors, screenMid, new Rectangle(301, 288, 15, 15), minigameColor * 0.95f, 0f, new Vector2(7.5f, 7.5f), 2f, SpriteEffects.None, 0.5f);
-                    e.SpriteBatch.DrawString(Game1.smallFont, "5", screenMid, minigameColor, 0f, Game1.smallFont.MeasureString("5") / 2f, 1f, SpriteEffects.None, 0.51f);
-                }
-            }
+                    byte mousePercentage = (byte)(int)((Utility.Clamp(Game1.getOldMouseX(), pos.X, pos.X + width) - pos.X) / width * 255);
+
+                    Rectangle barR = new Rectangle((int)pos.X, (int)pos.Y, width, 24);
+                    Rectangle barG = new Rectangle((int)pos.X, (int)pos.Y + 80, width, 24);
+                    Rectangle barB = new Rectangle((int)pos.X, (int)pos.Y + 160, width, 24);
+
+                    if ((barR.Contains(Game1.getMouseX(), Game1.getMouseY()) && click.JustPressed()) || (state.whichSlider == 1 && click.IsDown()))
+                    {
+                        state.whichSlider = 1;
+                        state.color.R = mousePercentage;
+                    }
+                    else if ((barG.Contains(Game1.getMouseX(), Game1.getMouseY()) && click.JustPressed()) || (state.whichSlider == 2 && click.IsDown()))
+                    {
+                        state.whichSlider = 2;
+                        state.color.G = mousePercentage;
+                    }
+                    else if ((barB.Contains(Game1.getMouseX(), Game1.getMouseY()) && click.JustPressed()) || (state.whichSlider == 3 && click.IsDown()))
+                    {
+                        state.whichSlider = 3;
+                        state.color.B = mousePercentage;
+                    }
+                    else if (state.whichSlider != 0) state.whichSlider = 0;
+
+
+                    return state;
+                };
+            Func<SpriteBatch, Vector2, object, object> colorPickerDraw =
+                (SpriteBatch b, Vector2 pos, object state_) =>
+                {
+                    var state = state_ as MinigameColor;
+                    int width = Math.Min(Game1.uiViewport.Width / 4, 400);
+                    float scale = width / 400f;
+
+                    Rectangle barR = new Rectangle((int)pos.X, (int)pos.Y, width, 24);
+                    Rectangle barG = new Rectangle((int)pos.X, (int)pos.Y + 80, width, 24);
+                    Rectangle barB = new Rectangle((int)pos.X, (int)pos.Y + 160, width, 24);
+                    Rectangle posR = new Rectangle((int)(pos.X + (state.color.R / 255f) * (width - 40)), (int)pos.Y, 40, 24);
+                    Rectangle posG = new Rectangle((int)(pos.X + (state.color.G / 255f) * (width - 40)), (int)pos.Y + 80, 40, 24);
+                    Rectangle posB = new Rectangle((int)(pos.X + (state.color.B / 255f) * (width - 40)), (int)pos.Y + 160, 40, 24);
+
+                    StardewValley.Menus.IClickableMenu.drawTextureBox(b, Game1.mouseCursors, new Rectangle(403, 383, 6, 6), barR.X, barR.Y, barR.Width, barR.Height, Color.White, Game1.pixelZoom, false);
+                    StardewValley.Menus.IClickableMenu.drawTextureBox(b, Game1.mouseCursors, new Rectangle(403, 383, 6, 6), barG.X, barG.Y, barG.Width, barG.Height, Color.White, Game1.pixelZoom, false);
+                    StardewValley.Menus.IClickableMenu.drawTextureBox(b, Game1.mouseCursors, new Rectangle(403, 383, 6, 6), barB.X, barB.Y, barB.Width, barB.Height, Color.White, Game1.pixelZoom, false);
+
+                    b.Draw(Game1.mouseCursors, new Vector2(posR.X, posR.Y), new Rectangle(420, 441, 10, 6), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.9f);
+                    b.Draw(Game1.mouseCursors, new Vector2(posG.X, posG.Y), new Rectangle(420, 441, 10, 6), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.9f);
+                    b.Draw(Game1.mouseCursors, new Vector2(posB.X, posB.Y), new Rectangle(420, 441, 10, 6), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.9f);
+
+                    b.DrawString(Game1.smallFont, "R:" + string.Format("{0,6}", state.color.R), new Vector2(barR.X + width + 20, barR.Y - 4), Color.Black);
+                    b.DrawString(Game1.smallFont, "G:" + string.Format("{0,6}", state.color.G), new Vector2(barG.X + width + 20, barG.Y - 4), Color.Black);
+                    b.DrawString(Game1.smallFont, "B:" + string.Format("{0,6}", state.color.B), new Vector2(barB.X + width + 20, barB.Y - 4), Color.Black);
+
+                    Vector2 screenMid = new Vector2(pos.X - (width / 1.5f), pos.Y + 90);
+
+                    b.Draw(Game1.mouseCursors, screenMid, new Rectangle(31, 1870, 73, 49), state.color, 0f, new Vector2(36.5f, 22.5f), 4f * scale, SpriteEffects.None, 0.2f);
+                    b.Draw(Minigames.startMinigameTextures[0], screenMid, null, state.color, 0f, new Vector2(69f, 37f), 2f * scale, SpriteEffects.None, 0.3f);
+                    b.Draw(Minigames.startMinigameTextures[1], screenMid + new Vector2(-50f, 0f), new Rectangle(355, 86, 26, 26), state.color, 0f, new Vector2(13f), 1f * scale, SpriteEffects.None, 0.4f);
+
+                    b.Draw(Minigames.startMinigameTextures[1], screenMid + new Vector2(50f, 0), new Rectangle(322, 82, 12, 12), state.color, 0f, new Vector2(6f), 2f * scale, SpriteEffects.None, 0.4f);
+                    b.Draw(Game1.mouseCursors, screenMid, new Rectangle(301, 288, 15, 15), state.color * 0.95f, 0f, new Vector2(7.5f, 7.5f), 2f * scale, SpriteEffects.None, 0.5f);
+                    b.DrawString(Game1.smallFont, "5", screenMid, state.color, 0f, Game1.smallFont.MeasureString("5") / 2f, 1f * scale, SpriteEffects.None, 0.51f);
+                    return state;
+                };
+            Action<object> colorPickerSave =
+                (object state) =>
+                {
+                    if (state == null) return;
+                    config.MinigameColor = (state as MinigameColor).color;
+                };
+
+            GenericMC.RegisterLabel(mod, ".   " + optionName, optionDesc);
+            GenericMC.RegisterComplexOption(mod, "", "", colorPickerUpdate, colorPickerDraw, colorPickerSave);
+            GenericMC.RegisterLabel(mod, ".", "");
+            GenericMC.RegisterLabel(mod, ".", "");
         }
 
         private void GameLoop_SaveLoaded(object sender, SaveLoadedEventArgs e)
@@ -359,7 +415,7 @@ namespace FishingMinigames
                                 continue;
                         }
                         data[itemID] = string.Join("/", itemData);
-                                displayNames[itemData[0]] = translate.Get(itemData[0]);
+                        displayNames[itemData[0]] = translate.Get(itemData[0]);
                     }
                     catch (Exception)
                     {
@@ -477,7 +533,7 @@ namespace FishingMinigames
                 Minigames.voiceVolume = config.VoiceVolume / 100f;
                 Minigames.startMinigameScale = config.StartMinigameScale;
                 Minigames.realisticSizes = config.RealisticSizes;
-                Minigames.minigameColor = new Color(config.MinigameColorRGB[0], config.MinigameColorRGB[1], config.MinigameColorRGB[2]);
+                Minigames.minigameColor = config.MinigameColor;
                 if (LocalizedContentManager.CurrentLanguageCode == 0) Minigames.metricSizes = config.ConvertToMetric;
                 else Minigames.metricSizes = false;
                 Helper.Content.InvalidateCache("Strings/StringsFromCSFiles");
@@ -518,7 +574,16 @@ class Patch
     }
 }
 
-class DummyMenu
+class MinigameColor
 {
-
+    public Color color;
+    public Vector2 pos = new Vector2(0f);
+    public int whichSlider = 0;
+}
+class DummyMenu : StardewValley.Menus.IClickableMenu
+{
+    public DummyMenu()
+    {
+        //this is just to prevent other mods from interfering with minigames
+    }
 }

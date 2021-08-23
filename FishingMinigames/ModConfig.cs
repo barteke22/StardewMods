@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 
 namespace FishingMinigames
 {
@@ -18,7 +19,7 @@ namespace FishingMinigames
         public bool ConvertToMetric { get; set; } = false;
         public bool RealisticSizes { get; set; } = true;
         public int[] FestivalMode { get; set; } = { 3, 3, 3, 3 };
-        public int[] MinigameColorRGB { get; set; } = { 0, 255, 255 };
+        public Color MinigameColor { get; set; } = Color.Cyan;
 
         public Dictionary<string, Dictionary<string, int>> SeeInfoForBelowData { get; set; } = new Dictionary<string, Dictionary<string, int>>()
         {

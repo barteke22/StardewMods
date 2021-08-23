@@ -123,15 +123,17 @@ namespace FishingMinigames
         public void Input_ButtonsChanged(object sender, ButtonsChangedEventArgs e)  //this.Monitor.Log(locationName, LogLevel.Debug);
         {
             if (Game1.emoteMenu != null) return;
+
+            screen = Context.ScreenId;
             who = Game1.player;
             fishingLevel = who.FishingLevel;
+
             voiceVolumePersonal = 0;
             if (voiceVolume > 0f)
             {
                 voiceVolumePersonal = Math.Min((voiceVolume * 0.80f) + (fishingLevel * voiceVolume * 0.018f), (voiceVolume * 0.98f));
                 if (fishingLevel > 10) voiceVolumePersonal += Math.Min((fishingLevel - 10) * voiceVolume * 0.004f, (voiceVolume * 0.02f));
             }
-            screen = Context.ScreenId;
 
             if (infoTimer > 0 && infoTimer < 1001)//reset from bubble
             {
@@ -146,7 +148,7 @@ namespace FishingMinigames
             else if (keyBinds[screen].JustPressed()) //cancel regular rod use, if it's a shared keybind
             {
                 if (!Context.IsPlayerFree) return;
-                if (Game1.activeClickableMenu == null && who.CurrentItem is FishingRod)
+                if ((Game1.activeClickableMenu == null || Game1.activeClickableMenu is DummyMenu) && who.CurrentItem is FishingRod)
                 {
                     if (Game1.isFestival() && fishingFestivalMinigame > 0 && festivalMode[screen] == 0) return;//fishing + other festivals
                     SuppressAll(e.Pressed);
@@ -275,7 +277,7 @@ namespace FishingMinigames
 
         public void Display_RenderedAll(SpriteBatch e)
         {
-            if (!Context.IsWorldReady || Game1.activeClickableMenu != null) return;
+            if (!Context.IsWorldReady || (Game1.activeClickableMenu != null && !(Game1.activeClickableMenu is DummyMenu))) return;
             if (batch == null) batch = e;
             who = Game1.player;
             foreach (Farmer other in Game1.getAllFarmers())//draw tool for tool anims & bubble for other players
@@ -407,6 +409,7 @@ namespace FishingMinigames
                             x = (int)aimTile.X * 64;
                             y = (int)aimTile.Y * 64;
                             Game1.stats.timesFished++;
+                            Game1.activeClickableMenu = new DummyMenu();
                             HereFishyFishy(who);
                         }
                     }
@@ -1323,6 +1326,7 @@ namespace FishingMinigames
                 switch (stage)
                 {
                     case "Caught1":
+                        Game1.exitActiveMenu();
                         if (fishingFestivalMinigame == 0)
                         {
                             rodDummy = who.CurrentTool.getOne() as FishingRod;
@@ -1609,7 +1613,7 @@ namespace FishingMinigames
 
         protected void SuppressAll(IEnumerable<SButton> buttons)
         {
-            if (Game1.activeClickableMenu == null)
+            if (Game1.activeClickableMenu == null || Game1.activeClickableMenu is DummyMenu)
             {
                 foreach (SButton button in buttons)
                     Helper.Input.Suppress(button);
@@ -1617,6 +1621,7 @@ namespace FishingMinigames
         }
         public void EmergencyCancel()
         {
+            if (Game1.activeClickableMenu is DummyMenu) Game1.exitActiveMenu();
             endMinigameStage = 0;
             startMinigameStage = 0;
             who.UsingTool = false;
