@@ -341,6 +341,24 @@ namespace FishingMinigames
 
                             if (endMinigameTimer > endMinigameDiff)//too late/missed/failed
                             {
+                                if (effects["LIFE"] > 0 && Game1.random.Next(0, 3) == 0)//saved by tackle?
+                                {
+                                    if ((who.CurrentTool as FishingRod).attachments[1].Quality == 0 && effects["UNBREAKING1"] < Game1.random.Next(1, 101))
+                                    {
+                                        (who.CurrentTool as FishingRod).attachments[1].uses.Value++;
+                                    }
+                                    Game1.playSound("button1");
+                                    drawTool = true;
+                                    SendMessage(who, "");
+                                    endMinigameStage = 9;
+                                    ClearAnimations(who);
+                                    SendMessage(who, "ClearAnim");
+                                    DrawAndEmote(who, 0);
+                                    SendMessage(who, "Swing");
+                                    endMinigameTimer = 0;
+                                    continue;
+                                }
+
                                 PlayPause(who);
                                 drawTool = true;
                                 SendMessage(who, "Fail");
@@ -732,7 +750,7 @@ namespace FishingMinigames
 
         private void HereFishyAnimation(Farmer who, int x, int y)
         {
-            UpdateColor(who);
+            UpdateAmbientColor(who);
             //player jumping and calling fish
             switch (stage)
             {
@@ -942,7 +960,7 @@ namespace FishingMinigames
                 Vector2 textLoc = new Vector2(0f, height * -0.44f);
                 for (int i = 0; i < startMinigameText.Count; i++)
                 {
-                    DrawStringWithBorder(batch, Game1.tinyFont, startMinigameText[i], screenMid + (textLoc += new Vector2(0f, height * 0.05f)), minigameColor * opacity, 0f, new Vector2(Game1.tinyFont.MeasureString(startMinigameText[i]).X / 2f, 0f), scale * 0.1f, SpriteEffects.None, 0.4f);
+                    DrawStringWithBorder(batch, Game1.smallFont, startMinigameText[i], screenMid + (textLoc += new Vector2(0f, height * 0.07f)), minigameColor * opacity, 0f, new Vector2(Game1.smallFont.MeasureString(startMinigameText[i]).X / 2f, 0f), scale * 0.16f, SpriteEffects.None, 0.4f);
                 }
                 if (fishingFestivalMinigame != 0)
                 {
@@ -1659,33 +1677,6 @@ namespace FishingMinigames
             }
         }
 
-        private void UpdateColor(Farmer who)
-        {
-            ambientColor = (Game1.timeOfDay < 1900) ? Color.White :
-                (Game1.timeOfDay < 2000) ? Color.LightSteelBlue :
-                (Game1.timeOfDay < 2100) ? Color.SlateGray :
-                (Game1.timeOfDay < 2200) ? Color.RoyalBlue : Color.DarkBlue;
-
-            foreach (var item in who.currentLocation.sharedLights.Values)
-            {
-                if (item.PlayerID == who.UniqueMultiplayerID) ambientColor = Color.White;
-            }
-        }
-
-        /// <summary>Makes text a tiny bit bolder and adds a border behind it. The border uses text colour's alpha for its aplha value. 6 DrawString operations, so 6x less efficient.</summary>
-        private void DrawStringWithBorder(SpriteBatch batch, SpriteFont font, string text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects effects, float layerDepth, Color? borderColor = null)
-        {
-            Color border = borderColor.HasValue ? borderColor.Value : Color.Black;
-            border.A = color.A;
-            batch.DrawString(font, text, position + new Vector2(-1.2f * scale, -1.2f * scale), border, rotation, origin, scale, effects, layerDepth - 0.00001f);
-            batch.DrawString(font, text, position + new Vector2(1.2f * scale, -1.2f * scale), border, rotation, origin, scale, effects, layerDepth - 0.00001f);
-            batch.DrawString(font, text, position + new Vector2(-1.2f * scale, 1.2f * scale), border, rotation, origin, scale, effects, layerDepth - 0.00001f);
-            batch.DrawString(font, text, position + new Vector2(1.2f * scale, 1.2f * scale), border, rotation, origin, scale, effects, layerDepth - 0.00001f);
-
-            batch.DrawString(font, text, position + new Vector2(-0.2f * scale, -0.2f * scale), color, rotation, origin, scale, effects, layerDepth);
-            batch.DrawString(font, text, position + new Vector2(0.2f * scale, 0.2f * scale), color, rotation, origin, scale, effects, layerDepth);
-        }
-
         private void AimAssist(SpriteBatch batch)
         {
             maxDistance = (who.FishingLevel > 14) ? 7 : (who.FishingLevel > 7) ? 6 : (who.FishingLevel > 3) ? 5 : (who.FishingLevel > 0) ? 4 : 3;
@@ -1698,6 +1689,9 @@ namespace FishingMinigames
                             || Helper.Input.IsSuppressed(Game1.options.useToolButton[1].ToSButton())
                             || Helper.Input.IsSuppressed(SButton.ControllerX))
                 {
+                    who.completelyStopAnimatingOrDoingAction();
+                    who.CanMove = false;
+
                     Vector2 topLeft = who.getTileLocation() + new Vector2((who.FacingDirection == 3) ? -maxDistance - 1 : (who.FacingDirection == 1) ? 1 : -1,
                                                                           (who.FacingDirection == 0) ? -maxDistance : (who.FacingDirection == 2) ? 1 : -1);
 
@@ -1787,7 +1781,8 @@ namespace FishingMinigames
                 else if (keybindHeld)
                 {
                     keybindHeld = false;
-                     if (fishingFestivalMinigame == 0 || festivalTimer > 3000) TryFishingHere(aimTile);
+                    who.CanMove = true;
+                    if (fishingFestivalMinigame == 0 || festivalTimer > 3000) TryFishingHere(aimTile);
                 }
             }
             else//free aim
@@ -2000,6 +1995,35 @@ namespace FishingMinigames
                 }
             }
         }
+
+
+        private void UpdateAmbientColor(Farmer who)
+        {
+            ambientColor = (Game1.timeOfDay < 1900) ? Color.White :
+                (Game1.timeOfDay < 2000) ? Color.LightSteelBlue :
+                (Game1.timeOfDay < 2100) ? Color.SlateGray :
+                (Game1.timeOfDay < 2200) ? Color.RoyalBlue : Color.DarkBlue;
+
+            foreach (var item in who.currentLocation.sharedLights.Values)
+            {
+                if (item.PlayerID == who.UniqueMultiplayerID) ambientColor = Color.White;
+            }
+        }
+
+        /// <summary>Makes text a tiny bit bolder and adds a border behind it. The border uses text colour's alpha for its aplha value. 6 DrawString operations, so 6x less efficient.</summary>
+        private void DrawStringWithBorder(SpriteBatch batch, SpriteFont font, string text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects effects, float layerDepth, Color? borderColor = null)
+        {
+            Color border = borderColor.HasValue ? borderColor.Value : Color.Black;
+            border.A = color.A;
+            batch.DrawString(font, text, position + new Vector2(-1.2f * scale, -1.2f * scale), border, rotation, origin, scale, effects, layerDepth - 0.00001f);
+            batch.DrawString(font, text, position + new Vector2(1.2f * scale, -1.2f * scale), border, rotation, origin, scale, effects, layerDepth - 0.00001f);
+            batch.DrawString(font, text, position + new Vector2(-1.2f * scale, 1.2f * scale), border, rotation, origin, scale, effects, layerDepth - 0.00001f);
+            batch.DrawString(font, text, position + new Vector2(1.2f * scale, 1.2f * scale), border, rotation, origin, scale, effects, layerDepth - 0.00001f);
+
+            batch.DrawString(font, text, position + new Vector2(-0.2f * scale, -0.2f * scale), color, rotation, origin, scale, effects, layerDepth);
+            batch.DrawString(font, text, position + new Vector2(0.2f * scale, 0.2f * scale), color, rotation, origin, scale, effects, layerDepth);
+        }
+
 
         private void DebugColours(Vector2 startPos)
         {

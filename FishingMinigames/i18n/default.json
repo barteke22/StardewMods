@@ -89,7 +89,7 @@
     "Effects.DAMAGE": "Damage taken reduced by {{val}}%",
     "Effects.DIFFICULTY": "Minigame difficulty reduced by {{val}}%",
     "Effects.DOUBLE": "Double fish chance +{{val}}% of daily luck.",
-    "Effects.LIFE": "50% chance of fixing a mistake, up to {{val}} times per minigame.",
+    "Effects.LIFE": "Might fix a misplay, up to {{val}} times per cast.",
     "Effects.QUALITY": "Attracts fish of {{val}} higher quality than normal.",
     "Effects.SIZE": "Attracts {{val}}% larger fish.",
     "Effects.SPEED": "Decreases minigame speed by {{val}}%",

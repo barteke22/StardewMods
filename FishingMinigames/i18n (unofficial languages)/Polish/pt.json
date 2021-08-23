@@ -89,7 +89,7 @@
     "Effects.DAMAGE": "Otrzymane obrażenia zmniejszone o {{val}}%",
     "Effects.DIFFICULTY": "Zmniejsza poziom trudności minigry o {{val}}%",
     "Effects.DOUBLE": "Szansa podwójnych ryb: +{{val}}% dziennego szczęścia.",
-    "Effects.LIFE": "50% szansy na poprawienie błędu, do {{val}} razy na minigrę.",
+    "Effects.LIFE": "Może poprawić błąd, do {{val}} razy na połów.",
     "Effects.QUALITY": "Przyciąga ryby o {{val}} wyższej jakości niż zwykle.",
     "Effects.SIZE": "Przyciąga {{val}}% większe ryby.",
     "Effects.SPEED": "Zmniejsza prędkość minigry o {{val}}%",

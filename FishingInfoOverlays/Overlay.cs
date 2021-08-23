@@ -383,7 +383,7 @@ namespace StardewMods
             else
             {
                 isMinigame = false;
-                miniFish = -1;
+                if (e.OldMenu is BobberBar) miniFish = -1;
             }
         }
         public void OnRenderMenu(object sender, RenderedActiveMenuEventArgs e)
