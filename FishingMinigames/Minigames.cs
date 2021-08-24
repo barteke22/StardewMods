@@ -1210,7 +1210,7 @@ namespace FishingMinigames
         {
             if (ModEntry.config.EndMinigameStyle[screen] == 3)
             {
-                if (Game1.options.gamepadControls || Game1.options.gamepadMode == Options.GamepadModes.ForceOn || Game1.options.gamepadMode != Options.GamepadModes.ForceOff) endMinigameStyle[screen] = 2;
+                if (Game1.options.gamepadControls || Game1.options.gamepadMode == Options.GamepadModes.ForceOn) endMinigameStyle[screen] = 2;
                 else if (System.Text.Encoding.ASCII.GetString(System.Text.Encoding.ASCII.GetBytes(item.DisplayName)).Replace(" ", "").Replace("?", "").Length < 1) endMinigameStyle[screen] = 2;
                 else endMinigameStyle[screen] = 3;
             }
@@ -1416,13 +1416,13 @@ namespace FishingMinigames
                         {
                             if (!itemIsInstantCatch)
                             {
-                                if (fishingFestivalMinigame == 1 && (endMinigameStage == 10 || festivalMode[screen] == 1))//fall
+                                if (fishingFestivalMinigame == 1 && (endMinigameStage == 10 || festivalMode[screen] == 1 || endMinigameStyle[screen] == 0))//fall
                                 {
                                     Event ev = Game1.CurrentEvent;
                                     ev.caughtFish(137, Game1.random.Next(0, 20), who);
                                     if (Game1.random.Next(0, 5) == 0) ev.perfectFishing();
                                 }
-                                else if (fishingFestivalMinigame == 2 && (endMinigameStage == 10 || festivalMode[screen] == 1)) Game1.CurrentEvent.caughtFish(whichFish, (int)fishSize, who);//winter
+                                else if (fishingFestivalMinigame == 2 && (endMinigameStage == 10 || festivalMode[screen] == 1 || endMinigameStyle[screen] == 0)) Game1.CurrentEvent.caughtFish(whichFish, (int)fishSize, who);//winter
                             }
                             stageTimer = 1;
                         }

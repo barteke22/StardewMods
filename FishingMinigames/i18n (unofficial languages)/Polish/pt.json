@@ -24,7 +24,7 @@
     "GenericMC.StartMinigameStyle3": "todo",
 
     "GenericMC.EndMinigameStyle": "Styl Minigry (Koniec)",
-    "GenericMC.EndMinigameStyleDesc": "Ta minigra określa, czy odniesiesz obrażenia (jeśli się\n nie powiedzie) podczas zgarniania dowolnego przedmiotu/ryby którą\n można wyłowić, i ma wpływ na ogólny wynik. \nPrzycisk: W odpowiednim momencie naciśnij przycisk, którego używasz do\n łowienia, musi być pojedynczym przyciskiem (czyli nie kombinacje z \"+\"). \nStrzałki: W odpowiednim momencie dopasuj kierunek\n wyświetlanej strzałki za pomocą WASD, Strzałek lub DPad'a. \nLitery: W odpowiednim momencie naciśnij wyświetloną literę. Tylko dla klawiatur.\n Użyje literę z nazwy ryby/przedmiotu, jeśli znajdzie\n w niej jakieś angielskie - w przeciwnym razie wyświetli Strzałki.\n Jeśli otrzymujesz Strzałki na\n klawiaturze, nawet gdy nazwa zawiera angielskie litery,\n ustaw Opcje kontrolera do \"Wymuś Wyłączenie\".",
+    "GenericMC.EndMinigameStyleDesc": "Ta minigra określa, czy odniesiesz obrażenia (jeśli się\n nie powiedzie) podczas zgarniania dowolnego przedmiotu/ryby którą\n można wyłowić, i ma wpływ na ogólny wynik. \nPrzycisk: W odpowiednim momencie naciśnij przycisk, którego używasz do\n łowienia, musi być pojedynczym przyciskiem (czyli nie kombinacje z \"+\"). \nStrzałki: W odpowiednim momencie dopasuj kierunek\n wyświetlanej strzałki za pomocą WASD, Strzałek lub DPad'a. \nLitery: W odpowiednim momencie naciśnij wyświetloną literę. Tylko dla klawiatur.\n Użyje literę z nazwy ryby/przedmiotu, jeśli znajdzie\n w niej jakieś angielskie - w przeciwnym razie wyświetli Strzałki.",
     "GenericMC.EndMinigameStyle1": "Przycisk",
     "GenericMC.EndMinigameStyle2": "Strzałki",
     "GenericMC.EndMinigameStyle3": "Litery",
@@ -49,7 +49,7 @@
     "GenericMC.FestivalDesc": "Ma to znaczenie tylko dla festiwali Jesień 16 i Zima 8, ponieważ mają minigry wędkarskie, które mają miejsce w specjalnych scenariuszach.",
     "GenericMC.FestivalDesc2": "Oznacza to, że animacje mogą być trochę niezgrabne, i pełne minigry mogą być trudne do balansowania. Oto alternatywne opcje dla nich.",
     "GenericMC.FestivalMode": "Tryb Festiwalowy",
-    "GenericMC.FestivalModeDesc": "Stardew: Użyj zwykłej minigry wędkarskiej na obu tych festiwalach. INACZEJ: \n\nProsta: Tylko minigra Końcowa (jeśli jest włączona), tylko\n ryby się liczą. Trochę niezgrabne animacje. \nTylko Perfekt: Tylko Końcowa minigra (jeśli jest włączona), liczy\n się tylko perfekcyjny połów ryb (bardzo trudna). Trochę niezgrabne animacje. \nTylko Start: Odtwarza tylko specjalną wersję minigry Startu,\n ta opcja powinna być najlepiej zrównoważona pod względem punktów za wysiłek. ",
+    "GenericMC.FestivalModeDesc": "Stardew: Użyj zwykłej minigry wędkarskiej na obu tych festiwalach. INACZEJ: \n\nProsta: Tylko minigra Końcowa, tylko ryby się liczą. Trochę niezgrabne animacje. \nTylko Perfekt: Tylko Końcowa minigra (jeśli jest włączona), liczy\n się tylko perfekcyjny połów ryb (bardzo trudna). Trochę niezgrabne animacje. \nTylko Start: Odtwarza tylko specjalną wersję minigry Startu,\n ta opcja powinna być najlepiej zrównoważona pod względem punktów za wysiłek. ",
     "GenericMC.FestivalModeVanilla": "Stardew",
     "GenericMC.FestivalModeSimple": "Prosta",
     "GenericMC.FestivalModePerfectOnly": "Tylko Perfekt",

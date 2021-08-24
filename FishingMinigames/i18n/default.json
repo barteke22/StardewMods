@@ -24,7 +24,7 @@
     "GenericMC.StartMinigameStyle3": "todo",
 
     "GenericMC.EndMinigameStyle": "Minigame Style (End)",
-    "GenericMC.EndMinigameStyleDesc": "This minigame determines whether you take damage (if failed)\n when scooping up any fishable item/fish, and contributes to total score. \nMinigame Keybind: At the right time, press the button\n you use for fishing, the keybind must be single button (no + combos). \nMatching Arrow:  At the right time, match the direction of the displayed arrow\n with WASD, Arrow Keys, or DPad. \nMatching Letter: At the right time, press the displayed letter.\n Keyboard only, will use a letter from the fish/item name, if\n it can find any English ones - otherwise defaults to Arrows.\n If you're getting arrows even\n when the name contains English letters, set Controller Option to 'Force Off'.",
+    "GenericMC.EndMinigameStyleDesc": "This minigame determines whether you take damage (if failed)\n when scooping up any fishable item/fish, and contributes to total score. \nMinigame Keybind: At the right time, press the button\n you use for fishing, the keybind must be single button (no + combos). \nMatching Arrow:  At the right time, match the direction of the displayed arrow\n with WASD, Arrow Keys, or DPad. \nMatching Letter: At the right time, press the displayed letter.\n Keyboard only, will use a letter from the fish/item name, if\n it can find any English ones - otherwise defaults to Arrows.",
     "GenericMC.EndMinigameStyle1": "Minigame Keybind",
     "GenericMC.EndMinigameStyle2": "Matching Arrow",
     "GenericMC.EndMinigameStyle3": "Matching Letter",
@@ -49,7 +49,7 @@
     "GenericMC.FestivalDesc": "This only matters for Fall 16 and Winter 8 festivals, as they have fishing minigames that happen inside events.",
     "GenericMC.FestivalDesc2": "Meaning that the animations can look a little glitchy, and full lenght minigames might be hard to balance. So here are the options for those.",
     "GenericMC.FestivalMode": "Festival Mode",
-    "GenericMC.FestivalModeDesc": "Vanilla: Use the regular fishing minigame for both festivals. OTHERWISE: \n\nSimple: Only does the End Minigame (if enabled), any\n non-trash counts. A bit janky animations. \nPerfect Only: Only does the End Minigame (if enabled), only\n \"perfect catch\" fish count (better balance). A bit janky animations. \nStart Only: Plays the Start Minigame portion only,\n this one should be the most balanced in terms of points for effort.",
+    "GenericMC.FestivalModeDesc": "Vanilla: Use the regular fishing minigame for both festivals. OTHERWISE: \n\nSimple: Only does the End Minigame, only fish count. A bit janky animations. \nPerfect Only: Only does the End Minigame (if enabled), only\n \"perfect catch\" fish count (better balance). A bit janky animations. \nStart Only: Plays the Start Minigame portion only,\n this one should be the most balanced in terms of points for effort.",
     "GenericMC.FestivalModeVanilla": "Vanilla",
     "GenericMC.FestivalModeSimple": "Simple",
     "GenericMC.FestivalModePerfectOnly": "Perfect Only",
