@@ -2,10 +2,10 @@
   "Name": "Fishing Minigames",
   "Author": "barteke22 (Here Fishy base by aedenthorn)",
   "Version": "1.0.0",
-  "Description": "Alternative fishing minigames, including Here Fishy Fishy.",
+  "Description": "Alternative fishing minigames, including Here Fishy!",
   "UniqueID": "barteke22.FishingMinigames",
   "EntryDll": "FishingMinigames.dll",
-  "MinimumApiVersion": "3.8.0",
+  "MinimumApiVersion": "3.10.0",
   "Dependencies": [
     {
       "UniqueID": "spacechase0.GenericModConfigMenu",

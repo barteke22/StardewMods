@@ -56,14 +56,11 @@
     <None Include="i18n\default.json" />
     <None Include="itemConfigs\items_exampleMod.json" />
     <None Include="itemConfigs\items_vanilla.json" />
-    <None Include="ModEntry.cs.old" />
     <Compile Include="Minigames.cs" />
     <Compile Include="ModEntry.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="assets\put_fishy.wav_here" />
-    <None Include="manifestOLD.json" />
     <None Include="manifest.json" />
     <None Include="packages.config" />
   </ItemGroup>
