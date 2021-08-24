@@ -258,6 +258,8 @@ namespace FishingMinigames
                 who.canMove = true;
             }
 
+            if (startMinigameStage > 0 && startMinigameStage < 5 && e.Ticks % 240 == 0) who.netDoEmote("game");
+
 
             if (stageTimer > 0) stageTimer--;//animation await delay control, remember stage needs a single digit at the end to pass here
             else if (stageTimer == 0)
@@ -289,7 +291,6 @@ namespace FishingMinigames
                     if (messages[other.UniqueMultiplayerID].stage != null)
                     {
                         if (messages[other.UniqueMultiplayerID].stage.Equals("CaughtBubble", StringComparison.Ordinal)) CaughtBubble(other);//bubble
-                        else if (messages[other.UniqueMultiplayerID].stage.Equals("Playing", StringComparison.Ordinal)) DrawAndEmote(other, 3);//controller
                     }
                 }
             }
@@ -500,7 +501,6 @@ namespace FishingMinigames
 
                 startMinigameStage = 1;
                 startMinigameTimer = 0;
-                SendMessage(who, "Playing");
             }
             else HereFishyAnimation(who, x, y);
         }
@@ -1533,12 +1533,12 @@ namespace FishingMinigames
                     }
                 }
             }
-            else if (which == 3)//controller above head while startminigame
-            {
-                batch.Draw(Game1.emoteSpriteSheet, who.getLocalPosition(Game1.viewport) + new Vector2(0f, -160f),
-                    new Rectangle(52 * 16 % Game1.emoteSpriteSheet.Width, 52 * 16 / Game1.emoteSpriteSheet.Width * 16, 16, 16),
-                    Color.LightGray * 0.9f, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0f);
-            }
+            //else if (which == 3)//controller above head while startminigame //NO LONGER NEEDED
+            //{
+            //    batch.Draw(Game1.emoteSpriteSheet, who.getLocalPosition(Game1.viewport) + new Vector2(0f, -160f),
+            //        new Rectangle(52 * 16 % Game1.emoteSpriteSheet.Width, 52 * 16 / Game1.emoteSpriteSheet.Width * 16, 16, 16),
+            //        Color.LightGray * 0.9f, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0f);
+            //}
             else if (which == 4 && !fromFishPond && fishingFestivalMinigame == 0)
             {
                 Color ambientColor = this.ambientColor;
@@ -1788,7 +1788,6 @@ namespace FishingMinigames
             else//free aim
             {
                 List<Vector2> tiles = new List<Vector2>();
-                maxDistance = 7;
                 int endX = who.getTileX() + maxDistance + 2;
                 int endY = who.getTileY() + 2;
                 for (int x = who.getTileX() - maxDistance - 1; x < endX; x++)
