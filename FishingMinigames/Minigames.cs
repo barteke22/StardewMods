@@ -1788,17 +1788,58 @@ namespace FishingMinigames
             else//free aim
             {
                 List<Vector2> tiles = new List<Vector2>();
-                for (float x = who.getTileLocation().X - maxDistance - 1; x <= who.getTileLocation().X + maxDistance + 1; x++)
+                maxDistance = 7;
+                int endX = who.getTileX() + maxDistance + 2;
+                int endY = who.getTileY() + 2;
+                for (int x = who.getTileX() - maxDistance - 1; x < endX; x++)
                 {
-                    for (float y = who.getTileLocation().Y - maxDistance; y <= who.getTileLocation().Y + maxDistance; y++)
+                    for (int y = who.getTileY() - 1; y < endY; y++)
                     {
-                        if (who.currentLocation.isTileFishable((int)x, (int)y))
+                        if (who.currentLocation.isTileFishable(x, y))
                         {
-                            batch.Draw(startMinigameTextures[2], new Vector2((int)x * 64 - Game1.viewport.X, (int)y * 64 - Game1.viewport.Y), new Rectangle(0, 0, 64, 64), Color.White * 0.3f, 0f, Vector2.Zero, 1f, SpriteEffects.None, 1f);
+                            batch.Draw(startMinigameTextures[2], new Vector2(x * 64 - Game1.viewport.X, y * 64 - Game1.viewport.Y), new Rectangle(0, 0, 64, 64), Color.White * 0.3f, 0f, Vector2.Zero, 1f, SpriteEffects.None, 1f);
                             tiles.Add(new Vector2(x, y));
                         }
                     }
                 }
+                endX = who.getTileX() + 2;
+                endY = who.getTileY() + maxDistance + 1;
+                for (int x = who.getTileX() - 1; x < endX; x++)
+                {
+                    for (int y = who.getTileY() - maxDistance; y < endY; y++)
+                    {
+                        if (!tiles.Contains(new Vector2(x, y)) && who.currentLocation.isTileFishable(x, y))
+                        {
+                            batch.Draw(startMinigameTextures[2], new Vector2(x * 64 - Game1.viewport.X, y * 64 - Game1.viewport.Y), new Rectangle(0, 0, 64, 64), Color.White * 0.3f, 0f, Vector2.Zero, 1f, SpriteEffects.None, 1f);
+                            tiles.Add(new Vector2(x, y));
+                        }
+                    }
+                }
+                endX = (int)(who.getTileX() + maxDistance / 1.8f) + 3;
+                endY = (int)(who.getTileY() + maxDistance / 1.8f) + 2;
+                for (int x = (int)(who.getTileX() - maxDistance / 1.8f) - 1; x < endX; x++)
+                {
+                    for (int y = (int)(who.getTileY() - maxDistance / 1.8f); y < endY; y++)
+                    {
+                        if (!tiles.Contains(new Vector2(x, y)) && who.currentLocation.isTileFishable(x, y))
+                        {
+                            batch.Draw(startMinigameTextures[2], new Vector2(x * 64 - Game1.viewport.X, y * 64 - Game1.viewport.Y), new Rectangle(0, 0, 64, 64), Color.White * 0.3f, 0f, Vector2.Zero, 1f, SpriteEffects.None, 1f);
+                            tiles.Add(new Vector2(x, y));
+                        }
+                    }
+                }
+
+                //for (float x = who.getTileLocation().X - maxDistance; x <= who.getTileLocation().X + maxDistance; x++)
+                //{
+                //    for (float y = who.getTileLocation().Y - maxDistance; y <= who.getTileLocation().Y + maxDistance; y++)
+                //    {
+                //        if (Vector2.DistanceSquared(who.getTileLocation(), new Vector2(x, y)) <= (maxDistance + 1) * (maxDistance + 1) && who.currentLocation.isTileFishable((int)x, (int)y))
+                //        {
+                //            batch.Draw(startMinigameTextures[2], new Vector2((int)x * 64 - Game1.viewport.X, (int)y * 64 - Game1.viewport.Y), new Rectangle(0, 0, 64, 64), Color.White * 0.3f, 0f, Vector2.Zero, 1f, SpriteEffects.None, 1f);
+                //            tiles.Add(new Vector2(x, y));
+                //        }
+                //    }
+                //}
 
                 aimTile = new Vector2(-9999f);
                 if (tiles.Contains(Game1.currentCursorTile)) aimTile = Game1.currentCursorTile;
@@ -1810,16 +1851,12 @@ namespace FishingMinigames
                     }
                 }
 
-                //aimTile = Game1.currentCursorTile;
-                if (who.currentLocation.isTileFishable((int)aimTile.X, (int)aimTile.Y)
-                    && Math.Abs(who.getTileLocation().X - aimTile.X) <= maxDistance + 1
-                    && Math.Abs(who.getTileLocation().Y - aimTile.Y) <= maxDistance)
+                if (aimTile.X != -9999f)
                 {
                     batch.Draw(Game1.mouseCursors, new Vector2((int)aimTile.X * 64 - Game1.viewport.X, (int)aimTile.Y * 64 - Game1.viewport.Y), new Rectangle(652, 204, 44, 44), new Color(0, 255, 0, 0.5f), 0f, Vector2.Zero, 1.45f, SpriteEffects.None, 1f);
                 }
             }
         }
-
 
         private void SendMessage(Farmer who, string stageRequested = null)
         {
