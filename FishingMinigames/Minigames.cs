@@ -319,6 +319,7 @@ namespace FishingMinigames
                                 area.Contains((int)animations[i].Value.Position.X + size, (int)animations[i].Value.Position.Y) ||
                                 area.Contains((int)animations[i].Value.Position.X + size, (int)animations[i].Value.Position.Y + size)))
                             {
+                                Game1.activeClickableMenu = new DummyMenu();
                                 endMinigameStage = 2;
                             }
                         }
@@ -428,7 +429,6 @@ namespace FishingMinigames
                             x = (int)aimTile.X * 64;
                             y = (int)aimTile.Y * 64;
                             Game1.stats.timesFished++;
-                            Game1.activeClickableMenu = new DummyMenu();
                             HereFishyFishy(who);
                         }
                     }
@@ -474,6 +474,7 @@ namespace FishingMinigames
             if ((!itemIsInstantCatch && fishingFestivalMinigame == 0 && startMinigameStyle[screen] > 0) || (fishingFestivalMinigame != 0 && festivalMode[screen] == 3))//start minigame
             {
                 //starting minigame init
+                Game1.activeClickableMenu = new DummyMenu();
                 who.CanMove = false;
                 startMinigameData = new int[6];
 
@@ -913,6 +914,7 @@ namespace FishingMinigames
                 if (startMinigameData[5] == 0)
                 {
                     stage = null;
+                    Game1.exitActiveMenu();
                     if (startMinigameStage == 5)
                     {
                         DrawAndEmote(who, 2);
@@ -1344,7 +1346,7 @@ namespace FishingMinigames
                 switch (stage)
                 {
                     case "Caught1":
-                        Game1.exitActiveMenu();
+                        if (Game1.activeClickableMenu is DummyMenu) Game1.exitActiveMenu();
                         if (fishingFestivalMinigame == 0)
                         {
                             rodDummy = who.CurrentTool.getOne() as FishingRod;
