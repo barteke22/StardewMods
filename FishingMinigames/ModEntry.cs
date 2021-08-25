@@ -234,7 +234,12 @@ namespace FishingMinigames
 
                     b.Draw(Minigames.startMinigameTextures[1], screenMid + new Vector2(50f, 0), new Rectangle(322, 82, 12, 12), state.color, 0f, new Vector2(6f), 2f * scale, SpriteEffects.None, 0.4f);
                     b.Draw(Game1.mouseCursors, screenMid, new Rectangle(301, 288, 15, 15), state.color * 0.95f, 0f, new Vector2(7.5f, 7.5f), 2f * scale, SpriteEffects.None, 0.5f);
-                    b.DrawString(Game1.smallFont, "5", screenMid, state.color, 0f, Game1.smallFont.MeasureString("5") / 2f, 1f * scale, SpriteEffects.None, 0.51f);
+                    b.DrawString(Game1.smallFont, "5", screenMid + new Vector2(0, 2f), state.color, 0f, Game1.smallFont.MeasureString("5") / 2f, 1f * scale, SpriteEffects.None, 0.51f);
+
+                    b.Draw(Game1.mouseCursors, screenMid + new Vector2(width * -0.6f, -45), new Rectangle(395, 497, 3, 8), state.color, 0f, new Vector2(1.5f, 4f), 4f, SpriteEffects.None, 0.98f);
+                    b.Draw(Game1.mouseCursors, screenMid + new Vector2(width * -0.6f, 0), new Rectangle(407, 1660, 10, 10), state.color, 0f, new Vector2(5f), 3.3f, SpriteEffects.None, 0.98f);
+                    b.Draw(Game1.mouseCursors, screenMid + new Vector2(width * -0.6f, 45), new Rectangle(473, 36, 24, 24), state.color, 0f, new Vector2(12f), 2f, SpriteEffects.None, 0.98f);
+                    b.DrawString(Game1.smallFont, "A", screenMid + new Vector2(width * -0.6f, 47) - (Game1.smallFont.MeasureString("A") / 2 * 1.2f), state.color, 0f, Vector2.Zero, 1.2f, SpriteEffects.None, 1f); //text
                     return state;
                 };
             Action<object> colorPickerSave =

@@ -1222,18 +1222,15 @@ namespace FishingMinigames
             {
                 endMinigameStage = 3;
                 endMinigameTimer = 0;
-                who.PlayFishBiteChime();
 
                 Rectangle rect = new Rectangle(395, 497, 3, 8);
                 Vector2 offset = new Vector2(-7.5f, 0);
-                Color color = Color.White;
 
                 switch (endMinigameStyle[screen])
                 {
                     case 1:
                         break;
                     case 2:
-                        color = Color.Gold;
                         offset = new Vector2(-25f, -20f);
                         int direction = Game1.random.Next(0, 4);
                         endMinigameKey = direction.ToString();
