@@ -399,8 +399,8 @@ namespace FishingMinigames
                 {
                     float y_offset = (float)Math.Round(Math.Sin(Game1.currentGameTime.TotalGameTime.TotalMilliseconds / 200), 2);
                     Vector2 position = new Vector2(who.getStandingX() - Game1.viewport.X, who.getStandingY() - 156 - Game1.viewport.Y) + new Vector2(y_offset);
-                    batch.Draw(Game1.mouseCursors, position + new Vector2(-24, 0), new Rectangle(473, 36, 24, 24), Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, 0.98f);//text bg box
-                    batch.DrawString(Game1.smallFont, endMinigameKey, position - (Game1.smallFont.MeasureString(endMinigameKey) / 2 * 1.2f) + new Vector2(0f, 28f), Color.Gold, 0f, Vector2.Zero, 1.2f, SpriteEffects.None, 1f); //text
+                    batch.Draw(Game1.mouseCursors, position + new Vector2(-24, 0), new Rectangle(473, 36, 24, 24), minigameColor, 0f, Vector2.Zero, 2f, SpriteEffects.None, 0.98f);//text bg box
+                    batch.DrawString(Game1.smallFont, endMinigameKey, position - (Game1.smallFont.MeasureString(endMinigameKey) / 2 * 1.2f) + new Vector2(0f, 28f), minigameColor, 0f, Vector2.Zero, 1.2f, SpriteEffects.None, 1f); //text
                 }
 
                 if (drawTool) Game1.drawTool(who);//draw tool for tool animations
@@ -747,6 +747,7 @@ namespace FishingMinigames
                     who.temporarilyInvincible = false;
                 }
             }
+            fishSize = (int)Math.Round(fishSize);
         }
 
         private void HereFishyAnimation(Farmer who, int x, int y)
@@ -962,7 +963,7 @@ namespace FishingMinigames
                 Vector2 textLoc = new Vector2(0f, height * -0.44f);
                 for (int i = 0; i < startMinigameText.Count; i++)
                 {
-                    DrawStringWithBorder(batch, Game1.smallFont, startMinigameText[i], screenMid + (textLoc += new Vector2(0f, height * 0.07f)), minigameColor * opacity, 0f, new Vector2(Game1.smallFont.MeasureString(startMinigameText[i]).X / 2f, 0f), scale * 0.16f, SpriteEffects.None, 0.4f);
+                    DrawStringWithBorder(batch, Game1.smallFont, startMinigameText[i], screenMid + (textLoc += new Vector2(0f, height * 0.07f)), minigameColor * Math.Min(opacity, 1.5f), 0f, new Vector2(Game1.smallFont.MeasureString(startMinigameText[i]).X / 2f, 0f), scale * 0.16f, SpriteEffects.None, 0.4f);
                 }
                 if (fishingFestivalMinigame != 0)
                 {
@@ -1081,7 +1082,7 @@ namespace FishingMinigames
                     (startMinigameData[2] < startMinigameArrowData.Length * 1.9f) ? Color.LimeGreen : Color.Purple) * (opacity / 3f),
                     0f, Game1.smallFont.MeasureString(startMinigameData[2].ToString()) / 2f, scale * 0.28f, SpriteEffects.None, 0.51f);
                 //arrows left count
-                batch.DrawString(Game1.smallFont, arrowsLeft.ToString(), screenMid + new Vector2(width * 0.41f, height * 0.19f), minigameColor * opacity, 0f, Game1.smallFont.MeasureString(arrowsLeft.ToString()) / 2f, scale * 0.28f, SpriteEffects.None, 0.51f);
+                batch.DrawString(Game1.smallFont, arrowsLeft.ToString(), screenMid + new Vector2(width * 0.41f, height * 0.19f), minigameColor * Math.Min(opacity, 1f), 0f, Game1.smallFont.MeasureString(arrowsLeft.ToString()) / 2f, scale * 0.28f, SpriteEffects.None, 0.51f);
             }
             else//final score screen
             {
@@ -1269,7 +1270,7 @@ namespace FishingMinigames
                     position.X -= Game1.viewport.X;
                     position.Y -= Game1.viewport.Y;
                 }
-                Game1.screenOverlayTempSprites.Add(new TemporaryAnimatedSprite("LooseSprites\\Cursors", rect, position, flipped: false, 0.02f, color)
+                Game1.screenOverlayTempSprites.Add(new TemporaryAnimatedSprite("LooseSprites\\Cursors", rect, position, flipped: false, 0.02f, minigameColor)
                 {
                     scale = 5f,
                     scaleChange = -0.01f,
@@ -1541,7 +1542,7 @@ namespace FishingMinigames
             //        new Rectangle(52 * 16 % Game1.emoteSpriteSheet.Width, 52 * 16 / Game1.emoteSpriteSheet.Width * 16, 16, 16),
             //        Color.LightGray * 0.9f, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0f);
             //}
-            else if (which == 4 && !fromFishPond && fishingFestivalMinigame == 0)
+            else if (which == 4 && !fromFishPond && fishingFestivalMinigame == 0)//bait & megaphone
             {
                 Color ambientColor = this.ambientColor;
                 if (who != this.who) ambientColor = messages[who.UniqueMultiplayerID].ambientColor;

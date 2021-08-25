@@ -52,6 +52,7 @@ namespace FishingMinigames
             canStartEditingAssets = true;
             Helper.Content.InvalidateCache("Strings/StringsFromCSFiles");
             Helper.Content.InvalidateCache("Data/ObjectInformation");
+            Helper.Content.InvalidateCache("Maps/springobjects");
 
             var GenericMC = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
             if (GenericMC != null)
