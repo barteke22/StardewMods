@@ -9,6 +9,9 @@
     <GameModsPath>D:\Programs\Steam\steamapps\common\Stardew Valley\ModsTesting</GameModsPath>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="assets\fishyOG.wav" />
+  </ItemGroup>
+  <ItemGroup>
     <None Include="i18n %28unofficial languages%29\Polish\pt.json" />
     <None Include="i18n\default.json" />
     <None Include="itemConfigs\items_exampleMod.json" />
