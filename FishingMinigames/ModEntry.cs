@@ -1,5 +1,5 @@
 ﻿using GenericModConfigMenu;
-using Harmony;
+using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
@@ -41,7 +41,7 @@ namespace FishingMinigames
             helper.Events.GameLoop.SaveLoaded += GameLoop_SaveLoaded;
             helper.Events.Multiplayer.ModMessageReceived += OnModMessageReceived;
 
-            var harmony = HarmonyInstance.Create(ModManifest.UniqueID);//this might summon Cthulhu
+            var harmony = new Harmony(ModManifest.UniqueID);//this might summon Cthulhu
             harmony.PatchAll();
         }
 

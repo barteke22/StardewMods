@@ -148,7 +148,6 @@ namespace StardewMods
 
 
 
-
         private void OnButtonPressed(object sender, ButtonPressedEventArgs e)
         {
             if (!Context.IsWorldReady || !(e.Button == SButton.F5)) return; // ignore if player hasn't loaded a save yet
