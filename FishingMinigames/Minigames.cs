@@ -367,7 +367,6 @@ namespace FishingMinigames
                                 drawTool = true;
                                 SendMessage(who, "Fail");
 
-                                if (oldFacingDirection == 0) who.armOffset += new Vector2(-10f, 0);
                                 endMinigameTimer = 0;
                                 endMinigameStage = 8;
                                 who.completelyStopAnimatingOrDoingAction();
@@ -468,11 +467,6 @@ namespace FishingMinigames
             }
 
             CatchFish(who, x, y);
-
-            if (!debug && !fromFishPond && fishingFestivalMinigame == 0)
-            {
-                Helper.Multiplayer.SendMessage((whichFish < 167 || whichFish > 172) ? whichFish : 168, "whichFish", modIDs: new[] { "barteke22.FishingInfoOverlays" }, new[] { who.UniqueMultiplayerID });//notify overlay of which fish
-            }
 
             if (debug || ((!itemIsInstantCatch && fishingFestivalMinigame == 0 && startMinigameStyle[screen] > 0) || (fishingFestivalMinigame != 0 && festivalMode[screen] == 3)))//start minigame
             {
@@ -624,7 +618,7 @@ namespace FishingMinigames
                 }
                 else itemIsInstantCatch = true;
 
-                if (itemIsInstantCatch || item.Category == -20 || item.ParentSheetIndex == 152 || item.ParentSheetIndex == 153 || item.parentSheetIndex == 157 || item.parentSheetIndex == 797 || item.parentSheetIndex == 79 || item.parentSheetIndex == 73 || item.ParentSheetIndex == 842 || (item.ParentSheetIndex >= 820 && item.ParentSheetIndex <= 828) || item.parentSheetIndex == GameLocation.CAROLINES_NECKLACE_ITEM || item.ParentSheetIndex == 890 || fromFishPond)
+                if (itemIsInstantCatch || item.Category == -20 || item.ParentSheetIndex == 152 || item.ParentSheetIndex == 153 || item.ParentSheetIndex == 157 || item.ParentSheetIndex == 797 || item.ParentSheetIndex == 79 || item.ParentSheetIndex == 73 || item.ParentSheetIndex == 842 || (item.ParentSheetIndex >= 820 && item.ParentSheetIndex <= 828) || item.ParentSheetIndex == GameLocation.CAROLINES_NECKLACE_ITEM || item.ParentSheetIndex == 890 || fromFishPond)
                 {
                     itemIsInstantCatch = true;
                 }
@@ -763,6 +757,10 @@ namespace FishingMinigames
             switch (stage)
             {
                 case null:
+                    if (!fromFishPond && fishingFestivalMinigame == 0)
+                    {
+                        Helper.Multiplayer.SendMessage((whichFish < 167 || whichFish > 172) ? whichFish : 168, "whichFish", modIDs: new[] { "barteke22.FishingInfoOverlays" }, new[] { who.UniqueMultiplayerID });//notify overlay of which fish
+                    }
                     if (fishySound != null && !Context.IsSplitScreen) fishySound.Play(voiceVolumePersonal, voicePitch[screen], 0);
 
                     if ((who.CurrentTool as FishingRod).getBaitAttachmentIndex() != -1 || (who.CurrentTool as FishingRod).getBobberAttachmentIndex() != -1) drawAttachments = true;
@@ -910,6 +908,10 @@ namespace FishingMinigames
                 startMinigameData[5]++;
                 if (startMinigameData[5] == 300)
                 {
+                    if (!fromFishPond && fishingFestivalMinigame == 0)
+                    {
+                        Helper.Multiplayer.SendMessage((whichFish < 167 || whichFish > 172) ? whichFish : 168, "whichFish", modIDs: new[] { "barteke22.FishingInfoOverlays" }, new[] { who.UniqueMultiplayerID });//notify overlay of which fish
+                    }
                     Game1.activeClickableMenu = new DummyMenu();
                     startMinigameStage = 2;
                     Game1.playSound("FishHit");
@@ -1292,7 +1294,6 @@ namespace FishingMinigames
             {
                 drawTool = true;
                 SendMessage(who, "");
-                if (oldFacingDirection == 0) who.armOffset += new Vector2(-10f, 0);
                 bool passed = false;
                 if (endMinigameStage == 2)//too early
                 {
@@ -1421,7 +1422,6 @@ namespace FishingMinigames
 
 
                         who.Halt();
-                        who.armOffset = Vector2.Zero;
 
                         stage = "Caught2";
                         if (fishingFestivalMinigame != 0)
@@ -1506,7 +1506,6 @@ namespace FishingMinigames
                             who.CurrentTool.Update(1, 0, who);
                             break;
                         case 2://down
-                            who.armOffset += new Vector2(-10f, 0);
                             who.FarmerSprite.animateOnce(297, 1f, 1);
                             who.CurrentTool.Update(2, 0, who);
                             break;
@@ -1939,7 +1938,6 @@ namespace FishingMinigames
                                     who.CurrentTool.Update(1, 0, who);
                                     break;
                                 case 2://down
-                                    who.armOffset += new Vector2(-10f, 0);
                                     who.FarmerSprite.animateOnce(297, 1f, 1);
                                     who.CurrentTool.Update(2, 0, who);
                                     break;
@@ -2082,7 +2080,11 @@ namespace FishingMinigames
             {
                 if (args.Length == 1)
                 {
-                    whichFish = Convert.ToInt32(args[0]);
+                    if (!int.TryParse(args[0], out whichFish))
+                    {
+                        Item item2 = Utility.fuzzyItemSearch(args[0]);
+                        if (item2 != null) whichFish = item2.ParentSheetIndex;
+                    }
                     Dictionary<int, string> data = Game1.content.Load<Dictionary<int, string>>("Data\\Fish");
                     if (data.ContainsKey(whichFish))
                     {
@@ -2090,6 +2092,8 @@ namespace FishingMinigames
                         if (!int.TryParse(rawData[1], out difficulty) || !int.TryParse(rawData[3], out minFishSize) || !int.TryParse(rawData[4], out maxFishSize)) Monitor.Log("Missing Data\\Fish values, try a different fish.", LogLevel.Debug);
                         fishSize = Game1.random.Next(minFishSize, maxFishSize + 1);
                         bossFish = FishingRod.isFishBossFish(whichFish);
+
+                        Monitor.Log("Starting minigame for " + rawData[0] + ". Difficulty: " + difficulty + ", size: " + fishSize + ", boss: " + bossFish, LogLevel.Debug);
                     }
                     else
                     {
@@ -2101,7 +2105,9 @@ namespace FishingMinigames
                 {
                     difficulty = int.Parse(args[0]);
                     fishSize = int.Parse(args[1]);
-                    if (!bool.TryParse(args[2], out bossFish)) bossFish = false;
+                    if (args.Length < 3 || !bool.TryParse(args[2], out bossFish)) bossFish = false;
+
+                    Monitor.Log("Starting minigame for difficulty: " + difficulty + ", size: " + fishSize + ", boss: " + bossFish, LogLevel.Debug);
                 }
 
                 HereFishyFishy(who);

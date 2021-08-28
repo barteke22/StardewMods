@@ -221,7 +221,7 @@ namespace StardewMods
                         source = GameLocation.getSourceRectForObject(tackle);
                         if (backgroundMode[screen] == 0) AddBackground(batch, boxTopLeft, boxBottomLeft, iconCount, source, iconScale, boxWidth, boxHeight);
 
-                        int tackleCount = FishingRod.maxTackleUses - (who.CurrentItem as FishingRod).attachments[1].uses;
+                        int tackleCount = FishingRod.maxTackleUses - (who.CurrentItem as FishingRod).attachments[1].uses.Value;
                         batch.Draw(Game1.objectSpriteSheet, boxBottomLeft, source, Color.White, 0f, Vector2.Zero, 1.9f * barScale[screen], SpriteEffects.None, 0.9f);
 
                         if ((who.CurrentItem as FishingRod).attachments[1].Quality == 4) batch.Draw(Game1.mouseCursors, boxBottomLeft + (new Vector2(13f, (showPercentages[screen] ? 24 : 16)) * barScale[screen]),
@@ -318,7 +318,7 @@ namespace StardewMods
                             {
                                 if (caught) fishNameLocalized = new Furniture(fish, Vector2.Zero).DisplayName;
 
-                                batch.Draw(Furniture.furnitureTexture, boxBottomLeft, new Furniture(fish, Vector2.Zero).defaultSourceRect,
+                                batch.Draw(Furniture.furnitureTexture, boxBottomLeft, new Furniture(fish, Vector2.Zero).defaultSourceRect.Value,
                                     (caught) ? Color.White : Color.DarkSlateGray, 0f, Vector2.Zero, 0.95f * barScale[screen], SpriteEffects.None, 0.98f);//icon
                             }
                             else                                                                                        //Item
@@ -473,7 +473,7 @@ namespace StardewMods
                     }
                     if (magicBait) fail = false; //I guess magic bait check comes at this exact point because it overrides all conditions except rod and level?
 
-                    bool beginnersRod = who != null && who.CurrentItem != null && who.CurrentItem is FishingRod && (int)who.CurrentTool.upgradeLevel == 1;
+                    bool beginnersRod = who != null && who.CurrentItem != null && who.CurrentItem is FishingRod && (int)who.CurrentTool.UpgradeLevel == 1;
 
                     if (Convert.ToInt32(specificFishData[1]) >= 50 && beginnersRod) fail = true;
                     if (who.FishingLevel < Convert.ToInt32(specificFishData[12])) fail = true;
@@ -535,14 +535,14 @@ namespace StardewMods
                         {
                             if (item.DisplayName.Equals("Error Item")) 
                             {
-                                Monitor.LogOnce("Skipped Object of type" + item.GetType() + ", ID: " + item.parentSheetIndex + ", CodeName: " + item.Name + ", Catefory: " + item.Category + ". DisplayName is \"Error Item\".", LogLevel.Error);
+                                Monitor.LogOnce("Skipped Object of type" + item.GetType() + ", ID: " + item.ParentSheetIndex + ", CodeName: " + item.Name + ", Catefory: " + item.Category + ". DisplayName is \"Error Item\".", LogLevel.Error);
                                 continue;
                             }
                             fish = item.ParentSheetIndex;
                         }
                         catch (Exception)
                         {
-                            Monitor.LogOnce("Skipped Object of type" + item.GetType() + ", ID: " + item.parentSheetIndex + ", CodeName: " + item.Name + ", Catefory: " + item.Category + ". Missing DisplayName.", LogLevel.Error);
+                            Monitor.LogOnce("Skipped Object of type" + item.GetType() + ", ID: " + item.ParentSheetIndex + ", CodeName: " + item.Name + ", Catefory: " + item.Category + ". Missing DisplayName.", LogLevel.Error);
                             continue;
                         }
 
@@ -636,14 +636,14 @@ namespace StardewMods
 
                 if (who.currentLocation is IslandNorth)
                 {
-                    if ((bool)(Game1.getLocationFromName("IslandNorth") as IslandNorth).bridgeFixed &&
+                    if ((bool)(Game1.getLocationFromName("IslandNorth") as IslandNorth).bridgeFixed.Value &&
                         (new Random(who.getTileX() * 2000 + who.getTileY() * 777 + (int)Game1.uniqueIDForThisGame / 2 + (int)Game1.stats.DaysPlayed + (int)Game1.stats.TimesFished)).NextDouble() < 0.1) return 821;
                     return -1;
                 }
 
                 if (who.currentLocation is IslandSouthEast && who.getTileLocation().X >= 17 && who.getTileLocation().X <= 21 && who.getTileLocation().Y >= 19 && who.getTileLocation().Y <= 23)
                 {
-                    if (!(Game1.player.currentLocation as IslandSouthEast).fishedWalnut)
+                    if (!(Game1.player.currentLocation as IslandSouthEast).fishedWalnut.Value)
                     {
                         fishHere = new List<int>() { 73 };
                         fishChancesSlow = new Dictionary<int, int>() { { -1, 1 }, { 73, 1 }, { 168, 0 } };

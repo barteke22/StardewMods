@@ -42,7 +42,7 @@ namespace FishingMinigames
             helper.Events.Multiplayer.ModMessageReceived += OnModMessageReceived;
 
             helper.ConsoleCommands.Add("startminigametest", "For testing the Start Minigame of the Fishing Minigames mod. If holding a fishing rod/net, its data will be used, otherwise uses a basic one.\n\n" +
-                "Usage: startminigametest <fishID>\n- fishID: ID (int) of the fish to use. Random size is used.\n\n" +
+                "Usage: startminigametest <fish>\n- fish: ID or name (fuzzy search, single word only) of the fish to use. Random size (between min-max) is used.\n\n" +
                 "Usage: startminigametest <difficulty> <size> <boss>\n- difficulty: fish difficulty (int, vanilla = 15-110)\n" +
                 "- size: fishSize (int, vanilla = 1-73)\n- boss: true = bossFish, can be blank\nHighest vanilla combo = 110 51 true", this.StartMinigameTest);
 
@@ -576,12 +576,12 @@ class Patch
             {
                 if (__instance.attachments[0] != null)
                 {
-                    desc += "\n\n" + __instance.attachments[0].DisplayName + ((__instance.attachments[0].quality == 0) ? "" : " (" + FishingMinigames.ModEntry.translate.Get("Mods.Infinite") + ")")
+                    desc += "\n\n" + __instance.attachments[0].DisplayName + ((__instance.attachments[0].Quality == 0) ? "" : " (" + FishingMinigames.ModEntry.translate.Get("Mods.Infinite") + ")")
                            + ":\n" + FishingMinigames.ModEntry.AddEffectDescriptions(__instance.attachments[0].Name);
                 }
                 if (__instance.attachments[1] != null)
                 {
-                    desc += "\n\n" + __instance.attachments[1].DisplayName + ((__instance.attachments[1].quality == 0) ? "" : " (" + FishingMinigames.ModEntry.translate.Get("Mods.Infinite") + ")")
+                    desc += "\n\n" + __instance.attachments[1].DisplayName + ((__instance.attachments[1].Quality == 0) ? "" : " (" + FishingMinigames.ModEntry.translate.Get("Mods.Infinite") + ")")
                            + ":\n" + FishingMinigames.ModEntry.AddEffectDescriptions(__instance.attachments[1].Name);
                 }
             }
