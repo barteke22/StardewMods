@@ -41,6 +41,11 @@ namespace FishingMinigames
             helper.Events.GameLoop.SaveLoaded += GameLoop_SaveLoaded;
             helper.Events.Multiplayer.ModMessageReceived += OnModMessageReceived;
 
+            helper.ConsoleCommands.Add("startminigametest", "For testing the Start Minigame of the Fishing Minigames mod. If holding a fishing rod/net, its data will be used, otherwise uses a basic one.\n\n" +
+                "Usage: startminigametest <fishID>\n- fishID: ID (int) of the fish to use. Random size is used.\n\n" +
+                "Usage: startminigametest <difficulty> <size> <boss>\n- difficulty: fish difficulty (int, vanilla = 15-110)\n" +
+                "- size: fishSize (int, vanilla = 1-73)\n- boss: true = bossFish, can be blank\nHighest vanilla combo = 110 51 true", this.StartMinigameTest);
+
             var harmony = new Harmony(ModManifest.UniqueID);//this might summon Cthulhu
             harmony.PatchAll();
         }
@@ -50,9 +55,10 @@ namespace FishingMinigames
         {
             if (Context.IsSplitScreen) return;
             canStartEditingAssets = true;
+            Helper.Content.InvalidateCache("TileSheets/tools");
+            Helper.Content.InvalidateCache("Maps/springobjects");
             Helper.Content.InvalidateCache("Strings/StringsFromCSFiles");
             Helper.Content.InvalidateCache("Data/ObjectInformation");
-            Helper.Content.InvalidateCache("Maps/springobjects");
 
             var GenericMC = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
             if (GenericMC != null)
@@ -475,6 +481,11 @@ namespace FishingMinigames
             return initialText;
         }
 
+
+        private void StartMinigameTest(string commandname, string[] args)
+        {
+            minigame.Value.DebugConsoleStartMinigameTest(args);
+        }
 
         private void UpdateConfig()
         {
