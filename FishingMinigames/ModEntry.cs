@@ -7,6 +7,7 @@ using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
+using StardewValley.Tools;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -19,7 +20,7 @@ namespace FishingMinigames
         public static ITranslationHelper translate;
         public static ModConfig config;
         private readonly PerScreen<Minigames> minigame = new PerScreen<Minigames>();
-        private Dictionary<string, string> displayNames = new Dictionary<string, string>();
+        private Dictionary<string, int> itemIDs = new Dictionary<string, int>();
         private bool canStartEditingAssets = false;
 
 
@@ -43,7 +44,7 @@ namespace FishingMinigames
 
             helper.ConsoleCommands.Add("startminigametest", "For testing the Start Minigame of the Fishing Minigames mod. If holding a fishing rod/net, its data will be used, otherwise uses a basic one.\n\n" +
                 "Usage: startminigametest <fish>\n- fish: ID or name (fuzzy search, single word only) of the fish to use. Random size (between min-max) is used.\n\n" +
-                "Usage: startminigametest <difficulty> <size> <boss>\n- difficulty: fish difficulty (int, vanilla = 15-110)\n" +
+                "Usage: startminigametest <I:difficulty> <I:size> [S:boss]\n- difficulty: fish difficulty (int, vanilla = 15-110)\n" +
                 "- size: fishSize (int, vanilla = 1-73)\n- boss: true = bossFish, can be blank\nHighest vanilla combo = 110 51 true", this.StartMinigameTest);
 
             var harmony = new Harmony(ModManifest.UniqueID);//this might summon Cthulhu
@@ -101,7 +102,40 @@ namespace FishingMinigames
 
                     foreach (var item in config.SeeInfoForBelowData)
                     {
-                        GenericMC.RegisterLabel(ModManifest, displayNames[item.Key], item.Key);
+                        Item o = (itemIDs.ContainsKey(item.Key)) ? new StardewValley.Object(itemIDs[item.Key], 1) : null;
+                        string space = "";
+                        if (o == null)
+                        {
+                            FishingRod rod = new FishingRod();
+                            while (rod.UpgradeLevel < 5)
+                            {
+                                if (rod.Name.Equals(item.Key))
+                                {
+                                    o = rod;
+                                    break;
+                                }
+                                rod.UpgradeLevel++;
+                            }
+                        }
+                        if (o != null)
+                        {
+                            for (int i = 0; i < 26 - (o.DisplayName.Length / 2); i++)
+                            {
+                                space += " ";
+                            }
+                            if (o is FishingRod) GenericMC.RegisterImage(ModManifest, Game1.toolSpriteSheetName, Game1.getSourceRectForStandardTileSheet(Game1.toolSpriteSheet, (o as FishingRod).IndexOfMenuItemView, 16, 16), 4);
+                            else GenericMC.RegisterImage(ModManifest, Game1.objectSpriteSheetName, Game1.getSourceRectForStandardTileSheet(Game1.objectSpriteSheet, o.ParentSheetIndex, 16, 16), 4);
+                            GenericMC.RegisterLabel(ModManifest, space + o.DisplayName, item.Key);
+                        }
+                        else
+                        {
+                            for (int i = 0; i < 26 - (item.Key.Length / 2); i++)
+                            {
+                                space += " ";
+                            }
+                            GenericMC.RegisterLabel(ModManifest, space + item.Key, item.Key);
+                        }
+
                         foreach (var effect in item.Value)
                         {
                             GenericMC.RegisterClampedOption(ModManifest, effect.Key, translate.Get("Effects." + effect.Key).Tokens(new { val = "X" }),
@@ -356,19 +390,15 @@ namespace FishingMinigames
                                 break;
                             case "FishingRod.cs.14045":
                                 data[itemID] = translate.Get("Bamboo Pole");
-                                displayNames["Bamboo Pole"] = data[itemID];
                                 break;
                             case "FishingRod.cs.14046":
                                 data[itemID] = translate.Get("Training Rod");
-                                displayNames["Training Rod"] = data[itemID];
                                 break;
                             case "FishingRod.cs.14047":
                                 data[itemID] = translate.Get("Fiberglass Rod");
-                                displayNames["Fiberglass Rod"] = data[itemID];
                                 break;
                             case "FishingRod.cs.14048":
                                 data[itemID] = translate.Get("Iridium Rod");
-                                displayNames["Iridium Rod"] = data[itemID];
                                 break;
                             case "SkillPage.cs.11598":
                                 data[itemID] = translate.Get("Rod.Skill");
@@ -427,7 +457,7 @@ namespace FishingMinigames
                                 continue;
                         }
                         data[itemID] = string.Join("/", itemData);
-                        displayNames[itemData[0]] = translate.Get(itemData[0]);
+                        itemIDs[itemData[0]] = itemID;
                     }
                     catch (Exception)
                     {
