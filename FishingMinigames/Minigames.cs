@@ -1057,8 +1057,8 @@ namespace FishingMinigames
                             if (i == startMinigameData[4]) batch.Draw(Game1.mouseCursors, firstArrowLoc + new Vector2((data[2]), 0), new Rectangle((treasureCaught) ? 104 : (data[1] == -1f) ? 167 : 71, 1926, 20, 26),
                                 Color.White, 0f, new Vector2(9f, 14f), scale * 0.2f, SpriteEffects.None, 0.41f);
                             //saved arrow
-                            if (data[1] == 1.1f) batch.Draw(Game1.objectSpriteSheet, firstArrowLoc + new Vector2((data[2]), 0), new Rectangle(291, 612, 9, 9),
-                                    Color.White, 0f, new Vector2(4.5f), scale * 0.3f, SpriteEffects.None, 0.42f);
+                            if (data[1] == 1.1f && who.CurrentTool.attachments[1] != null) batch.Draw(Game1.objectSpriteSheet, firstArrowLoc + new Vector2((data[2]), 0),
+                                       Game1.getSourceRectForStandardTileSheet(Game1.objectSpriteSheet, who.CurrentTool.attachments[1].ParentSheetIndex, 16, 16), Color.White, 0f, new Vector2(8f), scale * 0.2f, SpriteEffects.None, 0.42f);
                         }
                         else if (i + 1 > startMinigameData[3])//update score when new arrow passes end
                         {

@@ -24,16 +24,16 @@ namespace FishingMinigames
         public Dictionary<string, Dictionary<string, int>> SeeInfoForBelowData { get; set; } = new Dictionary<string, Dictionary<string, int>>()
         {
             //rods
-            {"Training Rod", new Dictionary<string, int>(){     { "AREA", 0 }, { "DAMAGE", 0 }, { "DIFFICULTY", 0 }, { "DOUBLE", 0 }, { "LIFE", 0 }, { "QUALITY", 0 }, { "SIZE", 0 }, { "SPEED", 50 }, { "TREASURE", 0 } }},
-            {"Bamboo Pole", new Dictionary<string, int>(){      { "AREA", 0 }, { "DAMAGE", 0 }, { "DIFFICULTY", 0 }, { "DOUBLE", 0 }, { "LIFE", 0 }, { "QUALITY", 0 }, { "SIZE", 0 }, { "SPEED", 0 }, { "TREASURE", 0 } }},
-            {"Fiberglass Rod", new Dictionary<string, int>(){   { "AREA", 0 }, { "DAMAGE", 0 }, { "DIFFICULTY", 0 }, { "DOUBLE", 0 }, { "LIFE", 0 }, { "QUALITY", 0 }, { "SIZE", 0 }, { "SPEED", 20 }, { "TREASURE", 0 } }},
-            {"Iridium Rod", new Dictionary<string, int>(){      { "AREA", 0 }, { "DAMAGE", 0 }, { "DIFFICULTY", 0 }, { "DOUBLE", 0 }, { "LIFE", 0 }, { "QUALITY", 0 }, { "SIZE", 0 }, { "SPEED", 40 }, { "TREASURE", 0 } }},
+            {"Training Rod", new Dictionary<string, int>(){     { "AREA", 0 }, { "DAMAGE", 0 }, { "DIFFICULTY", 0 }, { "DOUBLE", 0 }, { "QUALITY", 0 }, { "SIZE", 0 }, { "SPEED", 50 }, { "TREASURE", 0 } }},
+            {"Bamboo Pole", new Dictionary<string, int>(){      { "AREA", 0 }, { "DAMAGE", 0 }, { "DIFFICULTY", 0 }, { "DOUBLE", 0 }, { "QUALITY", 0 }, { "SIZE", 0 }, { "SPEED", 0 }, { "TREASURE", 0 } }},
+            {"Fiberglass Rod", new Dictionary<string, int>(){   { "AREA", 0 }, { "DAMAGE", 0 }, { "DIFFICULTY", 0 }, { "DOUBLE", 0 }, { "QUALITY", 0 }, { "SIZE", 0 }, { "SPEED", 20 }, { "TREASURE", 0 } }},
+            {"Iridium Rod", new Dictionary<string, int>(){      { "AREA", 0 }, { "DAMAGE", 0 }, { "DIFFICULTY", 0 }, { "DOUBLE", 0 }, { "QUALITY", 0 }, { "SIZE", 0 }, { "SPEED", 40 }, { "TREASURE", 0 } }},
 
             //baits
-            {"Bait", new Dictionary<string, int>(){             { "AREA", 0 }, { "DAMAGE", 0 }, { "DIFFICULTY", 0 }, { "DOUBLE", 0 }, { "LIFE", 0 }, { "QUALITY", 0 }, { "SIZE", 10 }, { "SPEED", 0 }, { "TREASURE", 0 }, { "UNBREAKING", 0 } }},
-            {"Magnet", new Dictionary<string, int>(){           { "AREA", 0 }, { "DAMAGE", 0 }, { "DIFFICULTY", 0 }, { "DOUBLE", 0 }, { "LIFE", 0 }, { "QUALITY", 0 }, { "SIZE", -10 }, { "SPEED", 0 }, { "TREASURE", 15 }, { "UNBREAKING", 0 } }},
-            {"Wild Bait", new Dictionary<string, int>(){        { "AREA", 0 }, { "DAMAGE", 0 }, { "DIFFICULTY", 0 }, { "DOUBLE", 120 }, { "LIFE", 0 }, { "QUALITY", 0 }, { "SIZE", 20 }, { "SPEED", 0 }, { "TREASURE", 0 }, { "UNBREAKING", 0 } }},
-            {"Magic Bait", new Dictionary<string, int>(){       { "AREA", 0 }, { "DAMAGE", 0 }, { "DIFFICULTY", 30 }, { "DOUBLE", 0 }, { "LIFE", 0 }, { "QUALITY", 0 }, { "SIZE", 0 }, { "SPEED", 0 }, { "TREASURE", 0 }, { "UNBREAKING", 0 } }},
+            {"Bait", new Dictionary<string, int>(){             { "AREA", 0 }, { "DAMAGE", 0 }, { "DIFFICULTY", 0 }, { "DOUBLE", 0 }, { "QUALITY", 0 }, { "SIZE", 10 }, { "SPEED", 0 }, { "TREASURE", 0 }, { "UNBREAKING", 0 } }},
+            {"Magnet", new Dictionary<string, int>(){           { "AREA", 0 }, { "DAMAGE", 0 }, { "DIFFICULTY", 0 }, { "DOUBLE", 0 }, { "QUALITY", 0 }, { "SIZE", -10 }, { "SPEED", 0 }, { "TREASURE", 15 }, { "UNBREAKING", 0 } }},
+            {"Wild Bait", new Dictionary<string, int>(){        { "AREA", 0 }, { "DAMAGE", 0 }, { "DIFFICULTY", 0 }, { "DOUBLE", 120 }, { "QUALITY", 0 }, { "SIZE", 20 }, { "SPEED", 0 }, { "TREASURE", 0 }, { "UNBREAKING", 0 } }},
+            {"Magic Bait", new Dictionary<string, int>(){       { "AREA", 0 }, { "DAMAGE", 0 }, { "DIFFICULTY", 30 }, { "DOUBLE", 0 }, { "QUALITY", 0 }, { "SIZE", 0 }, { "SPEED", 0 }, { "TREASURE", 0 }, { "UNBREAKING", 0 } }},
 
             //tackle
             {"Spinner", new Dictionary<string, int>(){          { "AREA", 0 }, { "DAMAGE", 0 }, { "DIFFICULTY", 0 }, { "DOUBLE", 0 }, { "LIFE", 3 }, { "QUALITY", 0 }, { "SIZE", 10 }, { "SPEED", 0 }, { "TREASURE", 0 }, { "UNBREAKING", 0 } }},
