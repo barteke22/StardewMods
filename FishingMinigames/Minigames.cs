@@ -147,14 +147,17 @@ namespace FishingMinigames
                 who.faceDirection(oldFacingDirection);
             }
 
-            if (hereFishying || keybindHeld) SuppressAll(e.Pressed);
+            if (hereFishying || keybindHeld)
+            {
+                SuppressAll(e);
+            }
             else if (keyBinds[screen].JustPressed()) //cancel regular rod use, if it's a shared keybind
             {
                 if (!Context.IsPlayerFree) return;
                 if ((Game1.activeClickableMenu == null || Game1.activeClickableMenu is DummyMenu) && who.CurrentItem is FishingRod)
                 {
                     if (Game1.isFestival() && fishingFestivalMinigame > 0 && festivalMode[screen] == 0) return;//fishing + other festivals
-                    SuppressAll(e.Pressed);
+                    SuppressAll(e);
                 }
             }
 
@@ -178,7 +181,7 @@ namespace FishingMinigames
 
             if (startMinigameStage > 0 && startMinigameStage < 5)//already in startMinigame
             {
-                SuppressAll(e.Pressed);
+                SuppressAll(e);
                 if (startMinigameStage < 3 && (e.Pressed.Contains(SButton.Escape) || e.Pressed.Contains(SButton.ControllerB))) //cancel
                 {
                     Helper.Input.Suppress(SButton.Escape);
@@ -193,7 +196,7 @@ namespace FishingMinigames
             }
             else if (endMinigameStage == 2 || endMinigameStage == 3) //already in endMinigame
             {
-                SuppressAll(e.Pressed);
+                SuppressAll(e);
                 EndMinigame(1);
             }
             else if (keyBinds[screen].JustPressed() && freeAim[screen] && (fishingFestivalMinigame == 0 || festivalTimer > 3000)) TryFishingHere(aimTile);//start attempt
@@ -419,10 +422,7 @@ namespace FishingMinigames
                 {
                     try
                     {
-                        if (who.currentLocation.canFishHere() && who.currentLocation.isTileFishable((int)aimTile.X, (int)aimTile.Y)
-                                                              && Math.Abs(who.getTileLocation().X - (int)aimTile.X) <= maxDistance + 1
-                                                              && Math.Abs(who.getTileLocation().Y - (int)aimTile.Y) <= maxDistance)
-                        {
+                        if (who.currentLocation.isTileFishable((int)aimTile.X, (int)aimTile.Y) || who.currentLocation.getTileIndexAt((int)aimTile.X, (int)aimTile.Y, "Buildings") == 1208 || who.currentLocation.getTileIndexAt((int)aimTile.X, (int)aimTile.Y, "Buildings") == 1260) {
                             perfect = false;
                             debug = false;
                             oldFacingDirection = who.getGeneralDirectionTowards(new Vector2(aimTile.X * 64, aimTile.Y * 64));
@@ -1640,11 +1640,13 @@ namespace FishingMinigames
             if (!fromFishPond) batch.Draw(Game1.toolSpriteSheet, Game1.GlobalToLocal(Game1.viewport, who.Position + new Vector2(+22f, +17f)), Game1.getSourceRectForStandardTileSheet(Game1.toolSpriteSheet, who.CurrentTool.IndexOfMenuItemView, 16, 16), ambientColor, -3f, new Vector2(8f, 8f), 4f, SpriteEffects.None, 0.1f);
         }
 
-        protected void SuppressAll(IEnumerable<SButton> buttons)
+        protected void SuppressAll(ButtonsChangedEventArgs e)
         {
             if (Game1.activeClickableMenu == null || Game1.activeClickableMenu is DummyMenu)
             {
-                foreach (SButton button in buttons)
+                foreach (SButton button in e.Pressed)
+                    Helper.Input.Suppress(button);
+                foreach (SButton button in e.Held)
                     Helper.Input.Suppress(button);
             }
         }
@@ -1701,8 +1703,6 @@ namespace FishingMinigames
                 {
                     who.completelyStopAnimatingOrDoingAction();
 
-                    who.freezePause = 25;
-
                     Vector2 topLeft = who.getTileLocation() + new Vector2((who.FacingDirection == 3) ? -maxDistance - 1 : (who.FacingDirection == 1) ? 1 : -1,
                                                                           (who.FacingDirection == 0) ? -maxDistance : (who.FacingDirection == 2) ? 1 : -1);
 
@@ -1712,11 +1712,11 @@ namespace FishingMinigames
                     List<KeyValuePair<Vector2, bool>> tilesMid = new List<KeyValuePair<Vector2, bool>>();
                     List<KeyValuePair<Vector2, bool>> tilesAll = new List<KeyValuePair<Vector2, bool>>();
 
-                    for (float x = topLeft.X; x < bottomRight.X; x++)
+                    for (int x = (int)topLeft.X; x < bottomRight.X; x++)
                     {
-                        for (float y = topLeft.Y; y < bottomRight.Y; y++)
+                        for (int y = (int)topLeft.Y; y < bottomRight.Y; y++)
                         {
-                            KeyValuePair<Vector2, bool> tile = new KeyValuePair<Vector2, bool>(new Vector2(x, y), who.currentLocation.isTileFishable((int)x, (int)y));
+                            KeyValuePair<Vector2, bool> tile = new KeyValuePair<Vector2, bool>(new Vector2(x, y), (who.currentLocation.isTileFishable(x, y) || (who.currentLocation.getTileIndexAt(x, y, "Buildings") == 1208) || (who.currentLocation.getTileIndexAt(x, y, "Buildings") == 1260)));
 
                             if (who.FacingDirection == 3 || who.FacingDirection == 1)
                             {
@@ -1791,7 +1791,6 @@ namespace FishingMinigames
                 }
                 else if (keybindHeld)
                 {
-                    who.CanMove = true;
                     keybindHeld = false;
                     if (fishingFestivalMinigame == 0 || festivalTimer > 3000) TryFishingHere(aimTile);
                 }
@@ -1805,7 +1804,7 @@ namespace FishingMinigames
                 {
                     for (int y = who.getTileY() - 1; y < endY; y++)
                     {
-                        if (who.currentLocation.isTileFishable(x, y))
+                        if (who.currentLocation.isTileFishable(x, y) || (who.currentLocation.getTileIndexAt(x, y, "Buildings") == 1208) || (who.currentLocation.getTileIndexAt(x, y, "Buildings") == 1260))
                         {
                             batch.Draw(startMinigameTextures[2], new Vector2(x * 64 - Game1.viewport.X, y * 64 - Game1.viewport.Y), new Rectangle(0, 0, 64, 64), Color.White * 0.3f, 0f, Vector2.Zero, 1f, SpriteEffects.None, 1f);
                             tiles.Add(new Vector2(x, y));
@@ -1818,7 +1817,7 @@ namespace FishingMinigames
                 {
                     for (int y = who.getTileY() - maxDistance; y < endY; y++)
                     {
-                        if (!tiles.Contains(new Vector2(x, y)) && who.currentLocation.isTileFishable(x, y))
+                        if (!tiles.Contains(new Vector2(x, y)) && (who.currentLocation.isTileFishable(x, y) || (who.currentLocation.getTileIndexAt(x, y, "Buildings") == 1208) || (who.currentLocation.getTileIndexAt(x, y, "Buildings") == 1260)))
                         {
                             batch.Draw(startMinigameTextures[2], new Vector2(x * 64 - Game1.viewport.X, y * 64 - Game1.viewport.Y), new Rectangle(0, 0, 64, 64), Color.White * 0.3f, 0f, Vector2.Zero, 1f, SpriteEffects.None, 1f);
                             tiles.Add(new Vector2(x, y));
@@ -1831,7 +1830,7 @@ namespace FishingMinigames
                 {
                     for (int y = (int)(who.getTileY() - maxDistance / 1.8f); y < endY; y++)
                     {
-                        if (!tiles.Contains(new Vector2(x, y)) && who.currentLocation.isTileFishable(x, y))
+                        if (!tiles.Contains(new Vector2(x, y)) && (who.currentLocation.isTileFishable(x, y) || (who.currentLocation.getTileIndexAt(x, y, "Buildings") == 1208) || (who.currentLocation.getTileIndexAt(x, y, "Buildings") == 1260)))
                         {
                             batch.Draw(startMinigameTextures[2], new Vector2(x * 64 - Game1.viewport.X, y * 64 - Game1.viewport.Y), new Rectangle(0, 0, 64, 64), Color.White * 0.3f, 0f, Vector2.Zero, 1f, SpriteEffects.None, 1f);
                             tiles.Add(new Vector2(x, y));
