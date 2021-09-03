@@ -2,9 +2,7 @@
     "GenericMC.MainLabel": "Fishing Minigame Options",
     "GenericMC.MainDesc": "Options for the alternative Fishing Minigames. Here you can pick your minigame style, or completely disable a minigame part.",
     "GenericMC.MainDesc2": "The fish size and quality is determined by the combined score of Start and End minigames, depending on which ones are enabled.",
-    "GenericMC.MainDescPC": "Saving and hitting F5, sleeping, or reloading the save will update saved config changes without restarting the game.",
-    "GenericMC.MainDescOther": "Sleeping, or reloading the save, will update saved config changes without restarting the game.",
-    "GenericMC.MainDesc3": "If you changed your voice settings, it will also play a preview of your current voice. You can hover over the variable names for more info.",
+    "GenericMC.MainDesc3": "If you changed your voice settings, saving will play a preview of your current voice. You can hover over the variable names for more info.",
 
     "GenericMC.Volume": "Voice Volume",
     "GenericMC.VolumeDesc": "Allows fine-tuning of the \"Here Fishy!\" max volume. The actual volume increases a bit with fishing level, starting at 80% of this value. Press F5 after Saving to preview the volume at fishing level 10 (98% of max volume, 11-15 make up the last 2%).",

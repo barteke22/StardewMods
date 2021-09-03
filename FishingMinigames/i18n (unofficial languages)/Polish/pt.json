@@ -2,9 +2,7 @@
     "GenericMC.MainLabel": "Opcje Minigier Wędkarskich",
     "GenericMC.MainDesc": "Opcje dla alternatywnych minigier wędkarskich. Tutaj możesz wybrać swój styl minigry lub całkowicie wyłączyć część danej minigry.",
     "GenericMC.MainDesc2": "Wielkość i jakość ryby jest określana przez łączny wynik minigier Startu i Końca, w zależności od tego, które z nich są włączone.",
-    "GenericMC.MainDescPC": "Zapisanie i naciśnięcie F5, spanie lub ponowne wczytanie zapisu gry zaktualizuje zapisane zmiany konfiguracji bez ponownego uruchamiania gry.",
-    "GenericMC.MainDescOther": "Uśpienie lub ponowne wczytanie zapisu gry zaktualizuje zapisane zmiany konfiguracji bez ponownego uruchamiania gry.",
-    "GenericMC.MainDesc3": "Jeśli zmieniłeś ustawienia głosu, odtworzy się również podgląd twojego obecnego głosu. Możesz najechać kursorem na nazwę pozycji, aby uzyskać więcej informacji o nich.",
+    "GenericMC.MainDesc3": "Jeśli zmieniłeś ustawienia głosu, zapisanie odtworzy podgląd twojego obecnego głosu. Możesz najechać kursorem na nazwę pozycji, aby uzyskać więcej informacji o niej.",
 
     "GenericMC.Volume": "Głośność Głosu",
     "GenericMC.VolumeDesc": "Pozwala na precyzyjne ustawienie maksymalnej głośności \"Here Fishy!\". Rzeczywista głośność zwiększa się nieco wraz z poziomem łowienia, zaczynając od 80% tej wartości. Po zapisaniu naciśnij F5, aby wyświetlić podgląd głośności na poziomie połowu 10 (98% maksymalnej głośności, poziom 11-15 to ostatnie 2%).",

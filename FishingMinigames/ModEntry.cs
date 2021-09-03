@@ -28,11 +28,12 @@ namespace FishingMinigames
         public override void Entry(IModHelper helper)
         {
             translate = Helper.Translation;
-            UpdateConfig();
+            UpdateConfig(false);
             Minigames.startMinigameTextures = new Texture2D[] {
                 Game1.content.Load<Texture2D>("LooseSprites\\boardGameBorder"),
                 Game1.content.Load<Texture2D>("LooseSprites\\CraneGame"),
                 Game1.content.Load<Texture2D>("LooseSprites\\buildingPlacementTiles") };
+            
 
             helper.Events.Display.Rendered += Display_Rendered;
             helper.Events.Display.RenderedWorld += Display_RenderedWorld;
@@ -48,7 +49,11 @@ namespace FishingMinigames
                 "- size: fishSize (int, vanilla = 1-73)\n- boss: true = bossFish, can be blank\nHighest vanilla combo = 110 51 true", this.StartMinigameTest);
 
             var harmony = new Harmony(ModManifest.UniqueID);//this might summon Cthulhu
-            harmony.PatchAll();
+            //harmony.PatchAll();
+            harmony.Patch(
+                original: AccessTools.Method(typeof(Tool), "getDescription"),
+                postfix: new HarmonyMethod(typeof(HarmonyPatches), "getDescription_Nets")
+            );
         }
 
 
@@ -69,8 +74,6 @@ namespace FishingMinigames
                 GenericMC.RegisterLabel(ModManifest, translate.Get("GenericMC.MainLabel"), ""); //All of these strings are stored in the traslation files.
                 GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.MainDesc"));
                 GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.MainDesc2"));
-                if (Constants.TargetPlatform != GamePlatform.Android) GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.MainDescPC"));
-                else GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.MainDescOther"));
                 GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.MainDesc3"));
 
                 try
@@ -144,6 +147,9 @@ namespace FishingMinigames
                                 (effect.Key.Equals("QUALITY", StringComparison.Ordinal) ? 4 : effect.Key.Equals("LIFE", StringComparison.Ordinal) ? 50 : 300));
                         }
                     }
+
+                    //dummy value validation trigger - must be the last thing, so all values are saved before validation
+                    GenericMC.RegisterComplexOption(ModManifest, "", "", (Vector2 pos, object state_) => null, (SpriteBatch b, Vector2 pos, object state_) => null, (object state) => UpdateConfig(true));
                 }
                 catch (Exception)
                 {
@@ -192,7 +198,7 @@ namespace FishingMinigames
                     () => config.RealisticSizes, (bool val) => config.RealisticSizes = val);
 
                 if (LocalizedContentManager.CurrentLanguageCode == 0) GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.ConvertToMetric"), translate.Get("GenericMC.ConvertToMetricDesc"),
-                    () => config.ConvertToMetric, (bool val) => config.ConvertToMetric = val);
+                    () => config.ConvertToMetric, (bool val) =>  config.ConvertToMetric = val);
 
                 GenericMC.RegisterLabel(ModManifest, translate.Get("GenericMC.FestivalLabel"), "");
                 GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.FestivalDesc"));
@@ -297,7 +303,7 @@ namespace FishingMinigames
 
         private void GameLoop_SaveLoaded(object sender, SaveLoadedEventArgs e)
         {
-            UpdateConfig();
+            UpdateConfig(false);
         }
         private void OnModMessageReceived(object sender, ModMessageReceivedEventArgs e)
         {
@@ -308,7 +314,7 @@ namespace FishingMinigames
         {
             if (e.Pressed.Contains(SButton.F5))
             {
-                UpdateConfig();
+                UpdateConfig(false);
             }
             if (Game1.player.IsLocalPlayer) minigame.Value.Input_ButtonsChanged(sender, e);
         }
@@ -517,9 +523,9 @@ namespace FishingMinigames
             minigame.Value.DebugConsoleStartMinigameTest(args);
         }
 
-        private void UpdateConfig()
+        private void UpdateConfig(bool GMCM)
         {
-            config = Helper.ReadConfig<ModConfig>();
+            if (!GMCM) config = Helper.ReadConfig<ModConfig>();
 
             //item configs
             //Minigames.itemData = new Dictionary<string, string[]>();
@@ -527,17 +533,57 @@ namespace FishingMinigames
             //{
             //    (Helper.Data.ReadJsonFile<Dictionary<string, string[]>>("itemConfigs/" + file) ?? new Dictionary<string, string[]>()).ToList().ForEach(x => Minigames.itemData[x.Key] = x.Value);
             //}
+
+            //bool reset;
+            //reset = Minigames.itemData == null || Minigames.itemData.Count != config.SeeInfoForBelowData.Count;
+            //if (!reset)
+            //{
+            //    foreach (var item in Minigames.itemData)
+            //    {
+            //        if (!config.SeeInfoForBelowData.ContainsKey(item.Key))
+            //        {
+            //            reset = true;
+            //            break;
+            //        }
+            //        else if (Minigames.itemData[item.Key].Count == config.SeeInfoForBelowData[item.Key].Count)
+            //        {
+            //            foreach (var effect in Minigames.itemData[item.Key])
+            //            {
+            //                if (!config.SeeInfoForBelowData[item.Key].Contains(effect))
+            //                {
+            //                    reset = true;
+            //                    break;
+            //                }
+            //            }
+            //        }
+            //        else
+            //        {
+            //            reset = true;
+            //            break;
+            //        }
+            //    }
+            //}
+            //if (reset)
+            //{
+            //    Minigames.itemData = config.SeeInfoForBelowData;
+            //    Helper.Content.InvalidateCache("Data/ObjectInformation");
+            //}
+
             Minigames.itemData = config.SeeInfoForBelowData;
 
 
-            try
+            if (Minigames.fishySound == null) 
             {
-                Minigames.fishySound = SoundEffect.FromStream(new FileStream(Path.Combine(Helper.DirectoryPath, "assets", "fishy.wav"), FileMode.Open));
+                try
+                {
+                    Minigames.fishySound = SoundEffect.FromStream(new FileStream(Path.Combine(Helper.DirectoryPath, "assets", "fishy.wav"), FileMode.Open));
+                }
+                catch (Exception ex)
+                {
+                    Monitor.Log($"error loading fishy.wav: {ex}", LogLevel.Error);
+                }
             }
-            catch (Exception ex)
-            {
-                Monitor.Log($"error loading fishy.wav: {ex}", LogLevel.Error);
-            }
+
 
             for (int i = 0; i < 4; i++)
             {
@@ -555,7 +601,7 @@ namespace FishingMinigames
                 }
                 catch (Exception e)
                 {
-                    string def = "MouseLeft, Space, ControllerX";
+                    string def = "MouseLeft, C, ControllerX";
                     Minigames.keyBinds[i] = KeybindList.Parse(def);
                     config.KeyBinds[i] = def;
                     Helper.WriteConfig(config);
@@ -563,27 +609,26 @@ namespace FishingMinigames
                 }
 
                 Minigames.voicePitch[i] = config.VoicePitch[i] / 100f;
-
-                if (Context.IsWorldReady)
-                {
-                    Minigames.freeAim[i] = config.FreeAim[i];
-                    Minigames.startMinigameStyle[i] = config.StartMinigameStyle[i];
-                    Minigames.endMinigameStyle[i] = config.EndMinigameStyle[i];
-                    Minigames.endCanLoseTreasure[i] = config.EndLoseTreasureIfFailed[i];
-                    Minigames.minigameDamage[i] = config.EndMinigameDamage[i];
-                    Minigames.minigameDifficulty[i] = config.MinigameDifficulty[i];
-                    Minigames.festivalMode[i] = config.FestivalMode[i];
-                }
             }
             if (Context.IsWorldReady)
             {
                 Minigames.voiceVolume = config.VoiceVolume / 100f;
+                Minigames.freeAim = config.FreeAim;
+                Minigames.startMinigameStyle = config.StartMinigameStyle;
+                Minigames.endMinigameStyle = config.EndMinigameStyle;
+                Minigames.endCanLoseTreasure = config.EndLoseTreasureIfFailed;
+                Minigames.minigameDamage = config.EndMinigameDamage;
+                Minigames.minigameDifficulty = config.MinigameDifficulty;
+                Minigames.festivalMode = config.FestivalMode;
                 Minigames.startMinigameScale = config.StartMinigameScale;
                 Minigames.realisticSizes = config.RealisticSizes;
                 Minigames.minigameColor = config.MinigameColor;
-                if (LocalizedContentManager.CurrentLanguageCode == 0) Minigames.metricSizes = config.ConvertToMetric;
-                else Minigames.metricSizes = false;
-                Helper.Content.InvalidateCache("Strings/StringsFromCSFiles");
+                if (LocalizedContentManager.CurrentLanguageCode == 0 && Minigames.metricSizes != config.ConvertToMetric)
+                {
+                    Minigames.metricSizes = config.ConvertToMetric;
+                    Helper.Content.InvalidateCache("Strings/StringsFromCSFiles");
+                }
+                Helper.Content.InvalidateCache("Data/ObjectInformation");
             }
         }
     }

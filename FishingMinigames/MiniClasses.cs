@@ -70,10 +70,10 @@ namespace FishingMinigames
     }
 
 
-    [HarmonyPatch(typeof(Tool), "getDescription")]
-    class Patch
+    //[HarmonyPatch(typeof(Tool), "getDescription")]
+    class HarmonyPatches
     {
-        static void Postfix(ref string __result, ref Tool __instance)
+        public static void getDescription_Nets(ref string __result, ref Tool __instance)
         {
             if (__instance is StardewValley.Tools.FishingRod && __instance.UpgradeLevel != 1)//bamboo+ (except training)
             {

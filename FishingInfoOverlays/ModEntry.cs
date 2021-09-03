@@ -46,12 +46,6 @@ namespace StardewMods
                 GenericMC.RegisterLabel(ModManifest, translate.Get("GenericMC.barLabel"), ""); //All of these strings are stored in the traslation files.
                 GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.barDescription"));
                 GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.barDescription2"));
-                if (Constants.TargetPlatform != GamePlatform.Android)
-                {
-                    GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.barDescriptionPC"));
-                    GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.barDescriptionPC2"));
-                }
-                else GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.barDescriptionOther"));
 
                 try
                 {
@@ -71,12 +65,15 @@ namespace StardewMods
                     GenericMC.RegisterClampedOption(ModManifest, "R", "", () => config.BarBackgroundColorRGBA[0], (int val) => config.BarBackgroundColorRGBA[0] = val, 0, 255);
                     GenericMC.RegisterClampedOption(ModManifest, "G", "", () => config.BarBackgroundColorRGBA[1], (int val) => config.BarBackgroundColorRGBA[1] = val, 0, 255);
                     GenericMC.RegisterClampedOption(ModManifest, "B", "", () => config.BarBackgroundColorRGBA[2], (int val) => config.BarBackgroundColorRGBA[2] = val, 0, 255);
-                    GenericMC.RegisterClampedOption(ModManifest, "A", "", () =>    config.BarBackgroundColorRGBA[3], (int val) => config.BarBackgroundColorRGBA[3] = val, 0, 255);
+                    GenericMC.RegisterClampedOption(ModManifest, "A", "", () => config.BarBackgroundColorRGBA[3], (int val) => config.BarBackgroundColorRGBA[3] = val, 0, 255);
                     GenericMC.RegisterLabel(ModManifest, translate.Get("GenericMC.barTextColor"), "");
                     GenericMC.RegisterClampedOption(ModManifest, "R", "", () => config.BarTextColorRGBA[0], (int val) => config.BarTextColorRGBA[0] = val, 0, 255);
                     GenericMC.RegisterClampedOption(ModManifest, "G", "", () => config.BarTextColorRGBA[1], (int val) => config.BarTextColorRGBA[1] = val, 0, 255);
                     GenericMC.RegisterClampedOption(ModManifest, "B", "", () => config.BarTextColorRGBA[2], (int val) => config.BarTextColorRGBA[2] = val, 0, 255);
                     GenericMC.RegisterClampedOption(ModManifest, "A", "", () => config.BarTextColorRGBA[3], (int val) => config.BarTextColorRGBA[3] = val, 0, 255);
+
+                    //dummy value validation trigger - must be the last thing, so all values are saved before validation
+                    GenericMC.RegisterComplexOption(ModManifest, "", "", (Vector2 pos, object state_) => null, (SpriteBatch b, Vector2 pos, object state_) => null, (object state) => UpdateConfig(true));
                 }
                 catch (Exception)
                 {
@@ -153,13 +150,13 @@ namespace StardewMods
             if (!Context.IsWorldReady || !(e.Button == SButton.F5)) return; // ignore if player hasn't loaded a save yet
             config = Helper.ReadConfig<ModConfig>();
             translate = Helper.Translation;
-            UpdateConfig();
+            UpdateConfig(false);
         }
 
 
         private void OnDayStarted(object sender, DayStartedEventArgs e)
         {
-            UpdateConfig();
+            UpdateConfig(false);
         }
 
         private void RenderedHud(object sender, RenderedHudEventArgs e)
@@ -184,33 +181,39 @@ namespace StardewMods
         }
 
 
-        private void UpdateConfig()
+        private void UpdateConfig(bool GMCM)
         {
             for (int i = 0; i < 4; i++)
             {
-                Overlay.backgroundMode[i] = config.BarBackgroundMode[i];                                                    //config: 0=Circles (dynamic), 1=Rectangle (single), 2=Off
-                Overlay.barCrabEnabled[i] = config.BarCrabPotEnabled[i];                                                    //config: If bait/tackle/bait preview is enabled when holding a fishing rod
                 Overlay.barPosition[i] = new Vector2(config.BarTopLeftLocationX[i] + 2, config.BarTopLeftLocationY[i] + 2); //config: Position of bar
-                Overlay.barScale[i] = config.BarScale[i];                                                                   //config: Custom scale for the location bar.
-                Overlay.iconMode[i] = config.BarIconMode[i];                                                                //config: 0=Horizontal Icons, 1=Vertical Icons, 2=Vertical Icons + Text, 3=Off
-                Overlay.maxIcons[i] = config.BarMaxIcons[i];                                                                //config: ^Max amount of tackle + trash + fish icons
-                Overlay.maxIconsPerRow[i] = config.BarMaxIconsPerRow[i];                                                    //config: ^How many per row/column.
-                Overlay.onlyFish[i] = config.OnlyFish[i];                                                                   //config: Whether to hide things like furniture.
-                Overlay.miniMode[i] = config.MinigamePreviewMode[i];                                                        //config: Fish preview in minigame: 0=Full, 1=Simple, 2=BarOnly, 3=Off
-                Overlay.scanRadius[i] = config.BarScanRadius[i];                                                            //config: 0: Only checks if can fish, 1-50: also checks if there's water within X tiles around player.
-                Overlay.showPercentages[i] = config.BarShowPercentages[i];                                                  //config: Whether it should show catch percentages.
-                Overlay.showTackles[i] = config.BarShowBaitAndTackleInfo[i];                                                //config: Whether it should show Bait and Tackle info.
-                Overlay.sortMode[i] = config.BarSortMode[i];                                                                //config: 0= By Name (text mode only), 1= By Percentage, 2=Off
-                Overlay.uncaughtDark[i] = config.UncaughtFishAreDark[i];                                                    //config: Whether uncaught fish are displayed as ??? and use dark icons
             }
+
+            Overlay.backgroundMode = config.BarBackgroundMode;                                                              //config: 0=Circles (dynamic), 1=Rectangle (single), 2=Off
+            Overlay.barCrabEnabled = config.BarCrabPotEnabled;                                                              //config: If bait/tackle/bait preview is enabled when holding a fishing rod
+            Overlay.barScale = config.BarScale;                                                                             //config: Custom scale for the location bar.
+            Overlay.iconMode = config.BarIconMode;                                                                          //config: 0=Horizontal Icons, 1=Vertical Icons, 2=Vertical Icons + Text, 3=Off
+            Overlay.maxIcons = config.BarMaxIcons;                                                                          //config: ^Max amount of tackle + trash + fish icons
+            Overlay.maxIconsPerRow = config.BarMaxIconsPerRow;                                                              //config: ^How many per row/column.
+            Overlay.onlyFish = config.OnlyFish;                                                                             //config: Whether to hide things like furniture.
+            Overlay.miniMode = config.MinigamePreviewMode;                                                                  //config: Fish preview in minigame: 0=Full, 1=Simple, 2=BarOnly, 3=Off
+            Overlay.scanRadius = config.BarScanRadius;                                                                      //config: 0: Only checks if can fish, 1-50: also checks if there's water within X tiles around player.
+            Overlay.showPercentages = config.BarShowPercentages;                                                            //config: Whether it should show catch percentages.
+            Overlay.showTackles = config.BarShowBaitAndTackleInfo;                                                          //config: Whether it should show Bait and Tackle info.
+            Overlay.sortMode = config.BarSortMode;                                                                          //config: 0= By Name (text mode only), 1= By Percentage, 2=Off
+            Overlay.uncaughtDark = config.UncaughtFishAreDark;                                                              //config: Whether uncaught fish are displayed as ??? and use dark icons
+
             Overlay.extraCheckFrequency = config.BarExtraCheckFrequency;                                                    //config: 20-220: Bad performance dynamic check to see if there's modded/hardcoded fish
 
-            Overlay.locationData = Game1.content.Load<Dictionary<string, string>>("Data\\Locations");       //gets location data (which fish are here)
-            Overlay.fishData = Game1.content.Load<Dictionary<int, string>>("Data\\Fish");                   //gets fish data
-            Overlay.background[0] = WhiteCircle(17, 30);
-            Overlay.background[1] = WhitePixel();
             Overlay.colorBg = new Color(config.BarBackgroundColorRGBA[0], config.BarBackgroundColorRGBA[1], config.BarBackgroundColorRGBA[2], config.BarBackgroundColorRGBA[3]);
             Overlay.colorText = new Color(config.BarTextColorRGBA[0], config.BarTextColorRGBA[1], config.BarTextColorRGBA[2], config.BarTextColorRGBA[3]);
+
+            if (!GMCM)
+            {
+                Overlay.locationData = Game1.content.Load<Dictionary<string, string>>("Data\\Locations");       //gets location data (which fish are here)
+                Overlay.fishData = Game1.content.Load<Dictionary<int, string>>("Data\\Fish");                   //gets fish data
+                Overlay.background[0] = WhiteCircle(17, 30);
+                Overlay.background[1] = WhitePixel();
+            }
 
             overlay.ResetAllScreens();
         }
