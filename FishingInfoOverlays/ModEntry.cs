@@ -26,7 +26,7 @@ namespace StardewMods
 
             helper.Events.Input.ButtonPressed += this.OnButtonPressed;
             helper.Events.GameLoop.DayStarted += this.OnDayStarted;
-            helper.Events.Display.RenderedHud += this.RenderedHud;
+            helper.Events.Display.Rendered += this.Rendered;
             helper.Events.Display.MenuChanged += this.OnMenuChanged;
             helper.Events.Display.RenderedActiveMenu += this.OnRenderMenu;
             helper.Events.GameLoop.GameLaunched += this.GenericModConfigMenuIntegration;
@@ -159,10 +159,10 @@ namespace StardewMods
             UpdateConfig(false);
         }
 
-        private void RenderedHud(object sender, RenderedHudEventArgs e)
+        private void Rendered(object sender, RenderedEventArgs e)
         {
             if (overlay.Value == null) overlay.Value = new Overlay(this);
-            if (Context.IsWorldReady) overlay.Value.RenderedHud(sender, e);
+            if (Context.IsWorldReady) overlay.Value.Rendered(sender, e);
         }
 
         private void OnMenuChanged(object sender, MenuChangedEventArgs e)   //Minigame data
@@ -172,7 +172,7 @@ namespace StardewMods
         }
         private void OnRenderMenu(object sender, RenderedActiveMenuEventArgs e)
         {
-            if (Context.IsWorldReady) overlay.Value.OnRenderMenu(sender, e);
+            if (Context.IsWorldReady) overlay.Value?.OnRenderMenu(sender, e);
         }
 
         private void OnModMessageReceived(object sender, ModMessageReceivedEventArgs e)

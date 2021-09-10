@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuiccLoad", "QuiccLoad\Quic
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FishingInfoOverlays", "FishingInfoOverlays\FishingInfoOverlays.csproj", "{0D08DDA8-E58F-417D-8EA5-57A9D65FBAA2}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CustomSpouseLocation", "CustomSpouseLocation\CustomSpouseLocation.csproj", "{2820A9CB-A3F1-4E41-A312-DD6C672B7BD1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ModsTesting", "ModsTesting", "{D6912682-2522-44E7-9C58-823BF3B9B03B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +31,10 @@ Global
 		{0D08DDA8-E58F-417D-8EA5-57A9D65FBAA2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0D08DDA8-E58F-417D-8EA5-57A9D65FBAA2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0D08DDA8-E58F-417D-8EA5-57A9D65FBAA2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2820A9CB-A3F1-4E41-A312-DD6C672B7BD1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2820A9CB-A3F1-4E41-A312-DD6C672B7BD1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2820A9CB-A3F1-4E41-A312-DD6C672B7BD1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2820A9CB-A3F1-4E41-A312-DD6C672B7BD1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

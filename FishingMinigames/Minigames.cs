@@ -425,6 +425,8 @@ namespace FishingMinigames
                         if (who.currentLocation.isTileFishable((int)aimTile.X, (int)aimTile.Y) || who.currentLocation.getTileIndexAt((int)aimTile.X, (int)aimTile.Y, "Buildings") == 1208 || who.currentLocation.getTileIndexAt((int)aimTile.X, (int)aimTile.Y, "Buildings") == 1260) {
                             perfect = false;
                             debug = false;
+                            Game1.displayHUD = false;
+
                             oldFacingDirection = who.getGeneralDirectionTowards(new Vector2(aimTile.X * 64, aimTile.Y * 64));
                             who.faceDirection(oldFacingDirection);
 
@@ -472,6 +474,8 @@ namespace FishingMinigames
             {
                 //starting minigame init
                 startMinigameData = new int[6];
+
+                if (startMinigameStyle[screen] > 1) Helper.Multiplayer.SendMessage(true, "hideText", modIDs: new[] { "barteke22.FishingInfoOverlays" }, new[] { who.UniqueMultiplayerID });//hide overlay text (for text based)
 
                 startMinigameText = new List<string>();
                 foreach (string s in translate.Get("Minigame.InfoDDR" + ((fishingFestivalMinigame == 0) ? "" : "_Festival")).ToString().Split(new string[] { "\n" }, StringSplitOptions.None)) startMinigameText.Add(s);
@@ -934,6 +938,7 @@ namespace FishingMinigames
             }
             else if (fishingFestivalMinigame != 0 && festivalTimer <= 2000)
             {
+                Helper.Multiplayer.SendMessage(false, "hideText", modIDs: new[] { "barteke22.FishingInfoOverlays" }, new[] { who.UniqueMultiplayerID });//clear overlay
                 startMinigameData[5] -= 4;
                 startMinigameStage = 4;
                 if ((Game1.currentMinigame as StardewValley.Minigames.FishingGame).perfections == 0)
@@ -1422,6 +1427,7 @@ namespace FishingMinigames
 
 
                         who.Halt();
+                        Game1.displayHUD = true;
 
                         stage = "Caught2";
                         if (fishingFestivalMinigame != 0)
@@ -1664,7 +1670,9 @@ namespace FishingMinigames
             SendMessage(who, "Clear");
             hereFishying = false;
             stage = null;
+            Game1.displayHUD = true;
             Helper.Multiplayer.SendMessage(-1, "whichFish", modIDs: new[] { "barteke22.FishingInfoOverlays" }, new[] { who.UniqueMultiplayerID });//clear overlay
+            Helper.Multiplayer.SendMessage(false, "hideText", modIDs: new[] { "barteke22.FishingInfoOverlays" }, new[] { who.UniqueMultiplayerID });//clear overlay
         }
         private void ClearAnimations(Farmer who)
         {

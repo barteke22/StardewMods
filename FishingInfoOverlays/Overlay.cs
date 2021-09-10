@@ -22,7 +22,7 @@ namespace StardewMods
         private IModHelper Helper;
         private IManifest ModManifest;
 
-        //private bool dayStarted;    //world fish preview data 
+        private bool hideText = false;    //world fish preview data 
         private Farmer who;
         private int screen;
         private int totalPlayersOnThisPC;
@@ -98,7 +98,7 @@ namespace StardewMods
          *  Minigame: Preview, if not caught dark. Full, simple, just on preview, off. DONE
          */
 
-        public void RenderedHud(object sender, RenderedHudEventArgs e)
+        public void Rendered(object sender, RenderedEventArgs e)
         {
             screen = Context.ScreenId;
             who = Game1.player;
@@ -351,7 +351,7 @@ namespace StardewMods
                             }
                             else                    //Vertical Preview
                             {
-                                if (iconMode[screen] == 2)  // + text
+                                if (iconMode[screen] == 2 && !hideText)  // + text
                                 {
                                     DrawStringWithBorder(batch, font, fishNameLocalized, boxBottomLeft + new Vector2(source.Width * iconScale, 0), (caught) ? colorText : colorText * 0.8f, 0f, new Vector2(0, -3), 1f * barScale[screen], SpriteEffects.None, 0.98f, colorBg); //text
                                     boxWidth = Math.Max(boxWidth, boxBottomLeft.X + (font.MeasureString(fishNameLocalized).X * barScale[screen]) + (source.Width * iconScale));
@@ -388,7 +388,7 @@ namespace StardewMods
         }
         public void OnRenderMenu(object sender, RenderedActiveMenuEventArgs e)
         {
-            if ((Game1.activeClickableMenu is BobberBar bar) && isMinigame)
+            if (Game1.activeClickableMenu is BobberBar bar  && isMinigame)
             {
                 miniFish = Helper.Reflection.GetField<int>(bar, "whichFish").GetValue();
                 if (miniMode[screen] < 2)
@@ -420,6 +420,7 @@ namespace StardewMods
             {
                 //if (e.Type == "fishCaught" && Game1.player.UniqueMultiplayerID == e.ReadAs<long>()) oldTime = -1;
                 if (e.Type == "whichFish") miniFish = e.ReadAs<int>();
+                if (e.Type == "hideText") hideText = e.ReadAs<bool>();
             }
         }
 
