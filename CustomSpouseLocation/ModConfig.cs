@@ -28,9 +28,9 @@ namespace StardewMods
             { "Default", new List<KeyValuePair<string, Vector2>>() { new KeyValuePair<string, Vector2>("Down", Vector2.Zero) } }
         };
         //spouse patio
-        public Dictionary<string, List<Vector2>> Patio_TileOffsets { get; set; } = new Dictionary<string, List<Vector2>>()
+        public Dictionary<string, List<KeyValuePair<string, Vector2>>> Patio_TileOffsets { get; set; } = new Dictionary<string, List<KeyValuePair<string, Vector2>>>()
         {
-            { "Default", new List<Vector2>(){ Vector2.Zero } }
+            { "Default", new List<KeyValuePair<string, Vector2>>() { new KeyValuePair<string, Vector2>("Down", Vector2.Zero) } }
         };
         //spouse porch
         public Dictionary<string, List<KeyValuePair<string, Vector2>>> Porch_TileOffsets { get; set; } = new Dictionary<string, List<KeyValuePair<string, Vector2>>>()
