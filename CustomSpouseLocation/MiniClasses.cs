@@ -29,6 +29,7 @@ namespace CustomSpouseLocation
         public int contentBottom;
         public Regex spaceRemover = new Regex(@"\s+");
         public Regex digitRemover = new Regex(@"\d*");
+        public Regex animChecker = new Regex(@"^\d+\:\d+(\.\d+)?$");
 
         public DictionaryEditor(Dictionary<string, List<KeyValuePair<string, Vector2>>> dictionary, Vector2 pos)
         {

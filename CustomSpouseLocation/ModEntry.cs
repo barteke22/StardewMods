@@ -57,41 +57,38 @@ namespace StardewMods
                     GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.SpritePreviewMode"), translate.Get("GenericMC.SpritePreviewModeDesc"),
                         () => config.SpritePreviewMode, (bool val) => config.SpritePreviewMode = val);
 
-                    GenericMC.RegisterPageLabel(ModManifest, translate.Get("GenericMC.SpouseRoom"), "", translate.Get("GenericMC.SpouseRoom"));
-                    GenericMC.RegisterPageLabel(ModManifest, translate.Get("GenericMC.Kitchen"), "", translate.Get("GenericMC.Kitchen"));
-                    GenericMC.RegisterPageLabel(ModManifest, translate.Get("GenericMC.Patio"), "", translate.Get("GenericMC.Patio"));
-                    GenericMC.RegisterPageLabel(ModManifest, translate.Get("GenericMC.Porch"), "", translate.Get("GenericMC.Porch"));
-
-                    //spouse room
-                    GenericMC.StartNewPage(ModManifest, translate.Get("GenericMC.SpouseRoom"));
-
                     GenericMC.RegisterClampedOption(ModManifest, translate.Get("GenericMC.RandomTileChance"), translate.Get("GenericMC.RandomTileChanceDesc"),
                         () => config.SpouseRoom_RandomTileChance, (float val) => config.SpouseRoom_RandomTileChance = (int)val, 0f, 100f);
                     GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.FurnitureChairs"), translate.Get("GenericMC.FurnitureChairsDesc"),
                         () => config.SpouseRoom_RandomCanUse_FurnitureChairs_UpOnly, (bool val) => config.SpouseRoom_RandomCanUse_FurnitureChairs_UpOnly = val);
                     GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.MapChairs"), translate.Get("GenericMC.MapChairsDesc"),
                         () => config.SpouseRoom_RandomCanUse_MapChairs_DownOnly, (bool val) => config.SpouseRoom_RandomCanUse_MapChairs_DownOnly = val);
+
+                    GenericMC.RegisterPageLabel(ModManifest, translate.Get("GenericMC.SpouseRoomTile"), "", translate.Get("GenericMC.SpouseRoomTile"));
+                    GenericMC.RegisterPageLabel(ModManifest, translate.Get("GenericMC.SpouseRoomManual"), "", translate.Get("GenericMC.SpouseRoomManual"));
+                    GenericMC.RegisterPageLabel(ModManifest, translate.Get("GenericMC.Kitchen"), "", translate.Get("GenericMC.Kitchen"));
+                    GenericMC.RegisterPageLabel(ModManifest, translate.Get("GenericMC.Patio"), "", translate.Get("GenericMC.Patio"));
+                    GenericMC.RegisterPageLabel(ModManifest, translate.Get("GenericMC.Porch"), "", translate.Get("GenericMC.Porch"));
+
                     //spouse room auto tile config
+                    GenericMC.StartNewPage(ModManifest, translate.Get("GenericMC.SpouseRoomTile"));
+                    GenericMCDictionaryEditor(GenericMC, ModManifest, translate.Get("GenericMC.SpouseRoomTile"), "", 0);
 
                     //spouse room manual config
+                    GenericMC.StartNewPage(ModManifest, translate.Get("GenericMC.SpouseRoomManual"));
+                    GenericMCDictionaryEditor(GenericMC, ModManifest, translate.Get("GenericMC.SpouseRoomManual"), "", 1);
 
                     //kitchen config
                     GenericMC.StartNewPage(ModManifest, translate.Get("GenericMC.Kitchen"));
                     GenericMCDictionaryEditor(GenericMC, ModManifest, translate.Get("GenericMC.Kitchen"), "", 2);
 
-
                     //patio config
                     GenericMC.StartNewPage(ModManifest, translate.Get("GenericMC.Patio"));
+                    GenericMCDictionaryEditor(GenericMC, ModManifest, translate.Get("GenericMC.Patio"), "", 3);
 
                     //porch config
                     GenericMC.StartNewPage(ModManifest, translate.Get("GenericMC.Porch"));
-
-
-
-
-
-                    //dummy value validation trigger - must be the last thing, so all values are saved before validation
-                    GenericMC.RegisterComplexOption(ModManifest, "", "", (Vector2 pos, object state_) => null, (SpriteBatch b, Vector2 pos, object state_) => null, (object state) => UpdateConfig(true));
+                    GenericMCDictionaryEditor(GenericMC, ModManifest, translate.Get("GenericMC.Porch"), "", 4);
                 }
                 catch (Exception)
                 {
@@ -294,10 +291,11 @@ namespace StardewMods
                         Rectangle nameR = new Rectangle((int)(state.scrollBar + left).X, (int)(state.scrollBar + left).Y, state.boundsTopBottom.Width, (int)lineH);
 
                         NPC current = null;
-                        if (state.datableNPCs.TryGetValue(npc.Key, out current) || (npc.Key.Equals("Default", StringComparison.Ordinal)))
+                        if (!state.datableNPCs.TryGetValue(npc.Key, out current))
                         {
-                            if (current == null && Game1.player.getSpouse()?.isVillager() != null) current = Game1.player.getSpouse();
-                            else if (current == null && state.otherNPCs.TryGetValue("Pam", out current)) ;
+                            if (npc.Key.Equals("sebastianFrog", StringComparison.Ordinal) && state.datableNPCs.TryGetValue("Sebastian", out current)) ;
+                            else if (Game1.player.getSpouse()?.isVillager() != null) current = Game1.player.getSpouse();
+                            else state.otherNPCs.TryGetValue("Pam", out current);
                         }
 
                         if (!state.boundsTopBottom.Contains(state.boundsTopBottom.Width, (int)(state.scrollBar.Y + left.Y))) left.Y += lineH; //out of bounds?
@@ -323,7 +321,8 @@ namespace StardewMods
                                 Color color = Color.Red;
 
                                 int spriteIndex = IsValidSprite(state, text.Value);
-                                if (spriteIndex != -1) { 
+                                if (spriteIndex != -1)
+                                {
 
                                     if (current != null)
                                     {
@@ -440,7 +439,7 @@ namespace StardewMods
             if (data.Length > 0)
             {
                 if (int.TryParse(data[0], out int sprite)) return sprite;
-                else if (data[0].StartsWith("A:", StringComparison.OrdinalIgnoreCase))
+                else if (data[0].Contains(':'))
                 {
                     List<FarmerSprite.AnimationFrame> anims = GetAnimations(data[0]);
                     if (anims.Count > 0) return anims[DateTime.UtcNow.Second % anims.Count].frame;
@@ -465,13 +464,16 @@ namespace StardewMods
         private List<FarmerSprite.AnimationFrame> GetAnimations(string animData)
         {
             List<FarmerSprite.AnimationFrame> anims = new List<FarmerSprite.AnimationFrame>();
-            string[] data = animData.Split(':');
+            string[] data = animData.Split(',');
             foreach (var frame in data)
             {
-                string[] d2 = frame.Split(',');
-                if (d2.Length > 1 && int.TryParse(d2[0], out int f) && float.TryParse(d2[1], out float s))
+                if (state.animChecker.IsMatch(frame))
                 {
-                    anims.Add(new FarmerSprite.AnimationFrame(f, (int)(s * 1000f)));
+                    string[] d2 = frame.Split(':');
+                    if (int.TryParse(d2[0], out int f) && float.TryParse(d2[1], out float s))
+                    {
+                        anims.Add(new FarmerSprite.AnimationFrame(f, (int)(s * 1000f)));
+                    }
                 }
             }
             return anims;
