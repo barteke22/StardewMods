@@ -6,7 +6,7 @@ namespace StardewMods
 {
     internal class ModConfig//Defaults with 0fs are ignored
     {
-        public string SpritePreviewName { get; set; } = null;
+        public string SpritePreviewName { get; set; } = "";
         //spouse room
         public int SpouseRoom_RandomTileChance { get; set; } = 100;
         public bool SpouseRoom_RandomCanUse_MapChairs_DownOnly { get; set; } = true;

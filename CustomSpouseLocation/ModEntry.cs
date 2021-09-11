@@ -477,11 +477,11 @@ namespace StardewMods
                     List<FarmerSprite.AnimationFrame> anims = TryGetAnimations(data[0]);
                     if (anims.Count > 0) //return anims[DateTime.UtcNow.Second % anims.Count].frame;
                     {
-                        int currentMs = (int)Game1.currentGameTime.TotalGameTime.TotalMilliseconds % anims.Sum(val => val.milliseconds);
+                        int currentMs = (int)Game1.currentGameTime.TotalGameTime.TotalMilliseconds % (anims.Sum(val => val.milliseconds) + (anims.Count*25));
                         int indexMs = 0;
                         foreach (var frame in anims)
                         {
-                            if (currentMs <= indexMs + frame.milliseconds)
+                            if (currentMs <= indexMs + frame.milliseconds + (anims.Count * 25))
                             {
                                 if (frame.flip) return frame.frame * -1;
                                 return frame.frame;
@@ -510,7 +510,7 @@ namespace StardewMods
         private List<FarmerSprite.AnimationFrame> TryGetAnimations(string animData)
         {
             List<FarmerSprite.AnimationFrame> anims = new List<FarmerSprite.AnimationFrame>();
-
+            animData = spaceRemover.Replace(animData, "");
             string[] data = animData.Split(',');
             foreach (var frame in data)
             {
@@ -778,34 +778,33 @@ namespace StardewMods
 
                 if (who.currentLocation is FarmHouse)
                 {
+                    if (config.Kitchen_TileOffsets.TryGetValue(config.SpritePreviewName, out List<KeyValuePair<string, Vector2>> list))//kitchen
+                    {
+                        Vector2 kitchenDefault = Utility.PointToVector2((who.currentLocation as FarmHouse).getKitchenStandingSpot());
 
-                    //if (config.Kitchen_TileOffsets.TryGetValue(config.SpritePreviewName, out List<KeyValuePair<string, Vector2>> list))//kitchen
-                    //{
-                    //    Vector2 kitchenDefault = Utility.PointToVector2((who.currentLocation as FarmHouse).getKitchenStandingSpot());
-
-                    //    if (!npcs.TryGetValue(config.SpritePreviewName, out NPC current))
-                    //    {
-                    //        if (Game1.player.getSpouse()?.isVillager() != null) current = Game1.player.getSpouse();
-                    //        else npcs.TryGetValue("Pam", out current);
-                    //    }
-                    //    if (current != null)
-                    //    {
-                    //        foreach (var entry in list)
-                    //        {
-                    //            int spriteIndex = TryGetSprite(entry.Key);
-                    //            if (spriteIndex != -9999)
-                    //            {
-                    //                if (current != null) e.SpriteBatch.Draw(current.Sprite.Texture, Game1.GlobalToLocal((kitchenDefault + entry.Value) * 64f),
-                    //                    Game1.getSquareSourceRectForNonStandardTileSheet(current.Sprite.Texture, 16, 32, Math.Abs(spriteIndex)), Color.Gray * 0.8f, 0f,
-                    //                    new Vector2(0f, 36f), 4f, (spriteIndex < 0) ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 1f);
-                    //            }
-                    //        }
-                    //    }
-                    //}
+                        if (!npcs.TryGetValue(config.SpritePreviewName, out NPC current))
+                        {
+                            if (Game1.player.getSpouse()?.isVillager() != null) current = Game1.player.getSpouse();
+                            else npcs.TryGetValue("Pam", out current);
+                        }
+                        if (current != null)
+                        {
+                            foreach (var entry in list)
+                            {
+                                int spriteIndex = TryGetSprite(entry.Key);
+                                if (spriteIndex != -9999)
+                                {
+                                    if (current != null) e.SpriteBatch.Draw(current.Sprite.Texture, Game1.GlobalToLocal((kitchenDefault + entry.Value) * 64f),
+                                        Game1.getSquareSourceRectForNonStandardTileSheet(current.Sprite.Texture, 16, 32, Math.Abs(spriteIndex)), Color.Gray * 0.8f, 0f,
+                                        new Vector2(0f, 20f), 4f, (spriteIndex < 0) ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 1f);
+                                }
+                            }
+                        }
+                    }
 
                     Vector2 spouseDefault = Utility.PointToVector2((who.currentLocation as FarmHouse).GetSpouseRoomSpot());
 
-                    if (config.SpouseRoom_ManualTileOffsets.TryGetValue(config.SpritePreviewName, out List<KeyValuePair<string, Vector2>> list))//spouse room
+                    if (config.SpouseRoom_ManualTileOffsets.TryGetValue(config.SpritePreviewName, out list))//spouse room
                     {
                         if (!npcs.TryGetValue(config.SpritePreviewName, out NPC current))
                         {
@@ -822,7 +821,7 @@ namespace StardewMods
                                 {
                                     if (current != null) e.SpriteBatch.Draw(current.Sprite.Texture, Game1.GlobalToLocal((spouseDefault + entry.Value + ((config.SpritePreviewName.Equals("sebastianFrog", StringComparison.Ordinal)) ? new Vector2(-1f, 1f) : Vector2.Zero)) * 64f),
                                         Game1.getSquareSourceRectForNonStandardTileSheet(current.Sprite.Texture, 16, 32, Math.Abs(spriteIndex)), ((config.SpritePreviewName.Equals("sebastianFrog", StringComparison.Ordinal)) ? Color.LimeGreen : Color.Gray) * 0.8f, 0f,
-                                        new Vector2(0f, 36f), 4f, (spriteIndex < 0) ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 1f);
+                                        new Vector2(0f, 20f), 4f, (spriteIndex < 0) ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 1f);
                                 }
                             }
                         }
@@ -847,44 +846,6 @@ namespace StardewMods
                     if (config.Patio_TileOffsets.TryGetValue(config.SpritePreviewName, out List<KeyValuePair<string, Vector2>> list))//patio
                     {
                         Vector2 spouseDefault = Game1.getFarm().GetSpouseOutdoorAreaCorner() + new Vector2(2f, 3f);
-                        switch (config.SpritePreviewName)
-                        {
-                            case "Emily":
-                                spouseDefault.X += -1f;
-                                break;
-                            case "Shane":
-                                spouseDefault.X += -2f;
-                                break;
-                            case "Sam":
-                                spouseDefault.Y += -1f;
-                                break;
-                            case "Elliott":
-                                spouseDefault.Y += -1f;
-                                break;
-                            case "Harvey":
-                                spouseDefault.Y += -1f;
-                                break;
-                            case "Alex":
-                                spouseDefault.Y += -1f;
-                                break;
-                            case "Maru":
-                                spouseDefault.X += -1f;
-                                spouseDefault.Y += -1f;
-                                break;
-                            case "Penny":
-                                spouseDefault.Y += -1f;
-                                break;
-                            case "Haley":
-                                spouseDefault.Y += -1f;
-                                spouseDefault.X += -1f;
-                                break;
-                            case "Abigail":
-                                spouseDefault.Y += -1f;
-                                break;
-                            case "Leah":
-                                spouseDefault.Y += -1f;
-                                break;
-                        }
 
                         if (!npcs.TryGetValue(config.SpritePreviewName, out NPC current))
                         {
@@ -893,6 +854,44 @@ namespace StardewMods
                         }
                         if (current != null)
                         {
+                            switch (current.Name)
+                            {
+                                case "Emily":
+                                    spouseDefault.X += -1f;
+                                    break;
+                                case "Shane":
+                                    spouseDefault.X += -2f;
+                                    break;
+                                case "Sam":
+                                    spouseDefault.Y += -1f;
+                                    break;
+                                case "Elliott":
+                                    spouseDefault.Y += -1f;
+                                    break;
+                                case "Harvey":
+                                    spouseDefault.Y += -1f;
+                                    break;
+                                case "Alex":
+                                    spouseDefault.Y += -1f;
+                                    break;
+                                case "Maru":
+                                    spouseDefault.X += -1f;
+                                    spouseDefault.Y += -1f;
+                                    break;
+                                case "Penny":
+                                    spouseDefault.Y += -1f;
+                                    break;
+                                case "Haley":
+                                    spouseDefault.Y += -1f;
+                                    spouseDefault.X += -1f;
+                                    break;
+                                case "Abigail":
+                                    spouseDefault.Y += -1f;
+                                    break;
+                                case "Leah":
+                                    spouseDefault.Y += -1f;
+                                    break;
+                            }
                             foreach (var entry in list)
                             {
                                 int spriteIndex = TryGetSprite(entry.Key);
@@ -900,7 +899,31 @@ namespace StardewMods
                                 {
                                     if (current != null) e.SpriteBatch.Draw(current.Sprite.Texture, Game1.GlobalToLocal((spouseDefault + entry.Value) * 64f),
                                         Game1.getSquareSourceRectForNonStandardTileSheet(current.Sprite.Texture, 16, 32, Math.Abs(spriteIndex)), Color.Gray * 0.8f, 0f,
-                                        new Vector2(0f, 36f), 4f, (spriteIndex < 0) ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 1f);
+                                        new Vector2(0f, 20f), 4f, (spriteIndex < 0) ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 1f);
+                                }
+                            }
+                        }
+                    }
+                    if (config.Porch_TileOffsets.TryGetValue(config.SpritePreviewName, out list))//porch
+                    {
+                        Vector2 spouseDefault = Utility.PointToVector2(Game1.getFarm().GetMainFarmHouseEntry());
+                        spouseDefault.X += 2f;
+
+                        if (!npcs.TryGetValue(config.SpritePreviewName, out NPC current))
+                        {
+                            if (Game1.player.getSpouse()?.isVillager() != null) current = Game1.player.getSpouse();
+                            else npcs.TryGetValue("Pam", out current);
+                        }
+                        if (current != null)
+                        { 
+                            foreach (var entry in list)
+                            {
+                                int spriteIndex = TryGetSprite(entry.Key);
+                                if (spriteIndex != -9999)
+                                {
+                                    if (current != null) e.SpriteBatch.Draw(current.Sprite.Texture, Game1.GlobalToLocal((spouseDefault + entry.Value) * 64f),
+                                        Game1.getSquareSourceRectForNonStandardTileSheet(current.Sprite.Texture, 16, 32, Math.Abs(spriteIndex)), Color.Gray * 0.8f, 0f,
+                                        new Vector2(0f, 20f), 4f, (spriteIndex < 0) ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 1f);
                                 }
                             }
                         }
