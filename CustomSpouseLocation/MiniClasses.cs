@@ -27,18 +27,17 @@ namespace CustomSpouseLocation
         public Rectangle boundsTopBottom;
         public int scrollState;
         public int contentBottom;
-        public Regex spaceRemover = new Regex(@"\s+");
-        public Regex digitRemover = new Regex(@"\d*");
-        public Regex animChecker = new Regex(@"^\d+\:\d+(\.\d+)?$");
 
-        public DictionaryEditor(Dictionary<string, List<KeyValuePair<string, Vector2>>> dictionary, Vector2 pos)
+        public DictionaryEditor(Dictionary<string, List<KeyValuePair<string, Vector2>>> dictionary, int which)
         {
             enabledNPCs = new Dictionary<string, List<string>>();
             foreach (var npc in dictionary)
             {
                 for (int i = 0; i < npc.Value.Count; i++)
                 {
-                    dataStrings[npc.Key + i] = npc.Value[i].Key + " / " + npc.Value[i].Value.X + ", " + npc.Value[i].Value.Y;
+                    if (which == 0) dataStrings[npc.Key + i] = npc.Value[i].Value.X + ", " + npc.Value[i].Value.Y;
+                    else dataStrings[npc.Key + i] = npc.Value[i].Key + " / " + npc.Value[i].Value.X + ", " + npc.Value[i].Value.Y;
+
                     if (enabledNPCs.ContainsKey(npc.Key)) enabledNPCs[npc.Key].Add(npc.Key + i);
                     else enabledNPCs[npc.Key] = new List<string>() { npc.Key + i };
                 }
