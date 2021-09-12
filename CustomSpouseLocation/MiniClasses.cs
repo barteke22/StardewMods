@@ -17,11 +17,12 @@ namespace CustomSpouseLocation
     class DictionaryEditor
     {
         public Dictionary<string, List<string>> enabledNPCs;
-        public Dictionary<string, NPC> datableNPCs = new Dictionary<string, NPC>();
-        public Dictionary<string, NPC> otherNPCs = new Dictionary<string, NPC>();
+        //public Dictionary<string, NPC> datableNPCs = new Dictionary<string, NPC>();
+        //public Dictionary<string, NPC> otherNPCs = new Dictionary<string, NPC>();
         public Dictionary<string, Rectangle> hoverNames = new Dictionary<string, Rectangle>();
         public Dictionary<string, string> dataStrings = new Dictionary<string, string>();
         public string dataEditing = null;
+        public int dataIndex = 0;
         public Vector2 scrollBar;
         public Rectangle boundsLeftRight;
         public Rectangle boundsTopBottom;
@@ -35,19 +36,19 @@ namespace CustomSpouseLocation
             {
                 for (int i = 0; i < npc.Value.Count; i++)
                 {
-                    if (which == 0) dataStrings[npc.Key + i] = npc.Value[i].Value.X + ", " + npc.Value[i].Value.Y;
-                    else dataStrings[npc.Key + i] = npc.Value[i].Key + " / " + npc.Value[i].Value.X + ", " + npc.Value[i].Value.Y;
+                    if (which == 0) dataStrings[npc.Key + i] = npc.Value[i].Value.X + "," + npc.Value[i].Value.Y;
+                    else dataStrings[npc.Key + i] = npc.Value[i].Key + "/" + npc.Value[i].Value.X + "," + npc.Value[i].Value.Y;
 
                     if (enabledNPCs.ContainsKey(npc.Key)) enabledNPCs[npc.Key].Add(npc.Key + i);
                     else enabledNPCs[npc.Key] = new List<string>() { npc.Key + i };
                 }
             }
 
-            foreach (var item in Game1.content.Load<Dictionary<string, string>>("Data\\NPCDispositions"))
-            {
-                if (item.Value.Split('/')[5].Equals("datable", StringComparison.Ordinal)) datableNPCs.Add(item.Key, Game1.getCharacterFromName(item.Key));
-                else otherNPCs.Add(item.Key, Game1.getCharacterFromName(item.Key));
-            }
+            //foreach (var item in Game1.content.Load<Dictionary<string, string>>("Data\\NPCDispositions"))
+            //{
+            //    if (item.Value.Split('/')[5].Equals("datable", StringComparison.Ordinal)) datableNPCs.Add(item.Key, Game1.getCharacterFromName(item.Key));
+            //    else otherNPCs.Add(item.Key, Game1.getCharacterFromName(item.Key));
+            //}
             scrollState = Game1.input.GetMouseState().ScrollWheelValue;
         }
     }

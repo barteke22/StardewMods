@@ -25,12 +25,19 @@ namespace StardewMods
 
         private Regex spaceRemover = new Regex(@"\s+");
         private Regex digitRemover = new Regex(@"\d*");
-        private Regex animChecker = new Regex(@"^\d+(:f)?:\d+(\.\d+)?$");
+        private Regex animChecker = new Regex(@"^\d+(:(f|F))?:\d+(\.\d+)?$");
 
-        private Dictionary<string, NPC> npcs;
+        private Dictionary<string, NPC> allNPCs;
         private DictionaryEditor state;
         private bool resized = true;
         private bool SelectedImpl;
+        private int buttonHeld = 0;
+
+        private KeybindList click = KeybindList.Parse("MouseLeft");
+        private KeybindList remove = KeybindList.Parse("LeftControl + X");
+        private KeybindList left = KeybindList.Parse("Left");
+        private KeybindList right = KeybindList.Parse("Right");
+        private KeybindList del = KeybindList.Parse("Delete");
 
 
 
@@ -62,7 +69,7 @@ namespace StardewMods
                 try
                 {
                     GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.SpritePreviewMode"), translate.Get("GenericMC.SpritePreviewModeDesc"),
-                        () => config.SpritePreviewName, (string val) => config.SpritePreviewName = (string.IsNullOrEmpty(val)) ? null : val);
+                        () => config.SpritePreviewName, (string val) => config.SpritePreviewName = val);
 
                     GenericMC.RegisterClampedOption(ModManifest, translate.Get("GenericMC.RandomTileChance"), translate.Get("GenericMC.RandomTileChanceDesc"),
                         () => config.SpouseRoom_RandomTileChance, (float val) => config.SpouseRoom_RandomTileChance = (int)val, 0f, 100f);
@@ -128,26 +135,33 @@ namespace StardewMods
         }
         protected virtual void ReceiveInput(string str)
         {
-            if (state?.dataEditing != null) state.dataStrings[state.dataEditing] += str;
+            if (state?.dataEditing != null)
+            {
+                if (state.dataIndex < state.dataStrings[state.dataEditing].Length - 1) state.dataStrings[state.dataEditing] = state.dataStrings[state.dataEditing].Insert(state.dataIndex, str);
+                else state.dataStrings[state.dataEditing] += str;
+                state.dataIndex++;
+            }
         }
 
         public void RecieveCommandInput(char command)
         {
-            if (command == '\b' && state?.dataStrings[state.dataEditing].Length > 1)
+            if (command == '\b' && (state?.dataIndex > 0 && state?.dataStrings[state.dataEditing].Length > 1))
             {
                 Game1.playSound("tinyWhip");
-                state.dataStrings[state.dataEditing] = state.dataStrings[state.dataEditing].Substring(0, state.dataStrings[state.dataEditing].Length - 1);
+                state.dataStrings[state.dataEditing] = state.dataStrings[state.dataEditing].Remove(state.dataIndex - 1, 1);
+                state.dataIndex--;
             }
-            else if (command == '\b' && state?.dataStrings[state.dataEditing].Length < 2)
+            else if (command == '\b' && state?.dataIndex == 1 && state?.dataStrings[state.dataEditing].Length < 2)
             {
                 Game1.playSound("tinyWhip");
                 state.dataStrings[state.dataEditing] = "";
+                state.dataIndex = 0;
             }
         }
 
         public void RecieveSpecialInput(Keys key)
         {
-            //?
+            //
         }
 
         public void RecieveTextInput(char inputChar)
@@ -165,10 +179,8 @@ namespace StardewMods
             Func<Vector2, object, object> editorUpdate =
                 (Vector2 pos, object state_) =>
                 {
-                    KeybindList reset = KeybindList.Parse("F5");
-
                     state = state_ as DictionaryEditor;
-                    if (state == null || reset.JustPressed())
+                    if (state == null)
                     {
                         switch (which)
                         {
@@ -196,8 +208,23 @@ namespace StardewMods
                         resized = true;
                     }
 
-                    KeybindList click = KeybindList.Parse("MouseLeft");
-                    KeybindList delete = KeybindList.Parse("LeftControl + X");
+
+                    if (state.dataEditing != null)
+                    {
+                        if (left.JustPressed() || right.JustPressed() || del.JustPressed()) buttonHeld = -41;
+                        buttonHeld++;
+                        if (buttonHeld == 0 || buttonHeld == -40)
+                        {
+                            if (left.IsDown() && state.dataIndex > 0) state.dataIndex--;
+                            else if (right.IsDown() && state.dataIndex < state.dataStrings[state.dataEditing].Length) state.dataIndex++;
+                            else if (del.IsDown() && state.dataIndex < state.dataStrings[state.dataEditing].Length)
+                            {
+                                Game1.playSound("tinyWhip");
+                                state.dataStrings[state.dataEditing] = state.dataStrings[state.dataEditing].Remove(state.dataIndex, 1);
+                            }
+                        }
+                        else if (buttonHeld > 1) buttonHeld = -1;
+                    }
 
 
                     if (state.boundsLeftRight.Contains(Game1.getMouseX(), Game1.getMouseY()))
@@ -231,8 +258,8 @@ namespace StardewMods
                                     state.dataEditing = null;
                                     break;
                                 }
-                                else if (which == 0 && state.enabledNPCs.ContainsKey(button.Key)) ;//skips
-                                else if (state.datableNPCs.ContainsKey(button.Key))
+                                else if (which == 0 && (state.enabledNPCs.ContainsKey(button.Key))) ;//skips
+                                else if (allNPCs.ContainsKey(button.Key))
                                 {
                                     state.enabledNPCs[button.Key] = new List<string>() { button.Key + 0 };
                                     if (which == 0) state.dataStrings.Add(button.Key + 0, "0, 0");
@@ -243,6 +270,10 @@ namespace StardewMods
                                 else if (state.dataStrings.ContainsKey(button.Key))
                                 {
                                     state.dataEditing = button.Key;
+
+                                    float ind = ((Game1.getMouseX() - button.Value.X - 12f) / (Game1.smallFont.MeasureString(state.dataStrings[button.Key]).X * 1.2f));
+                                    ind = Utility.Clamp(ind * state.dataStrings[button.Key].Length, 0f, state.dataStrings[button.Key].Length);
+                                    state.dataIndex = (int)ind;
                                     break;
                                 }
                                 else if (button.Key.StartsWith("Arrow", StringComparison.Ordinal))
@@ -256,7 +287,7 @@ namespace StardewMods
                         }
                         Selected = state.dataEditing != null;
                     }
-                    else if (delete.JustPressed())
+                    else if (remove.JustPressed())
                     {
                         state.dataEditing = null;
                         foreach (var button in state.hoverNames)
@@ -310,18 +341,18 @@ namespace StardewMods
                         Rectangle nameR = new Rectangle((int)(state.scrollBar + left).X, (int)(state.scrollBar + left).Y, state.boundsTopBottom.Width, (int)lineH);
 
                         NPC current = null;
-                        if (!state.datableNPCs.TryGetValue(npc.Key, out current))
+                        if (!allNPCs.TryGetValue(npc.Key, out current))
                         {
-                            if (npc.Key.Equals("sebastianFrog", StringComparison.Ordinal) && state.datableNPCs.TryGetValue("Sebastian", out current)) ;
+                            if (npc.Key.Equals("sebastianFrog", StringComparison.Ordinal) && allNPCs.TryGetValue("Sebastian", out current)) ;
                             else if (Game1.player.getSpouse()?.isVillager() != null) current = Game1.player.getSpouse();
-                            else state.otherNPCs.TryGetValue("Pam", out current);
+                            else allNPCs.TryGetValue("Pam", out current);
                         }
 
                         if (!state.boundsTopBottom.Contains(state.boundsTopBottom.Width, (int)(state.scrollBar.Y + left.Y))) left.Y += lineH; //out of bounds?
                         else
                         {
                             state.hoverNames[npc.Key] = nameR;
-
+                            if (current == null) Monitor.Log(npc.Key, LogLevel.Error);
                             if (current != null) b.Draw(current.Sprite.Texture, state.scrollBar + left, new Rectangle(1, 2, 14, 16), Color.White, 0f, new Vector2(16f, 1f), 2f, SpriteEffects.None, 1f);
                             b.DrawString(Game1.smallFont, npc.Key, state.scrollBar + left, (nameR.Contains(Game1.getMouseX(), Game1.getMouseY())) ? Color.DarkSlateGray : Color.ForestGreen, 0f, Vector2.Zero, 1.2f, SpriteEffects.None, 1f);
                             left.Y += lineH;
@@ -335,9 +366,11 @@ namespace StardewMods
                                     left.Y += lineH;
                                     continue;
                                 }
-                                nameR = new Rectangle((int)(state.scrollBar + left).X, (int)(state.scrollBar + left).Y, state.boundsTopBottom.Width, (int)lineH);
+                                float f = Game1.parseText(text.Value, Game1.smallFont, state.boundsLeftRight.Width - 200).Split(new[] { "\n" }, StringSplitOptions.RemoveEmptyEntries).Length;
+
+                                nameR = new Rectangle((int)(state.scrollBar + left).X, (int)(state.scrollBar + left).Y, state.boundsLeftRight.Width, (int)lineH);
                                 state.hoverNames[text.Key] = nameR;
-                                Color color = Color.Red;
+                                Color color = Color.OrangeRed;
 
                                 if (which == 0 && text.Value.Split(',').Length == 2 && float.TryParse(text.Value.Split(',')[0], out _) && float.TryParse(text.Value.Split(',')[1], out _)) color = Color.ForestGreen;
                                 else if (which != 0)
@@ -347,28 +380,29 @@ namespace StardewMods
                                     {
                                         if (which != 0 && current != null)
                                         {
-                                            b.Draw(current.Sprite.Texture, state.scrollBar + left + new Vector2(50f, 0f), Game1.getSquareSourceRectForNonStandardTileSheet(current.Sprite.Texture, 16, 32, Math.Abs(spriteIndex)), Color.White, 0f, new Vector2(18f, 6f), 1.4f, (spriteIndex < 0) ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 1f);
+                                            b.Draw(current.Sprite.Texture, state.scrollBar + left + new Vector2(20f, 0f), Game1.getSquareSourceRectForNonStandardTileSheet(current.Sprite.Texture, current.Sprite.SpriteWidth, current.Sprite.SpriteHeight, Math.Abs(spriteIndex)), Color.White, 0f, new Vector2(18f, 6f), 1.4f, (spriteIndex < 0) ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 1f);
                                         }
                                         if (TryGetVector2(text.Value) != new Vector2(-9999f)) color = Color.ForestGreen;
                                     }
                                 }
                                 if (nameR.Contains(Game1.getMouseX(), Game1.getMouseY()))
                                 {
-                                    if (color == Color.Red) color = Color.Maroon;
+                                    if (color == Color.OrangeRed) color = Color.Crimson;
                                     else color = Color.DarkSlateGray;
                                 }
 
-                                b.DrawString(Game1.smallFont, text.Value, state.scrollBar + left + new Vector2(50f, 0f), color, 0f, Vector2.Zero, 1.2f, SpriteEffects.None, 1f);
+                                b.DrawString(Game1.smallFont, text.Value, state.scrollBar + left + new Vector2(20f, 0f), color, 0f, Vector2.Zero, 1.2f / f, SpriteEffects.None, 1f);
 
-                                if (Selected && text.Key.Equals(state.dataEditing, StringComparison.Ordinal) && DateTime.UtcNow.Millisecond % 1000 >= 500)
-                                    b.Draw(Game1.staminaRect, new Rectangle((int)(state.scrollBar.X + left.X + 56f) + (int)(Game1.smallFont.MeasureString(text.Value).X * 1.2f), (int)(state.scrollBar.Y + left.Y), 4, 32), Color.Black);
+                                if (Selected && text.Key.Equals(state.dataEditing, StringComparison.Ordinal)) b.Draw(Game1.staminaRect, new Rectangle((int)(state.scrollBar.X + left.X + 19f)
+                                    + (int)((Game1.smallFont.MeasureString((state.dataIndex == text.Value.Length) ? text.Value : text.Value.Remove(state.dataIndex)).X) * 1.2f / f), (int)(state.scrollBar.Y + left.Y), 3, 32),
+                                    Color.Black * ((DateTime.UtcNow.Millisecond % 1000 >= 500) ? 0.3f : 1f));
 
                                 left.Y += lineH;
                             }
                         }
                     }
 
-                    foreach (var npc in state.datableNPCs.OrderBy(val => val.Key))//other datable npcs (also add a list of non datables below?
+                    foreach (var npc in allNPCs.OrderBy(val => val.Value?.datable ? 0 : 1).ThenBy(val => val.Key))//other datable npcs
                     {
                         if (!state.enabledNPCs.ContainsKey(npc.Key))
                         {
@@ -380,7 +414,14 @@ namespace StardewMods
                             Rectangle nameR = new Rectangle((int)(state.scrollBar + left).X, (int)(state.scrollBar + left).Y, state.boundsTopBottom.Width, (int)lineH);
                             state.hoverNames[npc.Key] = nameR;
 
-                            b.DrawString(Game1.smallFont, npc.Key, state.scrollBar + left, (nameR.Contains(Game1.getMouseX(), Game1.getMouseY())) ? Color.Maroon : Color.Red, 0f, Vector2.Zero, 1.2f, SpriteEffects.None, 1f);
+                            Color c = (nameR.Contains(Game1.getMouseX(), Game1.getMouseY())) ? Color.Black : Color.Gray;
+                            if (npc.Value?.datable)
+                            {
+                                if (c == Color.Gray) c = Color.DeepPink;
+                                else c = Color.HotPink;
+                            }
+
+                            b.DrawString(Game1.smallFont, npc.Key, state.scrollBar + left, c, 0f, Vector2.Zero, 1.2f, SpriteEffects.None, 1f);
                             left.Y += lineH;
                         }
                     }
@@ -477,7 +518,7 @@ namespace StardewMods
                     List<FarmerSprite.AnimationFrame> anims = TryGetAnimations(data[0]);
                     if (anims.Count > 0) //return anims[DateTime.UtcNow.Second % anims.Count].frame;
                     {
-                        int currentMs = (int)Game1.currentGameTime.TotalGameTime.TotalMilliseconds % (anims.Sum(val => val.milliseconds) + (anims.Count*25));
+                        int currentMs = (int)Game1.currentGameTime.TotalGameTime.TotalMilliseconds % (anims.Sum(val => val.milliseconds) + (anims.Count * 25));
                         int indexMs = 0;
                         foreach (var frame in anims)
                         {
@@ -516,7 +557,7 @@ namespace StardewMods
             {
                 if (animChecker.IsMatch(frame))
                 {
-                    bool flip = frame.Contains(":f");
+                    bool flip = frame.ToLower().Contains(":f");
                     string[] frameData = frame.Split(':');
 
                     if (int.TryParse(frameData[0], out int f) && (float.TryParse(frameData[1], out float s) || float.TryParse(frameData[2], out s)))
@@ -594,6 +635,11 @@ namespace StardewMods
         private void OnDayStarted(object sender, DayStartedEventArgs e)
         {
             UpdateConfig(false);
+            allNPCs = new Dictionary<string, NPC>();
+            foreach (var item in Game1.content.Load<Dictionary<string, string>>("Data\\NPCDispositions"))
+            {
+                allNPCs.Add(item.Key, Game1.getCharacterFromName(item.Key));
+            }
 
             Farmer who = Game1.player;
             NPC spouse = who.getSpouse();
@@ -782,20 +828,20 @@ namespace StardewMods
                     {
                         Vector2 kitchenDefault = Utility.PointToVector2((who.currentLocation as FarmHouse).getKitchenStandingSpot());
 
-                        if (!npcs.TryGetValue(config.SpritePreviewName, out NPC current))
+                        if (!allNPCs.TryGetValue(config.SpritePreviewName, out NPC npc))
                         {
-                            if (Game1.player.getSpouse()?.isVillager() != null) current = Game1.player.getSpouse();
-                            else npcs.TryGetValue("Pam", out current);
+                            if (Game1.player.getSpouse()?.isVillager() != null) npc = Game1.player.getSpouse();
+                            else allNPCs.TryGetValue("Pam", out npc);
                         }
-                        if (current != null)
+                        if (npc != null)
                         {
                             foreach (var entry in list)
                             {
                                 int spriteIndex = TryGetSprite(entry.Key);
                                 if (spriteIndex != -9999)
                                 {
-                                    if (current != null) e.SpriteBatch.Draw(current.Sprite.Texture, Game1.GlobalToLocal((kitchenDefault + entry.Value) * 64f),
-                                        Game1.getSquareSourceRectForNonStandardTileSheet(current.Sprite.Texture, 16, 32, Math.Abs(spriteIndex)), Color.Gray * 0.8f, 0f,
+                                    if (npc != null) e.SpriteBatch.Draw(npc.Sprite.Texture, Game1.GlobalToLocal((kitchenDefault + entry.Value) * 64f),
+                                        Game1.getSquareSourceRectForNonStandardTileSheet(npc.Sprite.Texture, npc.Sprite.SpriteWidth, npc.Sprite.SpriteHeight, Math.Abs(spriteIndex)), Color.Gray * 0.8f, 0f,
                                         new Vector2(0f, 20f), 4f, (spriteIndex < 0) ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 1f);
                                 }
                             }
@@ -806,21 +852,21 @@ namespace StardewMods
 
                     if (config.SpouseRoom_ManualTileOffsets.TryGetValue(config.SpritePreviewName, out list))//spouse room
                     {
-                        if (!npcs.TryGetValue(config.SpritePreviewName, out NPC current))
+                        if (!allNPCs.TryGetValue(config.SpritePreviewName, out NPC npc))
                         {
-                            if (config.SpritePreviewName.Equals("sebastianFrog", StringComparison.Ordinal) && npcs.TryGetValue("Sebastian", out current)) ;
-                            else if (Game1.player.getSpouse()?.isVillager() != null) current = Game1.player.getSpouse();
-                            else npcs.TryGetValue("Pam", out current);
+                            if (config.SpritePreviewName.Equals("sebastianFrog", StringComparison.Ordinal) && allNPCs.TryGetValue("Sebastian", out npc)) ;
+                            else if (Game1.player.getSpouse()?.isVillager() != null) npc = Game1.player.getSpouse();
+                            else allNPCs.TryGetValue("Pam", out npc);
                         }
-                        if (current != null)
+                        if (npc != null)
                         {
                             foreach (var entry in list)
                             {
                                 int spriteIndex = TryGetSprite(entry.Key);
                                 if (spriteIndex != -9999)
                                 {
-                                    if (current != null) e.SpriteBatch.Draw(current.Sprite.Texture, Game1.GlobalToLocal((spouseDefault + entry.Value + ((config.SpritePreviewName.Equals("sebastianFrog", StringComparison.Ordinal)) ? new Vector2(-1f, 1f) : Vector2.Zero)) * 64f),
-                                        Game1.getSquareSourceRectForNonStandardTileSheet(current.Sprite.Texture, 16, 32, Math.Abs(spriteIndex)), ((config.SpritePreviewName.Equals("sebastianFrog", StringComparison.Ordinal)) ? Color.LimeGreen : Color.Gray) * 0.8f, 0f,
+                                    if (npc != null) e.SpriteBatch.Draw(npc.Sprite.Texture, Game1.GlobalToLocal((spouseDefault + entry.Value + ((config.SpritePreviewName.Equals("sebastianFrog", StringComparison.Ordinal)) ? new Vector2(-1f, 1f) : Vector2.Zero)) * 64f),
+                                        Game1.getSquareSourceRectForNonStandardTileSheet(npc.Sprite.Texture, npc.Sprite.SpriteWidth, npc.Sprite.SpriteHeight, Math.Abs(spriteIndex)), ((config.SpritePreviewName.Equals("sebastianFrog", StringComparison.Ordinal)) ? Color.LimeGreen : Color.Gray) * 0.8f, 0f,
                                         new Vector2(0f, 20f), 4f, (spriteIndex < 0) ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 1f);
                                 }
                             }
@@ -828,15 +874,15 @@ namespace StardewMods
                     }
                     if (config.SpouseRoomRandomFaceTileOffset.TryGetValue(config.SpritePreviewName, out Vector2 tile))//face tiles (spouse room)
                     {
-                        if (!npcs.TryGetValue(config.SpritePreviewName, out NPC current))
+                        if (!allNPCs.TryGetValue(config.SpritePreviewName, out NPC current))
                         {
-                            if (config.SpritePreviewName.Equals("sebastianFrog", StringComparison.Ordinal) && npcs.TryGetValue("Sebastian", out current))
+                            if (config.SpritePreviewName.Equals("sebastianFrog", StringComparison.Ordinal) && allNPCs.TryGetValue("Sebastian", out current))
                             {
                                 e.SpriteBatch.Draw(current.Sprite.Texture, Game1.GlobalToLocal((spouseDefault + new Vector2(-1f, 1f) + tile) * 64f), new Rectangle(0, 2, 16, 16), Color.LimeGreen, 0f, new Vector2(8f), 2f, SpriteEffects.None, 1f);
                                 return;
                             }
                             else if (Game1.player.getSpouse()?.isVillager() != null) current = Game1.player.getSpouse();
-                            else npcs.TryGetValue("Pam", out current);
+                            else allNPCs.TryGetValue("Pam", out current);
                         }
                         if (current != null) e.SpriteBatch.Draw(current.Sprite.Texture, Game1.GlobalToLocal((spouseDefault + tile) * 64f), new Rectangle(0, 2, 16, 16), Color.Gray * 0.8f, 0f, new Vector2(8f), 2f, SpriteEffects.None, 1f);
                     }
@@ -847,14 +893,14 @@ namespace StardewMods
                     {
                         Vector2 spouseDefault = Game1.getFarm().GetSpouseOutdoorAreaCorner() + new Vector2(2f, 3f);
 
-                        if (!npcs.TryGetValue(config.SpritePreviewName, out NPC current))
+                        if (!allNPCs.TryGetValue(config.SpritePreviewName, out NPC npc))
                         {
-                            if (Game1.player.getSpouse()?.isVillager() != null) current = Game1.player.getSpouse();
-                            else npcs.TryGetValue("Pam", out current);
+                            if (Game1.player.getSpouse()?.isVillager() != null) npc = Game1.player.getSpouse();
+                            else allNPCs.TryGetValue("Pam", out npc);
                         }
-                        if (current != null)
+                        if (npc != null)
                         {
-                            switch (current.Name)
+                            switch (npc.Name)
                             {
                                 case "Emily":
                                     spouseDefault.X += -1f;
@@ -897,8 +943,8 @@ namespace StardewMods
                                 int spriteIndex = TryGetSprite(entry.Key);
                                 if (spriteIndex != -9999)
                                 {
-                                    if (current != null) e.SpriteBatch.Draw(current.Sprite.Texture, Game1.GlobalToLocal((spouseDefault + entry.Value) * 64f),
-                                        Game1.getSquareSourceRectForNonStandardTileSheet(current.Sprite.Texture, 16, 32, Math.Abs(spriteIndex)), Color.Gray * 0.8f, 0f,
+                                    if (npc != null) e.SpriteBatch.Draw(npc.Sprite.Texture, Game1.GlobalToLocal((spouseDefault + entry.Value) * 64f),
+                                        Game1.getSquareSourceRectForNonStandardTileSheet(npc.Sprite.Texture, npc.Sprite.SpriteWidth, npc.Sprite.SpriteHeight, Math.Abs(spriteIndex)), Color.Gray * 0.8f, 0f,
                                         new Vector2(0f, 20f), 4f, (spriteIndex < 0) ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 1f);
                                 }
                             }
@@ -909,20 +955,20 @@ namespace StardewMods
                         Vector2 spouseDefault = Utility.PointToVector2(Game1.getFarm().GetMainFarmHouseEntry());
                         spouseDefault.X += 2f;
 
-                        if (!npcs.TryGetValue(config.SpritePreviewName, out NPC current))
+                        if (!allNPCs.TryGetValue(config.SpritePreviewName, out NPC npc))
                         {
-                            if (Game1.player.getSpouse()?.isVillager() != null) current = Game1.player.getSpouse();
-                            else npcs.TryGetValue("Pam", out current);
+                            if (Game1.player.getSpouse()?.isVillager() != null) npc = Game1.player.getSpouse();
+                            else allNPCs.TryGetValue("Pam", out npc);
                         }
-                        if (current != null)
-                        { 
+                        if (npc != null)
+                        {
                             foreach (var entry in list)
                             {
                                 int spriteIndex = TryGetSprite(entry.Key);
                                 if (spriteIndex != -9999)
                                 {
-                                    if (current != null) e.SpriteBatch.Draw(current.Sprite.Texture, Game1.GlobalToLocal((spouseDefault + entry.Value) * 64f),
-                                        Game1.getSquareSourceRectForNonStandardTileSheet(current.Sprite.Texture, 16, 32, Math.Abs(spriteIndex)), Color.Gray * 0.8f, 0f,
+                                    if (npc != null) e.SpriteBatch.Draw(npc.Sprite.Texture, Game1.GlobalToLocal((spouseDefault + entry.Value) * 64f),
+                                        Game1.getSquareSourceRectForNonStandardTileSheet(npc.Sprite.Texture, npc.Sprite.SpriteWidth, npc.Sprite.SpriteHeight, Math.Abs(spriteIndex)), Color.Gray * 0.8f, 0f,
                                         new Vector2(0f, 20f), 4f, (spriteIndex < 0) ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 1f);
                                 }
                             }
@@ -941,15 +987,6 @@ namespace StardewMods
         private void UpdateConfig(bool GMCM)
         {
             if (!GMCM) config = Helper.ReadConfig<ModConfig>();
-
-            if (!config.SpritePreviewName.Equals("", StringComparison.Ordinal))
-            {
-                npcs = new Dictionary<string, NPC>();
-                foreach (var item in Game1.content.Load<Dictionary<string, string>>("Data\\NPCDispositions"))
-                {
-                    npcs.Add(item.Key, Game1.getCharacterFromName(item.Key));
-                }
-            }
         }
     }
 }
