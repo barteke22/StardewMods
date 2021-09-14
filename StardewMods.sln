@@ -11,8 +11,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FishingInfoOverlays", "Fish
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CustomSpouseLocation", "CustomSpouseLocation\CustomSpouseLocation.csproj", "{2820A9CB-A3F1-4E41-A312-DD6C672B7BD1}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ModsTesting", "ModsTesting", "{D6912682-2522-44E7-9C58-823BF3B9B03B}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
