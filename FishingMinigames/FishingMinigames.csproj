@@ -6,7 +6,7 @@
     <Version>1.0.0</Version>
     <TargetFramework>net452</TargetFramework>
     <EnableHarmony>true</EnableHarmony>
-    <GameModsPath>D:\Programs\Steam\steamapps\common\Stardew Valley x64\ModsTesting</GameModsPath>
+    <GameModsPath>D:\Programs\Steam\steamapps\common\Stardew Valley 155\ModsTesting</GameModsPath>
   </PropertyGroup>
   <ItemGroup>
     <None Include="i18n %28unofficial languages%29\Polish\pt.json" />

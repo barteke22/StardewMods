@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewModdingAPI.Utilities;
 using System;
+using System.Collections.Generic;
 
 namespace GenericModConfigMenu
 {
@@ -34,10 +35,8 @@ namespace GenericModConfigMenu
     }
 }
 
-
-public interface IJsonAssetsApi
+public interface ICustomSpousePatioApi
 {
-    int GetObjectId(string name);
-    int GetBigCraftableId(string name);
-    void LoadAssets(string path);
+    Dictionary<string, object> GetCurrentSpouseAreas();
+    Dictionary<string, Point> GetDefaultSpouseOffsets();
 }
