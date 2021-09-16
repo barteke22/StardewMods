@@ -1,5 +1,4 @@
 {
-	"GenericMC.Warning": "",
 	"GenericMC.Label": "",
 	"GenericMC.Description": "",
 
@@ -31,5 +30,8 @@
 	"GenericMC.Patio": "",
 	"GenericMC.PatioDesc": "",
 	"GenericMC.Porch": "",
-	"GenericMC.PorchDesc": ""
+	"GenericMC.PorchDesc": "",
+
+	"GenericMC.WarningMenu": "It's recommended to access GMCM from within a save to improve the accuracy of this menu, and for preview mode.",
+	"GenericMC.WarningCoop": "Non-host mod will be ignored, you can however use it to preview animations inside your cabin - then tell the host what you want."
 }
