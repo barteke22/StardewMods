@@ -5,7 +5,7 @@
     "GenericMC.SpritePreview": "Sprite Preview",
     "GenericMC.SpritePreviewDesc": "Will show previews of the specified Manual profiles in the world (and the automation's Facing Tile), allowing you to fine-tune spouse offsets.\n Leave blank during regular gameplay to avoid performance impacts.\n Valid entries: All (for all profiles), or a list of profile names (like Default, Sam).\n If installed, Custom Spouse Patio will assign the correct spouse preview to the correct patio.\n If installed, Multiple Spouses will show a preview for each room, however the preview won't be able\n to determine the correct room (will show one in each), but the rest of the mod will.",
 
-    "GenericMC.SpouseRoomAuto": "Spouse Room (Auto):",
+    "GenericMC.SpouseRoomAuto": "Spouse Room (Auto)",
     "GenericMC.AutoBlacklist": "Blacklist",
     "GenericMC.AutoBlacklistDesc": "If you wish to exclude a specific spouse profile from automation. Valid entries: All (same as setting Chance to 0), or a list of profile names (like Default, Sam).",
     "GenericMC.AutoChance": "Chance (VS Manual)",

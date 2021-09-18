@@ -96,7 +96,7 @@ namespace StardewMods
                         () => config.SpritePreviewName, (string val) => config.SpritePreviewName = val);
 
                     //auto
-                    GenericMC.RegisterLabel(ModManifest, translate.Get("GenericMC.SpouseRoomAuto"), "");
+                    GenericMC.RegisterLabel(ModManifest, "--- " + translate.Get("GenericMC.SpouseRoomAuto") + " ---", "");
                     GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.AutoBlacklist"), translate.Get("GenericMC.AutoBlacklistDesc"),
                         () => config.SpouseRoom_Auto_Blacklist, (string val) => config.SpouseRoom_Auto_Blacklist = val);
                     GenericMC.RegisterClampedOption(ModManifest, translate.Get("GenericMC.AutoChance"), translate.Get("GenericMC.AutoChanceDesc"),
