@@ -24,6 +24,7 @@ namespace StardewMods
         ITranslationHelper translate;
         private ModConfig config;
 
+        private int dayStartedDelay = -1;
         private List<NPC> spouses;
         private Dictionary<string, Vector2> patioPoints;
 
@@ -652,7 +653,6 @@ namespace StardewMods
                 if (npc != null) allNPCs[item.Key] = npc;
             }
         }
-
         private void OnDayStarted(object sender, DayStartedEventArgs e)//MAIN METHOD
         {
             if (!Context.IsMainPlayer) return;//host settings decide - since others don't join at day start
@@ -669,7 +669,6 @@ namespace StardewMods
 
             UpdateConfig(false);
 
-            Farmer who = Game1.player;
             spouses = new List<NPC>();
 
             foreach (var farmer in Game1.getAllFarmers())
@@ -691,6 +690,12 @@ namespace StardewMods
             //}
             //    spouse.setTileLocation(new Vector2(38, 14));
 
+            dayStartedDelay = 150;
+        }
+
+
+        private void PlaceSpousesInside()
+        {
             foreach (NPC spouse in spouses)
             {
                 if (spouse?.isVillager() != null)
@@ -698,7 +703,6 @@ namespace StardewMods
                     Vector2 tile = spouse.getTileLocation();
                     KeyValuePair<string, Vector2> newTile = new KeyValuePair<string, Vector2>();
                     GameLocation loc = spouse.currentLocation;
-                    int houseUpgradeLevel = who.HouseUpgradeLevel;
                     bool changed = false;
 
 
@@ -721,7 +725,7 @@ namespace StardewMods
 
                                 if (changed = tiles.Count > 0) newTile = tiles[Game1.random.Next(0, tiles.Count)];
 
-                                if (RandomTile(who, spouse, changed, loc, tile, ref newTile)) changed = true;
+                                if (RandomTile(spouse, changed, loc, tile, ref newTile)) changed = true;
                             }
                             if (!changed && tile.Y == (loc as FarmHouse).GetSpouseRoomSpot().Y && tileDistX % 7 == 0) //SpouseRoom - everything else
                             {
@@ -729,11 +733,28 @@ namespace StardewMods
 
                                 if (changed = tiles.Count > 0) newTile = tiles[Game1.random.Next(0, tiles.Count)];
 
-                                if (RandomTile(who, spouse, changed, loc, tile, ref newTile)) changed = true;
+                                if (RandomTile(spouse, changed, loc, tile, ref newTile)) changed = true;
                             }
                         }
                     }
-                    else if (Context.IsMainPlayer && loc is Farm)
+                    if (changed) PlaceSpouse(spouse, tile, newTile);
+                }
+            }
+            Monitor.Log("Made inside spouse(s) behave...");
+        }
+        private void PlaceSpousesOutside()
+        {
+            foreach (NPC spouse in spouses)
+            {
+                if (spouse?.isVillager() != null)
+                {
+                    Vector2 tile = spouse.getTileLocation();
+                    KeyValuePair<string, Vector2> newTile = new KeyValuePair<string, Vector2>();
+                    GameLocation loc = spouse.currentLocation;
+                    bool changed = false;
+
+
+                    if (loc is Farm)
                     {
                         if (tile == Utility.PointToVector2((spouse.getHome() as FarmHouse).getPorchStandingSpot())) //porch
                         {
@@ -753,43 +774,42 @@ namespace StardewMods
                             }
                         }
                     }
-                    if (changed)
-                    {
-                        spouse.Position = (tile + newTile.Value) * 64;
-
-                        if (int.TryParse(newTile.Key, out int spriteIndex)) spouse.Sprite.CurrentFrame = spriteIndex;
-                        else if (newTile.Key.Contains(':')) spouse.Sprite.setCurrentAnimation(TryGetAnimations(newTile.Key));
-                        else
-                        {
-                            switch (newTile.Key.ToLower())
-                            {
-                                case "tile":
-                                    if (spouse.Name == "Sebastian" && Game1.netWorldState.Value.hasWorldStateID("sebastianFrog") && config.SpouseRoom_Auto_Facing_TileOffset.ContainsKey("sebastianFrog")) spouse.faceGeneralDirection((tile + config.SpouseRoom_Auto_Facing_TileOffset["sebastianFrog"]) * 64f);
-                                    else if (config.SpouseRoom_Auto_Facing_TileOffset.ContainsKey(spouse.Name)) spouse.faceGeneralDirection((tile + config.SpouseRoom_Auto_Facing_TileOffset[spouse.Name]) * 64f);
-                                    else spouse.faceGeneralDirection((tile + config.SpouseRoom_Auto_Facing_TileOffset["Default"]) * 64f);
-                                    break;
-                                case "up":
-                                    spouse.faceDirection(0);
-                                    break;
-                                case "left":
-                                    spouse.faceDirection(3);
-                                    break;
-                                case "right":
-                                    spouse.faceDirection(1);
-                                    break;
-                                default://down
-                                    spouse.faceDirection(2);
-                                    break;
-                            }
-                        }
-                    }
+                    if (changed) PlaceSpouse(spouse, tile, newTile);
                 }
-                //}
             }
-            Monitor.Log("Made spouse(s) behave...");
+            Monitor.Log("Made outside spouse(s) behave...");
         }
+        private void PlaceSpouse(NPC spouse, Vector2 tile, KeyValuePair<string, Vector2> newTile)
+        {
+            spouse.Position = (tile + newTile.Value) * 64;
 
-        private bool RandomTile(Farmer who, NPC spouse, bool changed, GameLocation loc, Vector2 tile, ref KeyValuePair<string, Vector2> newTile)
+            if (int.TryParse(newTile.Key, out int spriteIndex)) spouse.Sprite.CurrentFrame = spriteIndex;
+            else if (newTile.Key.Contains(':')) spouse.Sprite.setCurrentAnimation(TryGetAnimations(newTile.Key));
+            else
+            {
+                switch (spaceRemover.Replace(newTile.Key, "").ToLower())
+                {
+                    case "tile":
+                        if (spouse.Name == "Sebastian" && Game1.netWorldState.Value.hasWorldStateID("sebastianFrog") && config.SpouseRoom_Auto_Facing_TileOffset.ContainsKey("sebastianFrog")) spouse.faceGeneralDirection((tile + config.SpouseRoom_Auto_Facing_TileOffset["sebastianFrog"]) * 64f);
+                        else if (config.SpouseRoom_Auto_Facing_TileOffset.ContainsKey(spouse.Name)) spouse.faceGeneralDirection((tile + config.SpouseRoom_Auto_Facing_TileOffset[spouse.Name]) * 64f);
+                        else spouse.faceGeneralDirection((tile + config.SpouseRoom_Auto_Facing_TileOffset["Default"]) * 64f);
+                        break;
+                    case "up":
+                        spouse.faceDirection(0);
+                        break;
+                    case "left":
+                        spouse.faceDirection(3);
+                        break;
+                    case "right":
+                        spouse.faceDirection(1);
+                        break;
+                    default://down
+                        spouse.faceDirection(2);
+                        break;
+                }
+            }
+        }
+        private bool RandomTile(NPC spouse, bool changed, GameLocation loc, Vector2 tile, ref KeyValuePair<string, Vector2> newTile)
         {
             if (!(config.SpouseRoom_Auto_Blacklist.ToLower().Contains("all") || config.SpouseRoom_Auto_Blacklist.Contains(spouse.Name))
                 && ((!changed && config.SpouseRoom_Auto_Chance > 0) || config.SpouseRoom_Auto_Chance > Game1.random.Next(0, 99)))
@@ -840,7 +860,7 @@ namespace StardewMods
                             {
                                 foreach (MapSeat seat in loc.mapSeats)
                                 {
-                                    if (seat.OccupiesTile(potential.X, potential.Y) && !seat.IsBlocked(loc) && seat.GetSittingDirection() == 2)
+                                    if (seat.OccupiesTile(potential.X, potential.Y) && !seat.IsBlocked(loc) && seat.direction.Value == 2)
                                     {
                                         foreach (var spot in seat.GetSeatPositions())
                                         {
@@ -867,6 +887,12 @@ namespace StardewMods
 
         private void OnRenderedWorld(object sender, RenderedWorldEventArgs e)//preview mode
         {
+            if (dayStartedDelay > -1)
+            {
+                if (dayStartedDelay == 148) PlaceSpousesInside();
+                else if (dayStartedDelay < 1 && Context.IsMainPlayer) PlaceSpousesOutside();
+                dayStartedDelay--;
+            }
             if (spouses?.Count > 0)
             {
                 foreach (var spouse in spouses.ToArray())//animation reset
@@ -876,10 +902,11 @@ namespace StardewMods
                         spouse.Sprite.StopAnimation();
                         spouses.Remove(spouse);
                     }
-                    else if (Game1.timeOfDay >= 830 && !spouse.currentLocation.isPointPassable(new xTile.Dimensions.Location(spouse.getTileX() * 64, spouse.getTileY() * 64), Game1.viewport) && !(spouse.currentLocation.getObjectAtTile(spouse.getTileX(), spouse.getTileY()) is Furniture))
+                    else if (Game1.timeOfDay == 820 && !spouse.currentLocation.isPointPassable(new xTile.Dimensions.Location(spouse.getTileX() * 64, spouse.getTileY() * 64), Game1.viewport) && !(spouse.currentLocation.getObjectAtTile(spouse.getTileX(), spouse.getTileY()) is Furniture))
                     {
                         spouse.Sprite.StopAnimation();
                         spouse.Position = Utility.getRandomAdjacentOpenTile(spouse.getTileLocation(), spouse.currentLocation) * 64;
+                        spouse.faceDirection(0);
                         spouse.Schedule = spouse.getSchedule(Game1.dayOfMonth);
                         spouses.Remove(spouse);
                     }
@@ -923,7 +950,7 @@ namespace StardewMods
                             }
 
                             Vector2 spouseDefault = Utility.PointToVector2((who.currentLocation as FarmHouse).GetSpouseRoomSpot());
-                            
+
                             for (int i = 0; i < allNPCs.Count; i++)
                             {
                                 if (config.SpouseRoom_Manual_TileOffsets.TryGetValue(name, out list))//spouse room
