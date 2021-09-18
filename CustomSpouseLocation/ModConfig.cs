@@ -20,24 +20,24 @@ namespace StardewMods
         };
         public Dictionary<string, List<KeyValuePair<string, Vector2>>> SpouseRoom_Manual_TileOffsets { get; set; } = new Dictionary<string, List<KeyValuePair<string, Vector2>>>()
         {
-            { "Default", new List<KeyValuePair<string, Vector2>>() { new KeyValuePair<string, Vector2>("Up", Vector2.Zero) } },
-            { "sebastianFrog", new List<KeyValuePair<string, Vector2>>() { new KeyValuePair<string, Vector2>("Down", Vector2.Zero) } }
+            { "Default", new List<KeyValuePair<string, Vector2>>() { new KeyValuePair<string, Vector2>("Up", new Vector2(-999f)) } },
+            { "sebastianFrog", new List<KeyValuePair<string, Vector2>>() { new KeyValuePair<string, Vector2>("Down", new Vector2(-999f)) } }
         };
 
         //spouse kitchen
         public Dictionary<string, List<KeyValuePair<string, Vector2>>> Kitchen_Manual_TileOffsets { get; set; } = new Dictionary<string, List<KeyValuePair<string, Vector2>>>()
         {
-            { "Default", new List<KeyValuePair<string, Vector2>>() { new KeyValuePair<string, Vector2>("Down", Vector2.Zero) } }
+            { "Default", new List<KeyValuePair<string, Vector2>>() { new KeyValuePair<string, Vector2>("Down", new Vector2(-999f)) } }
         };
         //spouse patio
         public Dictionary<string, List<KeyValuePair<string, Vector2>>> Patio_Manual_TileOffsets { get; set; } = new Dictionary<string, List<KeyValuePair<string, Vector2>>>()
         {
-            { "Default", new List<KeyValuePair<string, Vector2>>() { new KeyValuePair<string, Vector2>("Down", Vector2.Zero) } }
+            { "Default", new List<KeyValuePair<string, Vector2>>() { new KeyValuePair<string, Vector2>("Down", new Vector2(-999f)) } }
         };
         //spouse porch
         public Dictionary<string, List<KeyValuePair<string, Vector2>>> Porch_Manual_TileOffsets { get; set; } = new Dictionary<string, List<KeyValuePair<string, Vector2>>>()
         {
-            { "Default", new List<KeyValuePair<string, Vector2>>() { new KeyValuePair<string, Vector2>("Down", Vector2.Zero) } }
+            { "Default", new List<KeyValuePair<string, Vector2>>() { new KeyValuePair<string, Vector2>("Down", new Vector2(-999f)) } }
         };
     }
 }

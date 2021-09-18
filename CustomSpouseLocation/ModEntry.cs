@@ -710,7 +710,7 @@ namespace StardewMods
                     {
                         if (tile == Utility.PointToVector2((loc as FarmHouse).getKitchenStandingSpot())) //kitchen
                         {
-                            List<KeyValuePair<string, Vector2>> tiles = config.Kitchen_Manual_TileOffsets[(config.Kitchen_Manual_TileOffsets.ContainsKey(spouse.Name) ? spouse.Name : "Default")];//.FindAll(val => !val.Key.Equals("Down", StringComparison.OrdinalIgnoreCase) || val.Value != Vector2.Zero);
+                            List<KeyValuePair<string, Vector2>> tiles = config.Kitchen_Manual_TileOffsets[(config.Kitchen_Manual_TileOffsets.ContainsKey(spouse.Name) ? spouse.Name : "Default")].FindAll(val => val.Value != new Vector2(-999f));
 
                             if (changed = tiles.Count > 0) newTile = tiles[Game1.random.Next(0, tiles.Count)];
                         }
@@ -721,7 +721,7 @@ namespace StardewMods
                             if (spouse.Name == "Sebastian" && Game1.netWorldState.Value.hasWorldStateID("sebastianFrog") && config.SpouseRoom_Manual_TileOffsets.ContainsKey("sebastianFrog") //SpouseRoom (Sebastian after frog)
                                 && tile.Y == (loc as FarmHouse).GetSpouseRoomSpot().Y - 1 && tileDistX + 1 % 7 == 0)
                             {
-                                List<KeyValuePair<string, Vector2>> tiles = config.SpouseRoom_Manual_TileOffsets["sebastianFrog"];//.FindAll(val => !val.Key.Equals("Down", StringComparison.OrdinalIgnoreCase) || val.Value != Vector2.Zero);
+                                List<KeyValuePair<string, Vector2>> tiles = config.SpouseRoom_Manual_TileOffsets["sebastianFrog"].FindAll(val => val.Value != new Vector2(-999f));
 
                                 if (changed = tiles.Count > 0) newTile = tiles[Game1.random.Next(0, tiles.Count)];
 
@@ -729,7 +729,7 @@ namespace StardewMods
                             }
                             if (!changed && tile.Y == (loc as FarmHouse).GetSpouseRoomSpot().Y && tileDistX % 7 == 0) //SpouseRoom - everything else
                             {
-                                List<KeyValuePair<string, Vector2>> tiles = config.SpouseRoom_Manual_TileOffsets[(config.SpouseRoom_Manual_TileOffsets.ContainsKey(spouse.Name) ? spouse.Name : "Default")];//.FindAll(val => !val.Key.Equals("Down", StringComparison.OrdinalIgnoreCase) || val.Value != Vector2.Zero);
+                                List<KeyValuePair<string, Vector2>> tiles = config.SpouseRoom_Manual_TileOffsets[(config.SpouseRoom_Manual_TileOffsets.ContainsKey(spouse.Name) ? spouse.Name : "Default")].FindAll(val => val.Value != new Vector2(-999f));
 
                                 if (changed = tiles.Count > 0) newTile = tiles[Game1.random.Next(0, tiles.Count)];
 
@@ -758,7 +758,7 @@ namespace StardewMods
                     {
                         if (tile == Utility.PointToVector2((spouse.getHome() as FarmHouse).getPorchStandingSpot())) //porch
                         {
-                            List<KeyValuePair<string, Vector2>> tiles = config.Porch_Manual_TileOffsets[(config.Porch_Manual_TileOffsets.ContainsKey(spouse.Name) ? spouse.Name : "Default")];//.FindAll(val => !val.Key.Equals("Down", StringComparison.OrdinalIgnoreCase) || val.Value != Vector2.Zero);
+                            List<KeyValuePair<string, Vector2>> tiles = config.Porch_Manual_TileOffsets[(config.Porch_Manual_TileOffsets.ContainsKey(spouse.Name) ? spouse.Name : "Default")].FindAll(val => val.Value != new Vector2(-999f));
 
                             if (changed = tiles.Count > 0) newTile = tiles[Game1.random.Next(0, tiles.Count)];
                         }
@@ -768,7 +768,7 @@ namespace StardewMods
                             Rectangle area = new Rectangle((int)patio.X - 1, (int)patio.Y - 2, (int)patio.X + 4, (int)patio.Y + 3);
                             if (area.Contains((int)tile.X, (int)tile.Y))
                             {
-                                List<KeyValuePair<string, Vector2>> tiles = config.Patio_Manual_TileOffsets[(config.Patio_Manual_TileOffsets.ContainsKey(spouse.Name) ? spouse.Name : "Default")];//.FindAll(val => !val.Key.Equals("Down", StringComparison.OrdinalIgnoreCase) || val.Value != Vector2.Zero);
+                                List<KeyValuePair<string, Vector2>> tiles = config.Patio_Manual_TileOffsets[(config.Patio_Manual_TileOffsets.ContainsKey(spouse.Name) ? spouse.Name : "Default")].FindAll(val => val.Value != new Vector2(-999f));
 
                                 if (changed = tiles.Count > 0) newTile = tiles[Game1.random.Next(0, tiles.Count)];
                             }
