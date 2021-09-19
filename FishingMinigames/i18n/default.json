@@ -5,9 +5,9 @@
     "GenericMC.MainDesc3": "If you changed your voice settings, saving will play a preview of your current voice. You can hover over the variable names for more info.",
 
     "GenericMC.Volume": "Voice Volume",
-    "GenericMC.VolumeDesc": "Allows fine-tuning of the \"Here Fishy!\" max volume. The actual volume increases a bit with fishing level, starting at 80% of this value. Press F5 after Saving to preview the volume at fishing level 10 (98% of max volume, 11-15 make up the last 2%).",
+    "GenericMC.VolumeDesc": "Allows fine-tuning of the \"Here Fishy!\" max volume. The actual volume increases a bit with fishing level, starting at 80% of this value. After Saving a preview of the volume at fishing level 10 (98% of max volume, 11-15 make up the last 2%) will play.",
     "GenericMC.Pitch": "Voice Pitch",
-    "GenericMC.PitchDesc": "Changes the pitch of your \"Here Fishy!\" voice. Starts randomized for multiplayer diversity. The original is right in the middle. Press F5 after Saving to preview.",
+    "GenericMC.PitchDesc": "Changes the pitch of your \"Here Fishy!\" voice. Starts randomized for multiplayer diversity. The original is right in the middle. Save to preview.",
 
     "GenericMC.KeyBinds": "Keybinds",
     "GenericMC.KeyBindsDesc": "Button(s) used to trigger the minigame. If the same as Tool Use buttons, the Vanilla Fishing Minigame will be overwritten by this. Supports Mouse, Keyboard and Controller. Individual keys are separated by commas, combos like \"LeftShift + K\" are NOT supported for Keybind minigames, but work otherwise. Example of three keys: MouseRight, LeftShift + K, ControllerX. For key names, see: https://stardewcommunitywiki.com/Modding:Player_Guide/Key_Bindings",
