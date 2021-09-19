@@ -42,6 +42,7 @@ namespace FishingMinigames
             helper.Events.GameLoop.GameLaunched += GenericModConfigMenuIntegration;
             helper.Events.GameLoop.SaveLoaded += GameLoop_SaveLoaded;
             helper.Events.Multiplayer.ModMessageReceived += OnModMessageReceived;
+            helper.Events.Player.Warped += OnWarped;
 
             helper.ConsoleCommands.Add("startminigametest", "For testing the Start Minigame of the Fishing Minigames mod. If holding a fishing rod/net, its data will be used, otherwise uses a basic one.\n\n" +
                 "Usage: startminigametest <fish>\n- fish: ID or name (fuzzy search, single word only) of the fish to use. Random size (between min-max) is used.\n\n" +
@@ -308,6 +309,10 @@ namespace FishingMinigames
         private void OnModMessageReceived(object sender, ModMessageReceivedEventArgs e)
         {
             minigame.Value.OnModMessageReceived(sender, e);
+        }
+        private void OnWarped(object sender, WarpedEventArgs e)
+        {
+            minigame.Value.OnWarped(sender, e);
         }
 
         private void Input_ButtonsChanged(object sender, ButtonsChangedEventArgs e)  //this.Monitor.Log(locationName, LogLevel.Debug);

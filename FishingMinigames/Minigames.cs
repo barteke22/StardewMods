@@ -289,7 +289,7 @@ namespace FishingMinigames
             who = Game1.player;
             foreach (Farmer other in Game1.getAllFarmers())//draw tool for tool anims & bubble for other players
             {
-                if (messages.ContainsKey(other.UniqueMultiplayerID))
+                if (messages.ContainsKey(other.UniqueMultiplayerID) && who.currentLocation == other.currentLocation)
                 {
                     if (messages[other.UniqueMultiplayerID].drawAttachments) DrawAndEmote(other, 4);//draw bait and tackle
                     else if (messages[other.UniqueMultiplayerID].drawTool) Game1.drawTool(other);//tool
@@ -1909,7 +1909,8 @@ namespace FishingMinigames
                     {
                         if (other.UniqueMultiplayerID == message.multiplayerID) who = other;
                     }
-                    if (who == null) return;
+                    if (who == null || who.currentLocation != this.who.currentLocation) return;
+
 
                     float voiceVolumePersonal = 0;
                     if (voiceVolume > 0f)
@@ -1960,7 +1961,7 @@ namespace FishingMinigames
                             else if (fishySound != null)//volume based on distance? will be iffy in split... play at the same time?
                             {
                                 float volume = 0f;
-                                if (who.currentLocation == this.who.currentLocation) volume = Math.Min(Math.Max((Vector2.Distance(who.Position, this.who.Position) - 2560f) / -2560f, 0f), 1f);//distance based volume within 40ish tiles
+                                volume = Math.Min(Math.Max((Vector2.Distance(who.Position, this.who.Position) - 2560f) / -2560f, 0f), 1f);//distance based volume within 40ish tiles
                                 if (Context.IsSplitScreen)
                                 {
                                     int screen = Context.ScreenId;
@@ -2048,7 +2049,16 @@ namespace FishingMinigames
                 }
             }
         }
-
+        public void OnWarped(object sender, WarpedEventArgs e)
+        {
+            if (e.Player == who && e.OldLocation != e.NewLocation)
+            {
+                foreach (Farmer other in Game1.getAllFarmers())
+                {
+                    ClearAnimations(other);
+                }
+            }
+        }
 
         private void UpdateAmbientColor(Farmer who)
         {
