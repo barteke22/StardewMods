@@ -240,7 +240,12 @@ namespace FishingMinigames
                 fishCaught = false;
             }
 
-            if (infoTimer > 0 && Game1.activeClickableMenu != null) infoTimer = 1020;//bubble logic
+            if (infoTimer > 0 && Game1.activeClickableMenu != null)//bubble logic
+            {
+                who.FacingDirection = 2;
+                who.FarmerSprite.animateOnce(new FarmerSprite.AnimationFrame[1] { new FarmerSprite.AnimationFrame(84, 150) });
+                infoTimer = 1020;
+            }
             else if (infoTimer > 1) infoTimer--;
             else if (infoTimer == 1)
             {
@@ -1578,7 +1583,7 @@ namespace FishingMinigames
                 {
                     who.currentLocation.TemporarySprites.Add(new TemporaryAnimatedSprite(Game1.objectSpriteSheetName,
                         Game1.getSourceRectForStandardTileSheet(Game1.objectSpriteSheet, rod.getBaitAttachmentIndex(), 16, 16),
-                        position + new Vector2(facingDir == 3 ? 40f : -10f, -80f), false, 0f, Color.White)
+                        position + new Vector2(facingDir == 3 ? 44f : -10f, -80f), false, 0f, Color.White)
                     {
                         layerDepth = layer,
                         rotation = facingDir == 3 ? 0.3f : -0.3f,
@@ -1591,7 +1596,7 @@ namespace FishingMinigames
                 {
                     who.currentLocation.TemporarySprites.Add(new TemporaryAnimatedSprite(Game1.objectSpriteSheetName,
                         Game1.getSourceRectForStandardTileSheet(Game1.objectSpriteSheet, rod.getBobberAttachmentIndex(), 16, 16),
-                        position + new Vector2(facingDir == 3 ? -22f : 40f, -84f), false, 0f, Color.White)
+                        position + new Vector2(facingDir == 3 ? -20f : 36f, -90f), false, 0f, Color.White)
                     {
                         layerDepth = layer,
                         rotation = facingDir == 3 ? 0.6f : -0.6f,
@@ -1681,17 +1686,17 @@ namespace FishingMinigames
             //item(s) in hand
             if (!furniture)
             {
-                who.currentLocation.TemporarySprites.Add(new TemporaryAnimatedSprite(Game1.objectSpriteSheetName, sourceRect, who.Position + new Vector2(14f - (8f * itemSpriteSize), -45f - (8f * itemSpriteSize)), false, 0f, Color.White)
+                who.currentLocation.TemporarySprites.Add(new TemporaryAnimatedSprite(Game1.objectSpriteSheetName, sourceRect, who.Position + new Vector2(16f - (10f * itemSpriteSize), -48f - (6f * itemSpriteSize)), false, 0f, Color.White)
                 { layerDepth = layer + 0.0000010f, rotation = (fishSize == -1 || whichFish == 800 || whichFish == 798 || whichFish == 149 || whichFish == 151) ? 0.5f : (caughtDoubleFish) ? 2.2f : 2.4f, scale = itemSpriteSize, owner = who, id = nexusKey });
 
-                if (caughtDoubleFish) who.currentLocation.TemporarySprites.Add(new TemporaryAnimatedSprite(Game1.objectSpriteSheetName, sourceRect, who.Position + new Vector2(6f - (8f * itemSpriteSize), -45f - (8f * itemSpriteSize)), false, 0f, Color.White)
+                if (caughtDoubleFish) who.currentLocation.TemporarySprites.Add(new TemporaryAnimatedSprite(Game1.objectSpriteSheetName, sourceRect, who.Position + new Vector2(8f - (10f * itemSpriteSize), -48f - (6f * itemSpriteSize)), false, 0f, Color.White)
                 { layerDepth = layer + 0.0000011f, rotation = (fishSize == -1 || whichFish == 800 || whichFish == 798 || whichFish == 149 || whichFish == 151) ? 1f : 2.6f, scale = itemSpriteSize, owner = who, id = nexusKey });
             }
             else who.currentLocation.TemporarySprites.Add(new TemporaryAnimatedSprite(Furniture.furnitureTextureName, sourceRect, who.Position + new Vector2(-10f, -80f), false, 0f, Color.White)
             { layerDepth = layer, scale = itemSpriteSize, owner = who, id = nexusKey });
 
             //fishing net
-            if (!fromFishPond) who.currentLocation.TemporarySprites.Add(new TemporaryAnimatedSprite(Game1.toolSpriteSheetName, Game1.getSourceRectForStandardTileSheet(Game1.toolSpriteSheet, who.CurrentTool.IndexOfMenuItemView, 16, 16), who.Position + new Vector2(-10f, -16f), false, 0f, Color.White)
+            if (!fromFishPond) who.currentLocation.TemporarySprites.Add(new TemporaryAnimatedSprite(Game1.toolSpriteSheetName, Game1.getSourceRectForStandardTileSheet(Game1.toolSpriteSheet, who.CurrentTool.IndexOfMenuItemView, 16, 16), who.Position + new Vector2(-10f, -15f), false, 0f, Color.White)
             { layerDepth = layer, rotation = -3f, scale = 4f, owner = who, id = nexusKey });
         }
 
