@@ -364,7 +364,7 @@ namespace FishingMinigames
                                     who.completelyStopAnimatingOrDoingAction();
                                     who.UsingTool = true;
                                     List<FarmerSprite.AnimationFrame> animationFrames = new List<FarmerSprite.AnimationFrame>(){
-                                        new FarmerSprite.AnimationFrame(94, 500, false, false, null, false) { flip =  who.FacingDirection == 3 }.AddFrameAction(delegate (Farmer f) { f.jitterStrength = 2f; }) };
+                                        new FarmerSprite.AnimationFrame(94, 500, false, false, null, false) { flip =  oldFacingDirection == 3 }.AddFrameAction(delegate (Farmer f) { f.jitterStrength = 2f; }) };
                                     who.FarmerSprite.setCurrentAnimation(animationFrames.ToArray());
                                     who.FarmerSprite.PauseForSingleAnimation = true;
                                     who.FarmerSprite.loop = true;
@@ -762,7 +762,7 @@ namespace FishingMinigames
                     who.completelyStopAnimatingOrDoingAction();
                     who.jitterStrength = 2f;
                     List<FarmerSprite.AnimationFrame> animationFrames = new List<FarmerSprite.AnimationFrame>(){
-                        new FarmerSprite.AnimationFrame(94, 100, false, false, null, false) { flip =  who.FacingDirection == 3 }.AddFrameAction(delegate (Farmer f) { f.jitterStrength = 2f; }) };
+                        new FarmerSprite.AnimationFrame(94, 100, false, false, null, false) { flip =  oldFacingDirection == 3 }.AddFrameAction(delegate (Farmer f) { f.jitterStrength = 2f; }) };
                     who.FarmerSprite.setCurrentAnimation(animationFrames.ToArray());
                     who.FarmerSprite.PauseForSingleAnimation = true;
                     who.FarmerSprite.loop = true;
@@ -873,8 +873,8 @@ namespace FishingMinigames
                     float distance = y - (float)(who.getStandingY() - 100);
 
                     float height = Math.Abs(distance + 170f);
-                    if (who.FacingDirection == 0) height -= 130f;
-                    else if (who.FacingDirection == 2) height -= 170f;
+                    if (oldFacingDirection == 0) height -= 130f;
+                    else if (oldFacingDirection == 2) height -= 170f;
                     height = Math.Max(height, 0f);
 
                     float gravity = 0.002f;
@@ -1567,19 +1567,21 @@ namespace FishingMinigames
             }
             else if (which == 4 && !fromFishPond && fishingFestivalMinigame == 0)//bait & megaphone
             {
+                int facingDir = oldFacingDirection;
+                if (who != this.who) facingDir = messages[who.UniqueMultiplayerID].oldFacingDirection;
                 ClearAnimations(who);
                 FishingRod rod = who.CurrentTool as FishingRod;
                 Vector2 position = who.Position + new Vector2(0, who.yJumpOffset * 2f) + who.jitter;
-                float layer = (who.Position.Y + (who.FacingDirection != 0 ? 17.5f : 16.5f)) / 10000f;
+                float layer = (who.Position.Y + (facingDir != 0 ? 17.5f : 16.2f)) / 10000f;
 
                 if (rod.getBaitAttachmentIndex() != -1)
                 {
                     who.currentLocation.TemporarySprites.Add(new TemporaryAnimatedSprite(Game1.objectSpriteSheetName,
                         Game1.getSourceRectForStandardTileSheet(Game1.objectSpriteSheet, rod.getBaitAttachmentIndex(), 16, 16),
-                        position + new Vector2(who.FacingDirection == 3 ? 40f : -10f, -80f), false, 0f, Color.White)
+                        position + new Vector2(facingDir == 3 ? 40f : -10f, -80f), false, 0f, Color.White)
                     {
                         layerDepth = layer,
-                        rotation = who.FacingDirection == 3 ? 0.3f : -0.3f,
+                        rotation = facingDir == 3 ? 0.3f : -0.3f,
                         scale = 2f,
                         owner = who,
                         id = nexusKey
@@ -1589,12 +1591,12 @@ namespace FishingMinigames
                 {
                     who.currentLocation.TemporarySprites.Add(new TemporaryAnimatedSprite(Game1.objectSpriteSheetName,
                         Game1.getSourceRectForStandardTileSheet(Game1.objectSpriteSheet, rod.getBobberAttachmentIndex(), 16, 16),
-                        position + new Vector2(who.FacingDirection == 3 ? -22f : 40f, -84f), false, 0f, Color.White)
+                        position + new Vector2(facingDir == 3 ? -22f : 40f, -84f), false, 0f, Color.White)
                     {
                         layerDepth = layer,
-                        rotation = who.FacingDirection == 3 ? 0.6f : -0.6f,
+                        rotation = facingDir == 3 ? 0.6f : -0.6f,
                         scale = 3f,
-                        flipped = who.FacingDirection == 3,
+                        flipped = facingDir == 3,
                         owner = who,
                         id = nexusKey
                     });
@@ -1936,7 +1938,7 @@ namespace FishingMinigames
                 furniture = item is Furniture;
             }
             Helper.Multiplayer.SendMessage(new MinigameMessage(who, stageRequested, voicePitch[screen], drawAttachments, whichFish, fishQuality, maxFishSize, fishSize, itemSpriteSize,
-                stack, recordSize, furniture, sourceRect, x, y), "Animation", modIDs: new[] { ModManifest.UniqueID }, IDs);
+                stack, recordSize, furniture, sourceRect, x, y, oldFacingDirection), "Animation", modIDs: new[] { ModManifest.UniqueID }, IDs);
         }
 
         /// <summary>Other players' animations.</summary>
@@ -1955,8 +1957,8 @@ namespace FishingMinigames
                     {
                         if (other.UniqueMultiplayerID == message.multiplayerID) who = other;
                     }
-                    if (who == null || who.currentLocation != this.who.currentLocation) return;
-
+                    if (who == null) return;
+                    // || who.currentLocation != this.who.currentLocation
 
                     float voiceVolumePersonal = 0;
                     if (voiceVolume > 0f)
@@ -1983,7 +1985,7 @@ namespace FishingMinigames
                         case "Swing":
                             (who.CurrentTool as FishingRod).setTimingCastAnimation(who);
                             who.UsingTool = true;
-                            switch (who.FacingDirection)
+                            switch (message.oldFacingDirection)
                             {
                                 case 0://up
                                     who.FarmerSprite.animateOnce(295, 1f, 1);
@@ -2028,7 +2030,7 @@ namespace FishingMinigames
                             who.jitterStrength = 2f;
                             if (message.stage != null) who.UsingTool = true;
                             List<FarmerSprite.AnimationFrame> animationFrames = new List<FarmerSprite.AnimationFrame>(){
-                                new FarmerSprite.AnimationFrame(94, 100, false, false, null, false) { flip =  who.FacingDirection == 3 }.AddFrameAction(delegate (Farmer f) { f.jitterStrength = 2f; }) };
+                                new FarmerSprite.AnimationFrame(94, 100, false, false, null, false) { flip =  message.oldFacingDirection == 3 }.AddFrameAction(delegate (Farmer f) { f.jitterStrength = 2f; }) };
                             who.FarmerSprite.setCurrentAnimation(animationFrames.ToArray());
                             who.FarmerSprite.PauseForSingleAnimation = true;
                             who.FarmerSprite.loop = true;
@@ -2083,8 +2085,8 @@ namespace FishingMinigames
                             float distance = y - (float)(who.getStandingY() - 100);
 
                             float height = Math.Abs(distance + 170f);
-                            if (who.FacingDirection == 0) height -= 130f;
-                            else if (who.FacingDirection == 2) height -= 170f;
+                            if (message.oldFacingDirection == 0) height -= 130f;
+                            else if (message.oldFacingDirection == 2) height -= 170f;
                             height = Math.Max(height, 0f);
 
                             float gravity = 0.002f;
@@ -2131,16 +2133,16 @@ namespace FishingMinigames
                 }
             }
         }
-        public void OnWarped(object sender, WarpedEventArgs e)//maybe remove ---------------------------
-        {
-            if (e.Player == who && e.OldLocation != e.NewLocation)
-            {
-                foreach (Farmer other in Game1.getAllFarmers())
-                {
-                    ClearAnimations(other);
-                }
-            }
-        }
+        //public void OnWarped(object sender, WarpedEventArgs e)//maybe remove ---------------------------
+        //{
+        //    //if (e.Player == who && e.OldLocation != e.NewLocation)
+        //    //{
+        //    //    foreach (Farmer other in Game1.getAllFarmers())
+        //    //    {
+        //    //        ClearAnimations(other);
+        //    //    }
+        //    //}
+        //}
 
 
         /// <summary>Makes text a tiny bit bolder and adds a border behind it. The border uses text colour's alpha for its aplha value. 6 DrawString operations, so 6x less efficient.</summary>

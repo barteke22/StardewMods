@@ -21,6 +21,7 @@ namespace FishingMinigames
         public Rectangle sourceRect;
         public int x;
         public int y;
+        public int oldFacingDirection;
 
 
         public MinigameMessage()
@@ -30,7 +31,7 @@ namespace FishingMinigames
             this.sourceRect = new Rectangle();
         }
 
-        public MinigameMessage(Farmer whichPlayer, string stage, float voice, bool drawAttachments, int whichFish, int fishQuality, int maxFishSize, float fishSize, float itemSpriteSize, int count, bool recordSize, bool furniture, Rectangle sourceRect, int x, int y)
+        public MinigameMessage(Farmer whichPlayer, string stage, float voice, bool drawAttachments, int whichFish, int fishQuality, int maxFishSize, float fishSize, float itemSpriteSize, int count, bool recordSize, bool furniture, Rectangle sourceRect, int x, int y, int oldFacingDirection)
         {
             this.multiplayerID = whichPlayer.UniqueMultiplayerID;
             this.stage = stage;
@@ -47,6 +48,7 @@ namespace FishingMinigames
             this.sourceRect = sourceRect;
             this.x = x;
             this.y = y;
+            this.oldFacingDirection = oldFacingDirection;
         }
     }
 
