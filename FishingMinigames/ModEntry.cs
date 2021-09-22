@@ -36,6 +36,7 @@ namespace FishingMinigames
             
 
             helper.Events.Display.Rendered += Display_Rendered;
+            helper.Events.Display.RenderingWorld += Display_RenderingWorld;
             helper.Events.Display.RenderedWorld += Display_RenderedWorld;
             helper.Events.GameLoop.UpdateTicking += GameLoop_UpdateTicking;
             helper.Events.Input.ButtonsChanged += Input_ButtonsChanged;
@@ -369,6 +370,11 @@ namespace FishingMinigames
             }
         }
 
+
+        private void Display_RenderingWorld(object sender, RenderingWorldEventArgs e)
+        {
+            minigame.Value.Display_RenderingWorld(sender, e);
+        }
 
 
         /// <summary>Get whether this instance can edit the given asset.</summary>

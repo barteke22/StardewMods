@@ -9,7 +9,6 @@ namespace FishingMinigames
         public long multiplayerID;
         public string stage;
         public float voicePitch;
-        public bool drawTool;
         public bool drawAttachments;
         public int whichFish;
         public int fishQuality;
@@ -22,7 +21,6 @@ namespace FishingMinigames
         public Rectangle sourceRect;
         public int x;
         public int y;
-        public Color ambientColor;
 
 
         public MinigameMessage()
@@ -32,12 +30,11 @@ namespace FishingMinigames
             this.sourceRect = new Rectangle();
         }
 
-        public MinigameMessage(Farmer whichPlayer, string stage, float voice, bool drawTool, bool drawAttachments, int whichFish, int fishQuality, int maxFishSize, float fishSize, float itemSpriteSize, int count, bool recordSize, bool furniture, Rectangle sourceRect, int x, int y, Color ambientColor)
+        public MinigameMessage(Farmer whichPlayer, string stage, float voice, bool drawAttachments, int whichFish, int fishQuality, int maxFishSize, float fishSize, float itemSpriteSize, int count, bool recordSize, bool furniture, Rectangle sourceRect, int x, int y)
         {
             this.multiplayerID = whichPlayer.UniqueMultiplayerID;
             this.stage = stage;
             this.voicePitch = voice;
-            this.drawTool = drawTool;
             this.drawAttachments = drawAttachments;
             this.whichFish = whichFish;
             this.fishQuality = fishQuality;
@@ -50,7 +47,6 @@ namespace FishingMinigames
             this.sourceRect = sourceRect;
             this.x = x;
             this.y = y;
-            this.ambientColor = ambientColor;
         }
     }
 
