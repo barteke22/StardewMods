@@ -34,6 +34,9 @@
     "GenericMC.Difficulty": "Trudność Minigry (Obu)",
     "GenericMC.DifficultyDesc": "Trudność minigry (czas) jest oparta na takich czynnikach jak trudność i rozmiar ryby/przedmiotu i twoim sprzęcie. To jest mnożnik końcowej wartości, im wyższy, tym trudniej.",
 
+    "GenericMC.TutorialSkip": "Pomiń Instrukcje",
+    "GenericMC.TutorialSkipDesc": "Pozwala pominąć zwolnione tempo Minigry Startu. Zmienione automatycznie po ukończeniu Minigry Startu. Można wyłączyć tę opcje, aby zobaczyć je ponownie.",
+
     "GenericMC.StartMinigameScale": "Skala Minigry (Start)",
     "GenericMC.StartMinigameScaleDesc": "Minigra startowa skaluje się wraz z poziomem powiększenia, i można ją tutaj dostroić.",
 

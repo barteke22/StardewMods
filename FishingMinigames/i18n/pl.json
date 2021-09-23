@@ -34,6 +34,9 @@
     "GenericMC.Difficulty": "Trudność Minigry (Obu)",
     "GenericMC.DifficultyDesc": "Trudność minigry (czas) jest oparta na takich czynnikach jak trudność i rozmiar ryby/przedmiotu i twoim sprzęcie. To jest mnożnik końcowej wartości, im wyższy, tym trudniej.",
 
+    "GenericMC.TutorialSkip": "Pomiń Instrukcje",
+    "GenericMC.TutorialSkipDesc": "Pozwala pominąć zwolnione tempo Minigry Startu. Zmienione automatycznie po ukończeniu Minigry Startu. Można wyłączyć tę opcje, aby zobaczyć je ponownie.",
+
     "GenericMC.StartMinigameScale": "Skala Minigry (Start)",
     "GenericMC.StartMinigameScaleDesc": "Minigra startowa skaluje się wraz z poziomem powiększenia, i można ją tutaj dostroić.",
 
@@ -96,25 +99,25 @@
 
 
     //wędka -> podbierak
-    "Bamboo Pole":      "Podbierak Bambusowy",
-    "Training Rod":     "Podbierak Treningowy",
-    "Fiberglass Rod":   "Podbierak z Włókna Szklanego",
-    "Iridium Rod":      "Podbierak z Iridu",
+    "Bamboo Pole": "Podbierak Bambusowy",
+    "Training Rod": "Podbierak Treningowy",
+    "Fiberglass Rod": "Podbierak z Włókna Szklanego",
+    "Iridium Rod": "Podbierak z Iridu",
     //przynęty - tylko podszebne dla GMCM
-    "Bait":            "Przynęta",
-    "Magnet":          "Magnes",
-    "Wild Bait":       "Dzika Przynęta",
-    "Magic Bait":      "Magiczna Przynęta",
+    "Bait": "Przynęta",
+    "Magnet": "Magnes",
+    "Wild Bait": "Dzika Przynęta",
+    "Magic Bait": "Magiczna Przynęta",
     //spławik -> megafon
-    "Spinner":          "Megafon Spławika",
-    "Dressed Spinner":  "Megafon Szmaciany",
-    "Trap Bobber":      "Megafon Pułapka",
-    "Cork Bobber":      "Megafon z Korka",
-    "Lead Bobber":      "Megafon Ołowiany",
-    "Treasure Hunter":  "Megafon Skarbów",
-    "Barbed Hook":      "Megafon Ostry",
-    "Curiosity Lure":   "Megafon Ciekawski",
-    "Quality Bobber":   "Megafon Jakości",
+    "Spinner": "Megafon Spławika",
+    "Dressed Spinner": "Megafon Szmaciany",
+    "Trap Bobber": "Megafon Pułapka",
+    "Cork Bobber": "Megafon z Korka",
+    "Lead Bobber": "Megafon Ołowiany",
+    "Treasure Hunter": "Megafon Skarbów",
+    "Barbed Hook": "Megafon Ostry",
+    "Curiosity Lure": "Megafon Ciekawski",
+    "Quality Bobber": "Megafon Jakości",
     //itd
     "Rod.Fishing": "Podbierak",
     "Rod.FishingDesc": "Ten podbierak daje Ci pewność siebie niezbędną do rozpoczęcia łowienia ryb.",

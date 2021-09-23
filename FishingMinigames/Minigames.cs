@@ -104,6 +104,7 @@ namespace FishingMinigames
         public static bool metricSizes;
         public static int[] festivalMode = new int[4];
         public static float[] minigameDifficulty = new float[4];
+        public static bool[] tutorialSkip = new bool[4];
         public static Color minigameColor;
 
 
@@ -163,15 +164,15 @@ namespace FishingMinigames
 
             //if (e.Pressed.Contains(SButton.Z))
             //{
-            //    //entry.Helper.Reflection.GetField<bool>(pet, "wasPetToday").GetValue();
-            //    who.UsingTool = true;
+            //  
             //}
-            if (e.Pressed.Contains(SButton.F5) && Context.IsWorldReady)
+            if (!Context.IsWorldReady) return;
+
+            if (e.Pressed.Contains(SButton.F5))
             {
                 EmergencyCancel();
                 return;
             }
-            if (!Context.IsWorldReady) return;
 
 
             if (startMinigameStage > 0 && startMinigameStage < 5)//already in startMinigame
@@ -1016,7 +1017,7 @@ namespace FishingMinigames
                 float speed = 2f;
                 if (startMinigameStage == 2)
                 {
-                    if ((fishingFestivalMinigame == 0 && who.fishCaught.Count() != 0) || debug) speed -= (startMinigameDiff * effects["SPEED"]);
+                    if ((fishingFestivalMinigame == 0 && tutorialSkip[screen]) || debug) speed -= (startMinigameDiff * effects["SPEED"]);
                     else if (fishingFestivalMinigame == 1) speed += (festivalDifficulty / 2f - (fishingLevel / 10f)) * minigameDifficulty[screen];
                     else if (fishingFestivalMinigame == 2) speed += (festivalDifficulty / 1.6f - (fishingLevel / 10f)) * minigameDifficulty[screen];
 
@@ -1164,7 +1165,6 @@ namespace FishingMinigames
                 if (startMinigameStage < 5) startMinigameStage = 3;
             }
         }
-
         private void StartMinigameInput(ButtonsChangedEventArgs e)
         {
             if (startMinigameStage == 2)
@@ -1413,14 +1413,22 @@ namespace FishingMinigames
                                 });
                                 SendMessage(who, "Water");
                             }
-                            if (fishingFestivalMinigame == 0)
+                            if (fishingFestivalMinigame == 0)//not festivals
                             {
                                 recordSize = who.caughtFish(whichFish, (metricSizes) ? (int)(fishSize * 2.54f) : (int)fishSize, false, caughtDoubleFish ? 2 : 1);
+                                
+                                if (startMinigameStyle[screen] > 0 && !tutorialSkip[screen] && !itemIsInstantCatch)
+                                {
+                                    tutorialSkip[screen] = true;
+                                    ModConfig config = Helper.ReadConfig<ModConfig>();
+                                    config.TutorialSkip[screen] = true;
+                                    Helper.WriteConfig(config);
+                                }
+
                                 if (bossFish)
                                 {
                                     Game1.showGlobalMessage(Game1.content.LoadString("Strings\\StringsFromCSFiles:FishingRod.cs.14068"));
 
-                                    //Helper.Reflection.GetField<Multiplayer>(Game1.game1, "multiplayer").GetValue().globalChatInfoMessage("CaughtLegendaryFish", new string[] { who.Name, name }); //multiplayer class is not protected
                                     if (Game1.IsMultiplayer || Game1.multiplayerMode != 0)
                                     {
                                         if (Game1.IsClient) Game1.client.sendMessage(15, "CaughtLegendaryFish", new string[] { who.Name, item.DisplayName });
@@ -1447,7 +1455,7 @@ namespace FishingMinigames
                         Game1.displayHUD = true;
 
                         stage = "Caught2";
-                        if (fishingFestivalMinigame != 0)
+                        if (fishingFestivalMinigame != 0)//festivals
                         {
                             if (!itemIsInstantCatch)
                             {

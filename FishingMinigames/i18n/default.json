@@ -34,6 +34,9 @@
     "GenericMC.Difficulty": "Minigame Difficulty (Both)",
     "GenericMC.DifficultyDesc": "Minigame difficulty (timers) is based on factors like your equipment, fish difficulty and size. This is the final value multiplier, the higher, the harder.",
 
+    "GenericMC.TutorialSkip": "Skip Tutorial",
+    "GenericMC.TutorialSkipDesc": "Allows you to skip the Start Minigame tutorial (slow mode). Set automatically if you've completed a Start Minigame. You can also unset this to see it again.",
+
     "GenericMC.StartMinigameScale": "Minigame Scale (Start)",
     "GenericMC.StartMinigameScaleDesc": "The Start Minigame scales along with the zoom level, and can be fine-tuned here.",
 
@@ -123,7 +126,7 @@
 
 
     //everlasting baits and tackles mod
-    "Mods.Infinite": "infinite",
+    "Mods.Infinite": "infinite"
 
 
     //events:
