@@ -12,6 +12,7 @@ using StardewValley.Tools;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Object = StardewValley.Object;
 
 namespace FishingMinigames
@@ -44,6 +45,7 @@ namespace FishingMinigames
         private bool fishCaught;
         private bool bossFish;
         private int difficulty;
+        private string behavior = "";
         private bool treasureCaught;
         private bool showPerfect;
         private bool fromFishPond;
@@ -283,6 +285,22 @@ namespace FishingMinigames
                 if (messages.ContainsKey(other.UniqueMultiplayerID) && who.currentLocation == other.currentLocation && messages[other.UniqueMultiplayerID].drawAttachments) DrawAndEmote(other, 4);//draw bait and tackle
             }
             if (drawAttachments) DrawAndEmote(who, 4);//draw bait and tackle
+
+            if (startMinigameStage > 4 && startMinigameData[5] > 0)//fade out and continue - test if keeping it here fixes transition glitches
+            {
+                startMinigameData[5]--;
+                if (startMinigameData[5] == 0)
+                {
+                    stage = null;
+                    if (startMinigameStage == 5)
+                    {
+                        DrawAndEmote(who, 2);
+                        EmergencyCancel();
+                    }
+                    else HereFishyAnimation(who, x, y);
+                    return;
+                }
+            }
         }
         public void Display_RenderedAll(SpriteBatch e)
         {
@@ -433,7 +451,7 @@ namespace FishingMinigames
                     }
                     catch (Exception ex)
                     {
-                        Monitor.Log("Canceled fishing because: " + ex.Message, LogLevel.Error);
+                        Monitor.Log("Canceled fishing because: " + ex.Message + " in: " + ModEntry.exception.Match(ex.StackTrace).Value, LogLevel.Error);
                         EmergencyCancel();
                     }
                 }
@@ -478,11 +496,35 @@ namespace FishingMinigames
                 if (fishingFestivalMinigame == 0) startMinigameArrowData = new string[1 + (int)Math.Abs(startMinigameDiff * 7f) + ((bossFish) ? 20 : 0)];
                 else startMinigameArrowData = new string[999];
 
+                Random r = new Random();
+                int arrow = 0;
                 int offset = 0;
                 for (int i = 0; i < startMinigameArrowData.Length; i++)
                 {
-                    startMinigameArrowData[i] = Game1.random.Next(0, 4) + "/0/" + offset + "/9999";//0 arrow direction, 1 colour, 2 offset, 3 current distance
-                    if (Game1.random.Next(0, 3) == 0) offset += (int)(250 * startMinigameScale);
+                    switch (behavior)
+                    {
+                        case "smooth":
+                            if (i > 0 && r.Next(0, 2) != 0) arrow = r.Next(0, 4);
+                            break;
+                        case "sinker":
+                            if (i > 0 && r.Next(0, 3) == 0) arrow = 2;
+                            else arrow = r.Next(0, 4);
+                            break;
+                        case "floater":
+                            if (i > 0 && r.Next(0, 3) == 0) arrow = 0;
+                            else arrow = r.Next(0, 4);
+                            break;
+                        case "dart":
+                            int newR = r.Next(0, 4);
+                            if (i > 0 && arrow == newR && r.Next(0, 3) == 0) arrow = newR;
+                            else arrow = r.Next(0, 4);
+                            break;
+                        default:
+                            arrow = r.Next(0, 4);
+                            break;
+                    }
+                    startMinigameArrowData[i] = arrow + "/0/" + offset + "/9999";//0 arrow direction, 1 colour, 2 offset, 3 current distance
+                    if (r.Next(0, 3) == 0) offset += (int)(250 * startMinigameScale);
                     else offset += (int)(140 * startMinigameScale);
                 }
                 //vanilla treasure chance calculation
@@ -612,7 +654,11 @@ namespace FishingMinigames
                 if (item is Furniture) itemIsInstantCatch = true;
                 else if (Utility.IsNormalObjectAtParentSheetIndex(item, whichFish) && data.ContainsKey(whichFish))
                 {
-                    if (int.TryParse(fishData[1], out difficulty) && int.TryParse(fishData[3], out minFishSize) && int.TryParse(fishData[4], out maxFishSize)) itemIsInstantCatch = false;
+                    if (int.TryParse(fishData[1], out difficulty) && int.TryParse(fishData[3], out minFishSize) && int.TryParse(fishData[4], out maxFishSize))
+                    {
+                        behavior = fishData[2];
+                        itemIsInstantCatch = false;
+                    }
                     else itemIsInstantCatch = true;
                 }
                 else itemIsInstantCatch = true;
@@ -665,7 +711,7 @@ namespace FishingMinigames
             }
 
             float modifier = (fishingLevel / 5f) - ((difficulty / 12f + 3) - (fishSize / 40f)) + who.LuckLevel + (Game1.random.Next(0, 50) / 100f);
-            endMinigameDiff = 50 + (int)((((endMinigameStyle[screen] == 3) ? 35f : (endMinigameStyle[screen] == 2) ? 20f : 0f) + modifier) / minigameDifficulty[screen] / effects["DIFFICULTY"]);
+            endMinigameDiff = (int)((50 + ((endMinigameStyle[screen] == 3) ? 35f : (endMinigameStyle[screen] == 2) ? 20f : 0f) + modifier) / minigameDifficulty[screen] / effects["DIFFICULTY"]);
             startMinigameDiff = (int)(modifier * minigameDifficulty[screen] * effects["DIFFICULTY"]);
         }
         private void CatchFishAfterMinigame(Farmer who)
@@ -938,21 +984,21 @@ namespace FishingMinigames
                     Game1.playSound("FishHit");
                 }
             }
-            else if (startMinigameStage > 4)//fade out and continue
-            {
-                startMinigameData[5]--;
-                if (startMinigameData[5] == 0)
-                {
-                    stage = null;
-                    if (startMinigameStage == 5)
-                    {
-                        DrawAndEmote(who, 2);
-                        EmergencyCancel();
-                    }
-                    else HereFishyAnimation(who, x, y);
-                    return;
-                }
-            }
+            //else if (startMinigameStage > 4)//fade out and continue
+            //{
+            //    startMinigameData[5]--;
+            //    if (startMinigameData[5] == 0)
+            //    {
+            //        stage = null;
+            //        if (startMinigameStage == 5)
+            //        {
+            //            DrawAndEmote(who, 2);
+            //            EmergencyCancel();
+            //        }
+            //        else HereFishyAnimation(who, x, y);
+            //        return;
+            //    }
+            //}
             else if (fishingFestivalMinigame != 0 && festivalTimer <= 2000)
             {
                 Helper.Multiplayer.SendMessage(false, "hideText", modIDs: new[] { "barteke22.FishingInfoOverlays" }, new[] { who.UniqueMultiplayerID });//clear overlay
@@ -1416,7 +1462,7 @@ namespace FishingMinigames
                             if (fishingFestivalMinigame == 0)//not festivals
                             {
                                 recordSize = who.caughtFish(whichFish, (metricSizes) ? (int)(fishSize * 2.54f) : (int)fishSize, false, caughtDoubleFish ? 2 : 1);
-                                
+
                                 if (startMinigameStyle[screen] > 0 && !tutorialSkip[screen] && !itemIsInstantCatch)
                                 {
                                     tutorialSkip[screen] = true;
@@ -1511,7 +1557,7 @@ namespace FishingMinigames
             }
             catch (Exception ex)
             {
-                Monitor.Log("Handled Exception in PlayerCaughtFishEndFunction. Festival: " + Game1.isFestival() + ", Message: " + ex.Message, LogLevel.Trace);
+                Monitor.Log("Handled Exception in PlayerCaughtFishEndFunction. Festival: " + Game1.isFestival() + ", Message: " + ex.Message + " in: " + ModEntry.exception.Match(ex.StackTrace).Value, LogLevel.Trace);
                 EmergencyCancel();
             }
         }

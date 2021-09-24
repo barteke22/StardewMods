@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace FishingMinigames
 {
@@ -19,6 +20,7 @@ namespace FishingMinigames
     {
         public static ITranslationHelper translate;
         public static ModConfig config;
+        public static Regex exception = new Regex(@"([^\\]*)\.cs:.*");
         private readonly PerScreen<Minigames> minigame = new PerScreen<Minigames>();
         private Dictionary<string, int> itemIDs = new Dictionary<string, int>();
         private bool canStartEditingAssets = false;
@@ -343,7 +345,7 @@ namespace FishingMinigames
             }
             catch (Exception ex)
             {
-                Monitor.Log("Handled Exception in UpdateTicking. Festival: " + Game1.isFestival() + ", Message: " + ex.Message, LogLevel.Trace);
+                Monitor.Log("Handled Exception in UpdateTicking. Festival: " + Game1.isFestival() + ", Message: " + ex.Message + " in: " + exception.Match(ex.StackTrace).Value, LogLevel.Trace);
                 minigame.Value.EmergencyCancel();
             }
         }
@@ -356,7 +358,7 @@ namespace FishingMinigames
             }
             catch (Exception ex)
             {
-                Monitor.Log("Handled Exception in Rendered. Festival: " + Game1.isFestival() + ", Message: " + ex.Message, LogLevel.Trace);
+                Monitor.Log("Handled Exception in Rendered. Festival: " + Game1.isFestival() + ", Message: " + ex.Message + " in: " + exception.Match(ex.StackTrace).Value, LogLevel.Trace);
                 minigame.Value.EmergencyCancel();
             }
         }
@@ -368,7 +370,7 @@ namespace FishingMinigames
             }
             catch (Exception ex)
             {
-                Monitor.Log("Handled Exception in RenderedWorld. Festival: " + Game1.isFestival() + ", Message: " + ex.Message, LogLevel.Trace);
+                Monitor.Log("Handled Exception in RenderedWorld. Festival: " + Game1.isFestival() + ", Message: " + ex.Message + " in: " + exception.Match(ex.StackTrace).Value, LogLevel.Trace);
                 minigame.Value.EmergencyCancel();
             }
         }
@@ -376,7 +378,15 @@ namespace FishingMinigames
 
         private void Display_RenderingWorld(object sender, RenderingWorldEventArgs e)
         {
-            minigame.Value.Display_RenderingWorld(sender, e);
+            try
+            {
+                minigame.Value.Display_RenderingWorld(sender, e);
+            }
+            catch (Exception ex)
+            {
+                Monitor.Log("Handled Exception in RenderedWorld. Festival: " + Game1.isFestival() + ", Message: " + ex.Message + " in: " + exception.Match(ex.StackTrace).Value, LogLevel.Trace);
+                minigame.Value.EmergencyCancel();
+            }
         }
 
 
