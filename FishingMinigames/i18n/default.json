@@ -89,7 +89,7 @@
     "Effects.AREA": "Expands the perfect area by {{val}}%",
     "Effects.DAMAGE": "Damage taken reduced by {{val}}%",
     "Effects.DIFFICULTY": "Minigame difficulty reduced by {{val}}%",
-    "Effects.DOUBLE": "Double fish chance +{{val}}% of daily luck.",
+    "Effects.EXTRA": "Can attract up to {{max}} similar, additional fish, {{chance}}% chance each.",
     "Effects.LIFE": "Might fix a misplay, up to {{val}} times per cast.",
     "Effects.QUALITY": "Attracts fish of {{val}} higher quality than normal.",
     "Effects.SIZE": "Attracts {{val}}% larger fish.",

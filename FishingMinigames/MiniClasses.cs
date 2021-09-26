@@ -15,7 +15,7 @@ namespace FishingMinigames
         public int maxFishSize;
         public float fishSize;
         public float itemSpriteSize;
-        public int count;
+        public int stack;
         public bool recordSize;
         public bool furniture;
         public Rectangle sourceRect;
@@ -31,7 +31,7 @@ namespace FishingMinigames
             this.sourceRect = new Rectangle();
         }
 
-        public MinigameMessage(Farmer whichPlayer, string stage, float voice, bool drawAttachments, int whichFish, int fishQuality, int maxFishSize, float fishSize, float itemSpriteSize, int count, bool recordSize, bool furniture, Rectangle sourceRect, int x, int y, int oldFacingDirection)
+        public MinigameMessage(Farmer whichPlayer, string stage, float voice, bool drawAttachments, int whichFish, int fishQuality, int maxFishSize, float fishSize, float itemSpriteSize, int stack, bool recordSize, bool furniture, Rectangle sourceRect, int x, int y, int oldFacingDirection)
         {
             this.multiplayerID = whichPlayer.UniqueMultiplayerID;
             this.stage = stage;
@@ -42,7 +42,7 @@ namespace FishingMinigames
             this.maxFishSize = maxFishSize;
             this.fishSize = fishSize;
             this.itemSpriteSize = itemSpriteSize;
-            this.count = count;
+            this.stack = stack;
             this.recordSize = recordSize;
             this.furniture = furniture;
             this.sourceRect = sourceRect;

@@ -89,7 +89,7 @@
     "Effects.AREA": "Rozszerza obszar \"Perfekt!\" o {{val}}%",
     "Effects.DAMAGE": "Otrzymane obrażenia zmniejszone o {{val}}%",
     "Effects.DIFFICULTY": "Zmniejsza poziom trudności minigry o {{val}}%",
-    "Effects.DOUBLE": "Szansa podwójnych ryb: +{{val}}% dziennego szczęścia.",
+    "Effects.EXTRA": "Może przyciągnąć do {{max}} podobnych, dodatkowych ryb, {{chance}}% szansy każda.",
     "Effects.LIFE": "Może poprawić błąd, do {{val}} razy na połów.",
     "Effects.QUALITY": "Przyciąga ryby o {{val}} wyższej jakości niż zwykle.",
     "Effects.SIZE": "Przyciąga {{val}}% większe ryby.",

@@ -35,7 +35,7 @@ namespace FishingMinigames
                 Game1.content.Load<Texture2D>("LooseSprites\\boardGameBorder"),
                 Game1.content.Load<Texture2D>("LooseSprites\\CraneGame"),
                 Game1.content.Load<Texture2D>("LooseSprites\\buildingPlacementTiles") };
-            
+
 
             helper.Events.Display.Rendered += Display_Rendered;
             helper.Events.Display.RenderingWorld += Display_RenderingWorld;
@@ -145,7 +145,9 @@ namespace FishingMinigames
 
                         foreach (var effect in item.Value)
                         {
-                            GenericMC.RegisterClampedOption(ModManifest, effect.Key, translate.Get("Effects." + effect.Key).Tokens(new { val = "X" }),
+                            if (effect.Key.StartsWith("EXTRA_", StringComparison.Ordinal)) GenericMC.RegisterClampedOption(ModManifest, effect.Key, translate.Get("Effects.EXTRA").Tokens(new { max = "MAX", chance = "CHANCE" }),
+                                () => config.SeeInfoForBelowData[item.Key][effect.Key], (float val) => config.SeeInfoForBelowData[item.Key][effect.Key] = (int)Math.Round(val), 0, effect.Key.Equals("EXTRA_MAX", StringComparison.Ordinal) ? 10 : 100);
+                            else GenericMC.RegisterClampedOption(ModManifest, effect.Key, translate.Get("Effects." + effect.Key).Tokens(new { val = "X" }),
                                 () => config.SeeInfoForBelowData[item.Key][effect.Key], (float val) => config.SeeInfoForBelowData[item.Key][effect.Key] = (int)Math.Round(val),
                                 (effect.Key.Equals("QUALITY", StringComparison.Ordinal) ? -4 : effect.Key.Equals("LIFE", StringComparison.Ordinal) ? 0 : -100),
                                 (effect.Key.Equals("QUALITY", StringComparison.Ordinal) ? 4 : effect.Key.Equals("LIFE", StringComparison.Ordinal) ? 50 : 300));
@@ -205,7 +207,7 @@ namespace FishingMinigames
                     () => config.RealisticSizes, (bool val) => config.RealisticSizes = val);
 
                 if (LocalizedContentManager.CurrentLanguageCode == 0) GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.ConvertToMetric"), translate.Get("GenericMC.ConvertToMetricDesc"),
-                    () => config.ConvertToMetric, (bool val) =>  config.ConvertToMetric = val);
+                    () => config.ConvertToMetric, (bool val) => config.ConvertToMetric = val);
 
                 GenericMC.RegisterLabel(ModManifest, translate.Get("GenericMC.FestivalLabel"), "");
                 GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.FestivalDesc"));
@@ -460,10 +462,10 @@ namespace FishingMinigames
                         {
                             //bait
                             case 685://bait
+                            case 774://wild bait
                                 itemData[5] = AddEffectDescriptions(itemData[0]);
                                 break;
                             case 703://magnet
-                            case 774://wild bait
                             case 908://magic bait
                                 itemData[5] = AddEffectDescriptions(itemData[0], itemData[5]);
                                 break;
@@ -535,8 +537,16 @@ namespace FishingMinigames
             foreach (var effect in config.SeeInfoForBelowData[itemName])
             {
                 if (effect.Value == 0) continue;
+                if (!effect.Key.StartsWith("EXTRA_", StringComparison.Ordinal))
+                {
+                    if (initialText != null) initialText += "\n";
+                    initialText += translate.Get("Effects." + effect.Key).Tokens(new { val = effect.Value });
+                }
+            }
+            if (config.SeeInfoForBelowData[itemName].TryGetValue("EXTRA_MAX", out int max) && config.SeeInfoForBelowData[itemName].TryGetValue("EXTRA_CHANCE", out int chance) && max != 0 && chance != 0)
+            {
                 if (initialText != null) initialText += "\n";
-                initialText += translate.Get("Effects." + effect.Key).Tokens(new { val = effect.Value });
+                initialText += translate.Get("Effects.EXTRA").Tokens(new { max, chance });
             }
             return initialText;
         }
@@ -592,11 +602,34 @@ namespace FishingMinigames
             //    Minigames.itemData = config.SeeInfoForBelowData;
             //    Helper.Content.InvalidateCache("Data/ObjectInformation");
             //}
+            int fix = 0;
+            foreach (var item in config.SeeInfoForBelowData.ToArray())//updates old configs to new format
+            {
+                foreach (var effect in item.Value.ToArray())
+                {
+                    if (effect.Key.Equals("DOUBLE", StringComparison.Ordinal))
+                    {
+                        config.SeeInfoForBelowData[item.Key].Remove(effect.Key);
+                        if (item.Key.Equals("Wild Bait", StringComparison.Ordinal))
+                        {
+                            config.SeeInfoForBelowData[item.Key]["EXTRA_MAX"] = 2;
+                            config.SeeInfoForBelowData[item.Key]["EXTRA_CHANCE"] = 20;
+                        }
+                        else
+                        {
+                            config.SeeInfoForBelowData[item.Key]["EXTRA_MAX"] = 0;
+                            config.SeeInfoForBelowData[item.Key]["EXTRA_CHANCE"] = 0;
+                        }
+                        fix++;
+                    }
+                }
+            }
+            if (fix > 0) Helper.WriteConfig(config);
 
             Minigames.itemData = config.SeeInfoForBelowData;
 
 
-            if (Minigames.fishySound == null) 
+            if (Minigames.fishySound == null)
             {
                 try
                 {

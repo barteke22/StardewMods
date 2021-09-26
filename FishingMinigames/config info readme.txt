@@ -107,7 +107,8 @@ Meaning that the animations can look a little glitchy, and full lenght minigames
     		"AREA": 	% multiplier	Expands the perfect area by {x}%
     		"DAMAGE": 	% multiplier	Damage taken reduced by {x}%
     		"DIFFICULTY": 	% multiplier	Minigame difficulty reduced by {x}%
-    		"DOUBLE":	% additive	Double fish chance +{x}% of daily luck.
+    		"EXTRA_MAX":	n additive	Can attract up to {MAX} similar, additional fish, {CHANCE}% chance each.
+    		"EXTRA_CHANCE":	% additive	^^
     		"LIFE": 	n additive	Might fix a misplay, up to {x} times per cast. Tackle (megaphone) only!
     		"QUALITY":	n additive	Attracts fish of {x} higher quality than normal.
     		"SIZE": 	% multiplier	Attracts {x}% larger fish.
