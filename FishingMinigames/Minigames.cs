@@ -163,107 +163,108 @@ namespace FishingMinigames
                 }
             }
 
-            if (e.Pressed.Contains(SButton.Z))
-            {
-                ClearAnimations(who);
-                who.FacingDirection = 2;
-                who.FarmerSprite.animateOnce(new FarmerSprite.AnimationFrame[1] { new FarmerSprite.AnimationFrame(84, 99999999) });
-                int fishCount = 2;
-                if (itemSpriteSize == 0) itemSpriteSize = 1 * 0.66f;
-                itemIsInstantCatch = false;///////////////////
-                whichFish = 148;
-                sourceRect = GameLocation.getSourceRectForObject(whichFish);
-                //itemSpriteSize = 8f;
+            //if (e.Pressed.Contains(SButton.Z))
+            //{
+            //    ClearAnimations(who);
+            //    who.FacingDirection = 2;
+            //    who.FarmerSprite.animateOnce(new FarmerSprite.AnimationFrame[1] { new FarmerSprite.AnimationFrame(84, 99999999) });
+            //    int fishCount = 3;
+            //    if (itemSpriteSize == 0) itemSpriteSize = 1f;
+            //    itemIsInstantCatch = false;///////////////////
+            //    whichFish = 146;
+            //    sourceRect = GameLocation.getSourceRectForObject(whichFish);
+            //    //itemSpriteSize = 8f;
 
-                string textureName = Game1.objectSpriteSheetName;
+            //    string textureName = Game1.objectSpriteSheetName;
 
-                float rotOffset = 0f;
-                switch (whichFish)//regular hardcoded sprites
-                {
-                    case 128://puff
-                    case 151://squid
-                    case 798://midnight squid
-                    case 800://blob
-                        rotOffset = 2.2f;
-                        break;
-                    case 158://stonefish
-                        rotOffset = 1f;
-                        break;
-                    case 160://angler
-                    case 838://discus
-                    case 899://ms angler
-                        rotOffset = 0.3f;
-                        break;
-                }
-                float layer = (who.Position.Y + 17.5f) / 10000f;
-                float distanceFromMidToFaceCorner = -8f * itemSpriteSize;
+            //    float rotOffset = 0f;
+            //    switch (whichFish)//regular hardcoded sprites
+            //    {
+            //        case 128://puff
+            //        case 151://squid
+            //        case 798://midnight squid
+            //        case 800://blob
+            //            rotOffset = 2.2f;
+            //            break;
+            //        case 158://stonefish
+            //            rotOffset = 1f;
+            //            break;
+            //        case 160://angler
+            //        case 838://discus
+            //        case 899://ms angler
+            //            rotOffset = 0.3f;
+            //            break;
+            //    }
+            //    float layer = (who.Position.Y + 17.5f) / 10000f;
+            //    float distanceFromMidToFaceCorner = -8f * itemSpriteSize;
 
-                Vector2 tankOffset = Vector2.Zero;
-                Object fish = new Object(whichFish, 1);
-                FishTankFurniture tank = new FishTankFurniture(2322, Vector2.Zero);
-                if (fish.Category == Object.FishCategory && tank.CanBeDeposited(fish))//fishtank sprites
-                {
-                    tank.boundingBox.Value = new Rectangle(0, 0, 300, 100);
-                    textureName = tank.GetAquariumTexture().Name;
-                    TankFish tankFish = new TankFish(tank, fish);
-                    tank.tankFish.Add(tankFish);
-                    int cols = tank.GetAquariumTexture().Width / 24;
-                    int sprite_sheet_x = tank.tankFish[0].currentFrame % cols * 24;
-                    int sprite_sheet_y = tank.tankFish[0].currentFrame / cols * 48;
-                    rotOffset = 1f;
-                    switch (tankFish.fishType)
-                    {
-                        case TankFish.FishType.Cephalopod:
-                            sprite_sheet_x += 72;
-                            rotOffset = 2.2f;
-                            break;
-                        case TankFish.FishType.Float:
-                            rotOffset = 3f;
-                            break;
-                        case TankFish.FishType.Crawl:
-                        case TankFish.FishType.Static:
-                            rotOffset = 2.2f;
-                            break;
-                        case TankFish.FishType.Eel:
-                            rotOffset = 0.7f;
-                            break;
-                    }
-                    switch (whichFish)
-                    {
-                        case 158://stonefish
-                            rotOffset = 1.2f;
-                            break;
-                    }
-                    //itemSpriteSize *= 0.66f;
-                    //distanceFromMidToFaceCorner *= 0.66f;
-                    sourceRect = new Rectangle(sprite_sheet_x, sprite_sheet_y, 24, 24);
-                    tankOffset = new Vector2(6f, 2f) * itemSpriteSize;
-                }
+            //    Vector2 tankOffset = Vector2.Zero;
+            //    Object fish = new Object(whichFish, 1);
+            //    FishTankFurniture tank = new FishTankFurniture(2322, Vector2.Zero);
+            //    if (fish.Category == Object.FishCategory && tank.CanBeDeposited(fish))//fishtank sprites
+            //    {
+            //        tank.boundingBox.Value = new Rectangle(0, 0, 300, 100);
+            //        textureName = tank.GetAquariumTexture().Name;
+            //        TankFish tankFish = new TankFish(tank, fish);
+            //        tank.tankFish.Add(tankFish);
+            //        int cols = tank.GetAquariumTexture().Width / 24;
+            //        int sprite_sheet_x = tank.tankFish[0].currentFrame % cols * 24;
+            //        int sprite_sheet_y = tank.tankFish[0].currentFrame / cols * 48;
+            //        rotOffset = 1f;
+            //        switch (tankFish.fishType)
+            //        {
+            //            case TankFish.FishType.Cephalopod:
+            //                sprite_sheet_x += 72;
+            //                rotOffset = 2.2f;
+            //                break;
+            //            case TankFish.FishType.Float:
+            //                rotOffset = 3f;
+            //                break;
+            //            case TankFish.FishType.Crawl:
+            //            case TankFish.FishType.Static:
+            //                rotOffset = 2.2f;
+            //                break;
+            //            case TankFish.FishType.Eel:
+            //                rotOffset = 0.7f;
+            //                break;
+            //        }
+            //        switch (whichFish)
+            //        {
+            //            case 158://stonefish
+            //                rotOffset = 1.2f;
+            //                break;
+            //        }
+            //        if (fishCount == 1) rotOffset -= 0.2f;
+            //        //distanceFromMidToFaceCorner *= 0.66f;
+            //        sourceRect = new Rectangle(sprite_sheet_x, sprite_sheet_y, 24, 24);
+            //        tankOffset = new Vector2(5f, 5f) * itemSpriteSize;
+            //        tankOffset.X -= 3f;
+            //    }
 
 
-                float rot = itemIsInstantCatch ? -0.2f : fishCount == 1 ? 2.4f - rotOffset : 2.2f - rotOffset + (fishCount < 6 ? ((fishCount - 0.5f) * 0.3f) : ((fishCount - 0.5f) * 0.15f));//rotate by half the amount
+            //    float rot = itemIsInstantCatch ? -0.2f : fishCount == 1 ? 2.4f - rotOffset : 2.2f - rotOffset + (fishCount < 6 ? ((fishCount - 0.5f) * 0.3f) : ((fishCount - 0.5f) * 0.15f));//rotate by half the amount
 
-                for (int i = 0; i < fishCount; i++)
-                {
-                    float offsetX = 15f;
-                    float offsetY = -30f;
-                    if (!itemIsInstantCatch)
-                    {
-                        offsetX = distanceFromMidToFaceCorner * (float)Math.Sin(rot + 1f + rotOffset) + (7f * itemSpriteSize);
-                        offsetY = distanceFromMidToFaceCorner * (float)Math.Cos(rot + 1f + rotOffset) - (12f * itemSpriteSize);
-                    }
+            //    for (int i = 0; i < fishCount; i++)
+            //    {
+            //        float offsetX = 15f;
+            //        float offsetY = -30f;
+            //        if (!itemIsInstantCatch)
+            //        {
+            //            offsetX = distanceFromMidToFaceCorner * (float)Math.Sin(rot + 1f + rotOffset) + (7f * itemSpriteSize);
+            //            offsetY = distanceFromMidToFaceCorner * (float)Math.Cos(rot + 1f + rotOffset) - (12f * itemSpriteSize);
+            //        }
 
-                    who.currentLocation.TemporarySprites.Add(new TemporaryAnimatedSprite(textureName, sourceRect, who.Position + new Vector2(7f - offsetX, -48f + offsetY) - tankOffset, false, 0f, Color.White)
-                    { layerDepth = layer + (i % 3 == 0 ? 0.000001f : 0f), rotation = rot, scale = itemSpriteSize, owner = who, id = nexusKey });
-                    layer += 0.00000001f;
-                    rot -= fishCount < 6 ? 0.6f : 0.3f;
-                }
-                if (itemSpriteSize > 8)///////////
-                {
-                    itemSpriteSize = 1 * 0.66f;
-                }
-                else itemSpriteSize += 1 * 0.66f;
-            }
+            //        who.currentLocation.TemporarySprites.Add(new TemporaryAnimatedSprite(textureName, sourceRect, who.Position + new Vector2(7f - offsetX, -48f + offsetY) - tankOffset, false, 0f, Color.White)
+            //        { layerDepth = layer + (i % 3 == 0 ? 0.000001f : 0f), rotation = rot, scale = itemSpriteSize, owner = who, id = nexusKey });
+            //        layer += 0.00000001f;
+            //        rot -= fishCount < 6 ? 0.6f : 0.3f;
+            //    }
+            //    if (itemSpriteSize > 8)///////////
+            //    {
+            //        itemSpriteSize = 1;
+            //    }
+            //    else itemSpriteSize += 1f;
+            //}
             if (!Context.IsWorldReady) return;
 
             if (e.Pressed.Contains(SButton.F5))
@@ -1020,7 +1021,7 @@ namespace FishingMinigames
                         if (fishSize > 0)
                         {
                             itemSpriteSize = Math.Max(((fishSize < 3) ? fishSize * 1.2f : fishSize) / 64f, 0.01f) * 6.6f;
-                            if (item.Name.Contains("Eel")) itemSpriteSize /= 2f;//eel sprite curls, so half size
+                            //if (item.Name.Contains("Eel")) itemSpriteSize /= 2f;//eel sprite curls, so half size
                         }
                     }
                     else itemSpriteSize = 4f;
@@ -1833,7 +1834,6 @@ namespace FishingMinigames
         private void CaughtBubbleSprite(Farmer who)
         {
             int whichFish = this.whichFish;
-            float fishSize = this.fishSize;
             float itemSpriteSize = this.itemSpriteSize;
             int fishCount = item.Stack;
             bool furniture;
@@ -1842,7 +1842,6 @@ namespace FishingMinigames
             else
             {
                 whichFish = messages[who.UniqueMultiplayerID].whichFish;
-                fishSize = messages[who.UniqueMultiplayerID].fishSize;
                 itemSpriteSize = messages[who.UniqueMultiplayerID].itemSpriteSize;
                 fishCount = messages[who.UniqueMultiplayerID].stack;
                 furniture = messages[who.UniqueMultiplayerID].furniture;
@@ -1857,58 +1856,95 @@ namespace FishingMinigames
             //item(s) in hand
             if (!furniture)
             {
-                itemIsInstantCatch = false;///////////////////
-                sourceRect = GameLocation.getSourceRectForObject(146);
-                itemSpriteSize = 1f;
-                if (Game1.random.NextDouble() > 0.5) itemSpriteSize = 4;
-                else if (Game1.random.NextDouble() > 0.5) itemSpriteSize = 8;
-                fishCount = 10;//----------------test// --- need offset based on size
+                //whichFish = 152;//test-------------------------------------------------------
+                //sourceRect = GameLocation.getSourceRectForObject(whichFish);
+                //itemIsInstantCatch = true;
 
-                //float offsetX = fishCount == 1 ? 0f : -3f - (fishCount / 1.33f * itemSpriteSize);
-                //float offsetY = 0f;// fishCount == 1 ? 0f : 0f - (fishCount / 1.33f * itemSpriteSize);
-                //float rot = itemIsInstantCatch ? 1f : fishCount == 1 ? 2.4f : 2.2f + (fishCount < 6 ? ((fishCount - 0.5f) * 0.3f) : ((fishCount - 0.5f) * 0.15f));//rotate by half the amount
+                string textureName = Game1.objectSpriteSheetName;
+                float distanceFromMidToFaceCorner = -8f * itemSpriteSize;
+                float rotOffset = 0f;
+                switch (whichFish)//regular hardcoded sprites
+                {
+                    case 128://puff
+                    case 151://squid
+                    case 798://midnight squid
+                    case 800://blob
+                        rotOffset = 2.2f;
+                        break;
+                    case 158://stonefish
+                        rotOffset = 1f;
+                        break;
+                    case 160://angler
+                    case 838://discus
+                    case 899://ms angler
+                        rotOffset = 0.3f;
+                        break;
+                }
 
-                //for (int i = 0; i < fishCount; i++)
-                //{
-                //    who.currentLocation.TemporarySprites.Add(new TemporaryAnimatedSprite(Game1.objectSpriteSheetName, sourceRect, who.Position + new Vector2(15f + offsetX - (10f * itemSpriteSize), -48f + offsetY - (6f * itemSpriteSize)), false, 0f, Color.White)
-                //        { layerDepth = layer + 0.00002f - (i % 3 == 0 ? 0.000001f : 0f), rotation = rot, scale = itemSpriteSize, owner = who, id = nexusKey });
-                //    layer -= 0.00000001f;
-                //    rot -= fishCount < 6 ? 0.6f : 0.3f;
-                //    offsetX += 2 + itemSpriteSize * 1.33f;
-                //    //if (i < fishCount / 2f) offsetY += itemSpriteSize * 1.5f;
-                //    //else offsetY -= itemSpriteSize * 1.5f;
+                Vector2 tankOffset = Vector2.Zero;
+                Object fish = new Object(whichFish, 1);
+                FishTankFurniture tank = new FishTankFurniture(2322, Vector2.Zero);
+                if (fish.Category == Object.FishCategory && tank.CanBeDeposited(fish))//fishtank sprites
+                {
+                    tank.boundingBox.Value = new Rectangle(0, 0, 300, 100);
+                    textureName = tank.GetAquariumTexture().Name;
+                    TankFish tankFish = new TankFish(tank, fish);
+                    tank.tankFish.Add(tankFish);
+                    int cols = tank.GetAquariumTexture().Width / 24;
+                    int sprite_sheet_x = tank.tankFish[0].currentFrame % cols * 24;
+                    int sprite_sheet_y = tank.tankFish[0].currentFrame / cols * 48;
+                    rotOffset = 1f;
+                    switch (tankFish.fishType)
+                    {
+                        case TankFish.FishType.Cephalopod:
+                            sprite_sheet_x += 72;
+                            rotOffset = 2.2f;
+                            break;
+                        case TankFish.FishType.Float:
+                            rotOffset = 3f;
+                            break;
+                        case TankFish.FishType.Crawl:
+                        case TankFish.FishType.Static:
+                            rotOffset = 2.2f;
+                            break;
+                        case TankFish.FishType.Eel:
+                            rotOffset = 0.7f;
+                            break;
+                    }
+                    switch (whichFish)
+                    {
+                        case 158://stonefish
+                            rotOffset = 1.2f;
+                            break;
+                    }
+                    if (fishCount == 1) rotOffset -= 0.2f;
+                    sourceRect = new Rectangle(sprite_sheet_x, sprite_sheet_y, 24, 24);
+                    tankOffset = new Vector2(5f, 5f) * itemSpriteSize;
+                    tankOffset.X -= 5f;
+                }
 
-                //public static void Main()
-                //{
-                //    float distanceFromMid = -11.31371f;
-                //    float rot = 2.356194490192345f;
-                //    float angleRadian = rot + 0.7853981633974483f;
-
-                //    Console.WriteLine((distanceFromMid * Math.Sin(angleRadian)) + "   " + (distanceFromMid * Math.Cos(angleRadian)));//x/y offset
-                //}
-
-                float distanceFromMidToFaceCorner = -11.31371f * itemSpriteSize;//the diagonal in a 8x8 triangle
-                float rot = 0f;
-
-                float offsetX = 0f;// fishCount == 1 ? 0f : -3f - (fishCount / 1.33f * itemSpriteSize);
-                float offsetY = 0f;// fishCount == 1 ? 0f : 0f - (fishCount / 1.33f * itemSpriteSize);
-                rot += itemIsInstantCatch ? 1f : fishCount == 1 ? 2.4f : 2.2f + (fishCount < 6 ? ((fishCount - 0.5f) * 0.3f) : ((fishCount - 0.5f) * 0.15f));//rotate by half the amount
+                float rot = itemIsInstantCatch ? -0.2f : fishCount == 1 ? 2.4f - rotOffset : 2.2f - rotOffset + (fishCount < 6 ? ((fishCount - 0.5f) * 0.2f) : ((fishCount - 0.5f) * 0.15f));//rotate by half the amount
 
                 for (int i = 0; i < fishCount; i++)
                 {
-                    if (fishCount > 1)
+                    float offsetX = 15f;
+                    float offsetY = -30f;
+                    if (!itemIsInstantCatch)
                     {
-                        offsetX = distanceFromMidToFaceCorner * (float)Math.Sin(rot % 6.2831853f);
-                        offsetY = distanceFromMidToFaceCorner * (float)Math.Cos(rot % 6.2831853f);
+                        offsetX = distanceFromMidToFaceCorner * (float)Math.Sin(rot + 1f + rotOffset) + (7f * itemSpriteSize);
+                        offsetY = distanceFromMidToFaceCorner * (float)Math.Cos(rot + 1f + rotOffset) - (12f * itemSpriteSize);
                     }
-                    who.currentLocation.TemporarySprites.Add(new TemporaryAnimatedSprite(Game1.objectSpriteSheetName, sourceRect, who.Position + new Vector2(15f - offsetX - (10f * itemSpriteSize), -48f - offsetY - (6f * itemSpriteSize)), false, 0f, Color.White)
-                    { layerDepth = layer + 0.00002f - (i % 3 == 0 ? 0.000001f : 0f), rotation = rot, scale = itemSpriteSize, owner = who, id = nexusKey });
-                    layer -= 0.00000001f;
-                    rot -= fishCount < 6 ? 0.6f : 0.3f;
-                }
+                    else if (itemSpriteSize != 2.5f)
+                    {
+                        offsetX = 3f * itemSpriteSize + 6f;
+                        offsetY = -5f * itemSpriteSize - 7f;
+                    }
 
-                //if (caughtDoubleFish) who.currentLocation.TemporarySprites.Add(new TemporaryAnimatedSprite(Game1.objectSpriteSheetName, sourceRect, who.Position + new Vector2(8f - (10f * itemSpriteSize), -48f - (6f * itemSpriteSize)), false, 0f, Color.White)
-                //{ layerDepth = layer + 0.0000011f, rotation = (fishSize == -1 || whichFish == 800 || whichFish == 798 || whichFish == 149 || whichFish == 151) ? 1f : 2.6f, scale = itemSpriteSize, owner = who, id = nexusKey });
+                    who.currentLocation.TemporarySprites.Add(new TemporaryAnimatedSprite(textureName, sourceRect, who.Position + new Vector2(7f - offsetX, -48f + offsetY) - tankOffset, false, 0f, Color.White)
+                    { layerDepth = layer + (i % 3 == 0 ? 0.000001f : 0f), rotation = rot, scale = itemSpriteSize, owner = who, id = nexusKey });
+                    layer += 0.00000001f;
+                    rot -= fishCount < 6 ? 0.4f : 0.3f;
+                }
             }
             else who.currentLocation.TemporarySprites.Add(new TemporaryAnimatedSprite(Furniture.furnitureTextureName, sourceRect, who.Position + new Vector2(-10f, -80f), false, 0f, Color.White)
             { layerDepth = layer, scale = itemSpriteSize, owner = who, id = nexusKey });
