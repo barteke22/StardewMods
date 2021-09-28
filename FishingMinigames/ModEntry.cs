@@ -325,7 +325,6 @@ namespace FishingMinigames
         //{
         //    minigame.Value.OnWarped(sender, e);
         //}
-        public static Dictionary<string, int[,]> dataTest;
         private void Input_ButtonsChanged(object sender, ButtonsChangedEventArgs e)  //this.Monitor.Log(locationName, LogLevel.Debug);
         {
             if (e.Pressed.Contains(SButton.F5))
@@ -337,7 +336,7 @@ namespace FishingMinigames
 
         private void GameLoop_UpdateTicking(object sender, UpdateTickingEventArgs e) //adds item to inv
         {
-            if (!Game1.player.IsLocalPlayer) return;
+            if (!Context.IsWorldReady || !Game1.player.IsLocalPlayer) return;
 
             if (minigame.Value == null)
             {
