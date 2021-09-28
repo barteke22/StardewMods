@@ -35,7 +35,7 @@
     "GenericMC.DifficultyDesc": "Minigame difficulty (timers) is based on factors like your equipment, fish difficulty and size. This is the final value multiplier, the higher, the harder.",
 
     "GenericMC.TutorialSkip": "Skip Tutorial",
-    "GenericMC.TutorialSkipDesc": "Allows you to skip the Start Minigame tutorial (slow mode). Set automatically if you've completed a Start Minigame. You can also unset this to see it again.",
+    "GenericMC.TutorialSkipDesc": "Allows you to skip the Start Minigame tutorial (slow mode). It's set automatically once you've completed a Start Minigame. You can also unset this to see it again.",
 
     "GenericMC.StartMinigameScale": "Minigame Scale (Start)",
     "GenericMC.StartMinigameScaleDesc": "The Start Minigame scales along with the zoom level, and can be fine-tuned here.",
@@ -45,6 +45,9 @@
 
     "GenericMC.RealisticSizes": "Realistic Sizes",
     "GenericMC.RealisticSizesDesc": "Enabled: The fish shown off at the end will have a realistic size VS player size, assuming the player holds them at a perspective that makes them a tiny bit bigger. Keep in mind that most of the time the fish are pretty tiny, around hand size.",
+
+    "GenericMC.FishTankHold": "Use Tank Sprites",
+    "GenericMC.FishTankHoldDesc": "Enabled: The fish shown off at the end will use the Fish Tank sprites for fish that have them. These sprites tend to be more consistent than item sprites, however if you don't like them, or have a mod that animates the fish, you can switch to item sprites by turning this off.",
 
     "GenericMC.FestivalLabel": "Festival Minigames",
     "GenericMC.FestivalDesc": "This only matters for Fall 16 and Winter 8 festivals, as they have fishing minigames that happen inside events.",

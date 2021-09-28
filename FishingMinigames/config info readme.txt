@@ -63,6 +63,9 @@ The fish size and quality is determined by the combined score of Start and End m
     MinigameDifficulty: 0.1-3.0 (1.0) - per screen
 	Minigame difficulty (timers) is based on factors like your equipment, fish difficulty and size. This is the final value multiplier, the higher, the harder.
 
+    TutorialSkip: true/false (true) - per screen
+    	Setting to true allows you to skip the Start Minigame tutorial (slow mode). It's set automatically once you've completed a Start Minigame. You can also set this to false see it again.
+
     StartMinigameScale: 0.1-10.0 (1.0)
 	The Start Minigame scales along with the zoom level, and can be fine-tuned here.
 
@@ -71,12 +74,16 @@ The fish size and quality is determined by the combined score of Start and End m
 	WARNING: If using together with 'Inches To Metric System' Mod, delete all fish data from its 'content.json' (line 4-74), or they'll be double converted.
 	WARNING: This will convert fish sizes as they're caught, and previous records won't be reversed to inches if you disable this.
 	Does not affect Festival Minigames, or regular fishing minigame - as their mechanics are based on fish size. Will work with modded fish caught via this mod.
-	If you read the above, enable with: true
+	If you read the above, are playing in English, and want metric, enable with: true
 
     RealisticSizes: true/false (true)
 	true: The fish shown off at the end will have a realistic size VS player size, assuming the player holds them at a perspective that makes them a tiny bit bigger.
 		Keep in mind that most of the time the fish are pretty tiny, around hand size.
 	false: Vanilla sprite sizes.
+
+    FishTankHoldSprites: true/false (true)
+    	true: The fish shown off at the end will use the Fish Tank sprites, for fish that have them. These sprites tend to be more consistent than item sprites.
+	However if you don't like them, or have a mod that animates the fish, you can switch to item sprites by setting this to false.
 
 This only matters for Fall 16 and Winter 8 festivals, as they have fishing minigames that happen inside events.
 Meaning that the animations can look a little glitchy, and full lenght minigames might be hard to balance. So here are the options for those.

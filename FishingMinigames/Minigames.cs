@@ -104,6 +104,7 @@ namespace FishingMinigames
         public static float startMinigameScale;
         public static bool realisticSizes;
         public static bool metricSizes;
+        public static bool fishTankSprites;
         public static int[] festivalMode = new int[4];
         public static float[] minigameDifficulty = new float[4];
         public static bool[] tutorialSkip = new bool[4];
@@ -326,6 +327,86 @@ namespace FishingMinigames
                 sparklingText = null;
             }
 
+            //fish flying
+            if (endMinigameStage > 0)
+            {
+                foreach (var anim in who.currentLocation.TemporarySprites)
+                {
+                    if (anim.id == nexusKey && anim.owner == who)
+                    {
+                        int size = (int)(itemSpriteSize * ((item is Furniture) ? 32 : 16));
+                        if (endMinigameStage == 1)//can miss area
+                        {
+                            Rectangle area = new Rectangle((int)who.Position.X - 200, (int)who.Position.Y - 450, 400, 400);
+                            if (anim.Position != anim.initialPosition &&
+                                (area.Contains((int)anim.Position.X, (int)anim.Position.Y) ||
+                                area.Contains((int)anim.Position.X, (int)anim.Position.Y + size) ||
+                                area.Contains((int)anim.Position.X + size, (int)anim.Position.Y) ||
+                                area.Contains((int)anim.Position.X + size, (int)anim.Position.Y + size)))
+                            {
+                                Game1.activeClickableMenu = new DummyMenu();
+                                endMinigameStage = 2;
+                            }
+                        }
+                        if (endMinigameStage == 2)//can succeed area
+                        {
+                            Rectangle area = new Rectangle((int)who.Position.X - 70, (int)who.Position.Y - 115, 140, 220);
+                            if (anim.Position != anim.initialPosition &&
+                                (area.Contains((int)anim.Position.X, (int)anim.Position.Y) ||
+                                area.Contains((int)anim.Position.X, (int)anim.Position.Y + size) ||
+                                area.Contains((int)anim.Position.X + size, (int)anim.Position.Y) ||
+                                area.Contains((int)anim.Position.X + size, (int)anim.Position.Y + size)))
+                            {
+                                PlayPause(who);
+                                SendMessage(who, "Pause");
+                                EndMinigame(0);
+                            }
+                        }
+                        else if (endMinigameStage == 3)//too late timer
+                        {
+                            endMinigameTimer++;
+                            //Monitor.Log($"End: {endMinigameTimer}   " + DateTime.Now.ToString("HH:mm:ss"), LogLevel.Error);
+
+                            if (endMinigameTimer > endMinigameDiff)//too late/missed/failed
+                            {
+                                if (effects["LIFE"] > 0 && Game1.random.Next(0, 3) == 0)//saved by tackle?
+                                {
+                                    if ((who.CurrentTool as FishingRod).attachments[1].Quality == 0 && effects["UNBREAKING1"] < Game1.random.Next(1, 101))
+                                    {
+                                        (who.CurrentTool as FishingRod).attachments[1].uses.Value++;
+                                    }
+                                    Game1.playSound("button1");
+                                    endMinigameStage = 9;
+                                    ClearAnimations(who);
+                                    SendMessage(who, "ClearAnim");
+                                    DrawAndEmote(who, 0);
+                                    SendMessage(who, "Swing");
+                                    endMinigameTimer = 0;
+                                    continue;
+                                }
+
+                                PlayPause(who);
+                                SendMessage(who, "Fail");
+
+                                endMinigameTimer = 0;
+                                endMinigameStage = 8;
+                                who.completelyStopAnimatingOrDoingAction();
+                                who.UsingTool = true;
+                                List<FarmerSprite.AnimationFrame> animationFrames = new List<FarmerSprite.AnimationFrame>(){
+                                        new FarmerSprite.AnimationFrame(94, 500, false, false, null, false) { flip =  oldFacingDirection == 3 }.AddFrameAction(delegate (Farmer f) { f.jitterStrength = 2f; }) };
+                                who.FarmerSprite.setCurrentAnimation(animationFrames.ToArray());
+                                who.FarmerSprite.PauseForSingleAnimation = true;
+                                who.FarmerSprite.loop = true;
+                                who.FarmerSprite.loopThisAnimation = true;
+                                who.Sprite.currentFrame = 94;
+                                stage = "Caught1";
+                                stageTimer = 20;
+                            }
+                        }
+                    }
+                }
+            }
+
             if (fishCaught)
             {
                 if (fishingFestivalMinigame == 0)
@@ -412,7 +493,6 @@ namespace FishingMinigames
                 }
             }
 
-
             if (startMinigameStage > 0 && startMinigameStage < 5) StartMinigameDraw(batch);
             else if (startMinigameStage > 4 && startMinigameData[5] > 0) StartMinigameDraw(batch);
             else
@@ -420,84 +500,6 @@ namespace FishingMinigames
                 //draw mouse target on water
                 if ((!Game1.eventUp || (fishingFestivalMinigame != 0 && festivalMode[screen] != 0)) && !Game1.menuUp && who.CurrentItem is FishingRod && (!hereFishying || infoTimer > 0)) AimAssist(batch);
 
-                //draw fish flying
-                if (endMinigameStage > 0)
-                {
-                    foreach (var anim in who.currentLocation.TemporarySprites)
-                    {
-                        if (anim.id == nexusKey && anim.owner == who)
-                        {
-                            int size = (int)(itemSpriteSize * ((item is Furniture) ? 32 : 16));
-                            if (endMinigameStage == 1)//can miss area
-                            {
-                                Rectangle area = new Rectangle((int)who.Position.X - 200, (int)who.Position.Y - 450, 400, 400);
-                                if (anim.Position != anim.initialPosition &&
-                                    (area.Contains((int)anim.Position.X, (int)anim.Position.Y) ||
-                                    area.Contains((int)anim.Position.X, (int)anim.Position.Y + size) ||
-                                    area.Contains((int)anim.Position.X + size, (int)anim.Position.Y) ||
-                                    area.Contains((int)anim.Position.X + size, (int)anim.Position.Y + size)))
-                                {
-                                    Game1.activeClickableMenu = new DummyMenu();
-                                    endMinigameStage = 2;
-                                }
-                            }
-                            if (endMinigameStage == 2)//can succeed area
-                            {
-                                Rectangle area = new Rectangle((int)who.Position.X - 70, (int)who.Position.Y - 115, 140, 220);
-                                if (anim.Position != anim.initialPosition &&
-                                    (area.Contains((int)anim.Position.X, (int)anim.Position.Y) ||
-                                    area.Contains((int)anim.Position.X, (int)anim.Position.Y + size) ||
-                                    area.Contains((int)anim.Position.X + size, (int)anim.Position.Y) ||
-                                    area.Contains((int)anim.Position.X + size, (int)anim.Position.Y + size)))
-                                {
-                                    PlayPause(who);
-                                    SendMessage(who, "Pause");
-                                    EndMinigame(0);
-                                }
-                            }
-                            else if (endMinigameStage == 3)//too late timer
-                            {
-                                endMinigameTimer++;
-
-                                if (endMinigameTimer > endMinigameDiff)//too late/missed/failed
-                                {
-                                    if (effects["LIFE"] > 0 && Game1.random.Next(0, 3) == 0)//saved by tackle?
-                                    {
-                                        if ((who.CurrentTool as FishingRod).attachments[1].Quality == 0 && effects["UNBREAKING1"] < Game1.random.Next(1, 101))
-                                        {
-                                            (who.CurrentTool as FishingRod).attachments[1].uses.Value++;
-                                        }
-                                        Game1.playSound("button1");
-                                        endMinigameStage = 9;
-                                        ClearAnimations(who);
-                                        SendMessage(who, "ClearAnim");
-                                        DrawAndEmote(who, 0);
-                                        SendMessage(who, "Swing");
-                                        endMinigameTimer = 0;
-                                        continue;
-                                    }
-
-                                    PlayPause(who);
-                                    SendMessage(who, "Fail");
-
-                                    endMinigameTimer = 0;
-                                    endMinigameStage = 8;
-                                    who.completelyStopAnimatingOrDoingAction();
-                                    who.UsingTool = true;
-                                    List<FarmerSprite.AnimationFrame> animationFrames = new List<FarmerSprite.AnimationFrame>(){
-                                        new FarmerSprite.AnimationFrame(94, 500, false, false, null, false) { flip =  oldFacingDirection == 3 }.AddFrameAction(delegate (Farmer f) { f.jitterStrength = 2f; }) };
-                                    who.FarmerSprite.setCurrentAnimation(animationFrames.ToArray());
-                                    who.FarmerSprite.PauseForSingleAnimation = true;
-                                    who.FarmerSprite.loop = true;
-                                    who.FarmerSprite.loopThisAnimation = true;
-                                    who.Sprite.currentFrame = 94;
-                                    stage = "Caught1";
-                                    stageTimer = 20;
-                                }
-                            }
-                        }
-                    }
-                }
                 if (showPerfect)//add perfect popup
                 {
                     perfect = true;
@@ -507,7 +509,7 @@ namespace FishingMinigames
                 }
                 if (sparklingText != null && who != null && !itemIsInstantCatch)//show perfect/new record popup
                 {
-                    sparklingText.draw(batch, Game1.GlobalToLocal(Game1.viewport, who.Position + new Vector2(-64f, -300f)));
+                    sparklingText.draw(batch, Game1.GlobalToLocal(Game1.viewport, who.Position + new Vector2(sparklingText.drawnTextWidth / -2f + 32f, treasureCaught ? -300f : -200f)));
                 }
 
                 if (endMinigameStyle[screen] == 3 && endMinigameTimer > 0 && endMinigameTimer < 100)//draw letter for end minigame
@@ -819,7 +821,7 @@ namespace FishingMinigames
             }
 
             float modifier = (fishingLevel / 5f) - ((difficulty / 12f + 3) - (fishSize / 40f)) + who.LuckLevel + (Game1.random.Next(0, 50) / 100f);
-            endMinigameDiff = (int)((50 + ((endMinigameStyle[screen] == 3) ? 35f : (endMinigameStyle[screen] == 2) ? 20f : 0f) + modifier) / minigameDifficulty[screen] / effects["DIFFICULTY"]);
+            endMinigameDiff = (int)((60 + ((endMinigameStyle[screen] == 3) ? 35f : (endMinigameStyle[screen] == 2) ? 20f : 0f) + modifier) / minigameDifficulty[screen] / effects["DIFFICULTY"]);
             startMinigameDiff = (int)(modifier * minigameDifficulty[screen] * effects["DIFFICULTY"]);
         }
         private void CatchFishAfterMinigame(Farmer who)
@@ -1021,7 +1023,7 @@ namespace FishingMinigames
                         if (fishSize > 0)
                         {
                             itemSpriteSize = Math.Max(((fishSize < 3) ? fishSize * 1.2f : fishSize) / 64f, 0.01f) * 6.6f;
-                            //if (item.Name.Contains("Eel")) itemSpriteSize /= 2f;//eel sprite curls, so half size
+                            if (item.Name.Contains("Eel")) itemSpriteSize /= 2f;//eel sprite curls, so half size
                         }
                     }
                     else itemSpriteSize = 4f;
@@ -1882,45 +1884,49 @@ namespace FishingMinigames
                 }
 
                 Vector2 tankOffset = Vector2.Zero;
-                Object fish = new Object(whichFish, 1);
-                FishTankFurniture tank = new FishTankFurniture(2322, Vector2.Zero);
-                if (fish.Category == Object.FishCategory && tank.CanBeDeposited(fish))//fishtank sprites
+                if (fishTankSprites)
                 {
-                    tank.boundingBox.Value = new Rectangle(0, 0, 300, 100);
-                    textureName = tank.GetAquariumTexture().Name;
-                    TankFish tankFish = new TankFish(tank, fish);
-                    tank.tankFish.Add(tankFish);
-                    int cols = tank.GetAquariumTexture().Width / 24;
-                    int sprite_sheet_x = tank.tankFish[0].currentFrame % cols * 24;
-                    int sprite_sheet_y = tank.tankFish[0].currentFrame / cols * 48;
-                    rotOffset = 1f;
-                    switch (tankFish.fishType)
+                    Object fish = new Object(whichFish, 1);
+                    FishTankFurniture tank = new FishTankFurniture(2322, Vector2.Zero);
+                    if (fish.Category == Object.FishCategory && tank.CanBeDeposited(fish))//fishtank sprites
                     {
-                        case TankFish.FishType.Cephalopod:
-                            sprite_sheet_x += 72;
-                            rotOffset = 2.2f;
-                            break;
-                        case TankFish.FishType.Float:
-                            rotOffset = 3f;
-                            break;
-                        case TankFish.FishType.Crawl:
-                        case TankFish.FishType.Static:
-                            rotOffset = 2.2f;
-                            break;
-                        case TankFish.FishType.Eel:
-                            rotOffset = 0.7f;
-                            break;
+                        tank.boundingBox.Value = new Rectangle(0, 0, 300, 100);
+                        textureName = tank.GetAquariumTexture().Name;
+                        TankFish tankFish = new TankFish(tank, fish);
+                        tank.tankFish.Add(tankFish);
+                        int cols = tank.GetAquariumTexture().Width / 24;
+                        int sprite_sheet_x = tank.tankFish[0].currentFrame % cols * 24;
+                        int sprite_sheet_y = tank.tankFish[0].currentFrame / cols * 48;
+                        rotOffset = 1f;
+                        switch (tankFish.fishType)
+                        {
+                            case TankFish.FishType.Cephalopod:
+                                sprite_sheet_x += 72;
+                                rotOffset = 2.2f;
+                                break;
+                            case TankFish.FishType.Float:
+                                rotOffset = 3f;
+                                break;
+                            case TankFish.FishType.Crawl:
+                            case TankFish.FishType.Static:
+                                rotOffset = 2.2f;
+                                break;
+                            case TankFish.FishType.Eel:
+                                itemSpriteSize *= 2f;
+                                rotOffset = 0.7f;
+                                break;
+                        }
+                        switch (whichFish)
+                        {
+                            case 158://stonefish
+                                rotOffset = 1.2f;
+                                break;
+                        }
+                        if (fishCount == 1) rotOffset -= 0.2f;
+                        sourceRect = new Rectangle(sprite_sheet_x, sprite_sheet_y, 24, 24);
+                        tankOffset = new Vector2(5f, 5f) * itemSpriteSize;
+                        tankOffset.X -= 5f;
                     }
-                    switch (whichFish)
-                    {
-                        case 158://stonefish
-                            rotOffset = 1.2f;
-                            break;
-                    }
-                    if (fishCount == 1) rotOffset -= 0.2f;
-                    sourceRect = new Rectangle(sprite_sheet_x, sprite_sheet_y, 24, 24);
-                    tankOffset = new Vector2(5f, 5f) * itemSpriteSize;
-                    tankOffset.X -= 5f;
                 }
 
                 float rot = itemIsInstantCatch ? -0.2f : fishCount == 1 ? 2.4f - rotOffset : 2.2f - rotOffset + (fishCount < 6 ? ((fishCount - 0.5f) * 0.2f) : ((fishCount - 0.5f) * 0.15f));//rotate by half the amount

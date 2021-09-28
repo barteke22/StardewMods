@@ -18,6 +18,7 @@ namespace FishingMinigames
         public float[] MinigameDifficulty { get; set; } = { 1f, 1f, 1f, 1f };
         public bool ConvertToMetric { get; set; } = false;
         public bool RealisticSizes { get; set; } = true;
+        public bool FishTankHoldSprites { get; set; } = true;
         public int[] FestivalMode { get; set; } = { 3, 3, 3, 3 };
         public bool[] TutorialSkip { get; set; } = { false, false, false, false };
         public Color MinigameColor { get; set; } = Color.Cyan;

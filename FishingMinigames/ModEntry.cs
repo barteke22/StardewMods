@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Xml;
 
 namespace FishingMinigames
 {
@@ -209,6 +210,9 @@ namespace FishingMinigames
                 if (LocalizedContentManager.CurrentLanguageCode == 0) GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.ConvertToMetric"), translate.Get("GenericMC.ConvertToMetricDesc"),
                     () => config.ConvertToMetric, (bool val) => config.ConvertToMetric = val);
 
+                GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.FishTankHold"), translate.Get("GenericMC.FishTankHoldDesc"),
+                    () => config.FishTankHoldSprites, (bool val) => config.FishTankHoldSprites = val);
+
                 GenericMC.RegisterLabel(ModManifest, translate.Get("GenericMC.FestivalLabel"), "");
                 GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.FestivalDesc"));
                 GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.FestivalDesc2"));
@@ -322,7 +326,7 @@ namespace FishingMinigames
         //{
         //    minigame.Value.OnWarped(sender, e);
         //}
-
+        public static Dictionary<string, int[,]> dataTest;
         private void Input_ButtonsChanged(object sender, ButtonsChangedEventArgs e)  //this.Monitor.Log(locationName, LogLevel.Debug);
         {
             if (e.Pressed.Contains(SButton.F5))
@@ -679,6 +683,7 @@ namespace FishingMinigames
                 Minigames.festivalMode = config.FestivalMode;
                 Minigames.startMinigameScale = config.StartMinigameScale;
                 Minigames.realisticSizes = config.RealisticSizes;
+                Minigames.fishTankSprites = config.FishTankHoldSprites;
                 Minigames.tutorialSkip = config.TutorialSkip;
                 Minigames.minigameColor = config.MinigameColor;
                 if (LocalizedContentManager.CurrentLanguageCode == 0 && Minigames.metricSizes != config.ConvertToMetric)

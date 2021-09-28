@@ -46,6 +46,9 @@
     "GenericMC.RealisticSizes": "Realistyczne Rozmiary",
     "GenericMC.RealisticSizesDesc": "Włączone: Ryba pokazana na końcu będzie miała realistyczny rozmiar w porównaniu z graczem, zakładając, że gracz trzyma je z perspektywy, która sprawia, że ​​są odrobinę większe. Pamiętaj, że przez większość czasu ryby są bardzo małe, mniej-więcej wielkości dłoni.",
 
+    "GenericMC.FishTankHold": "Textury Z Akwarium",
+    "GenericMC.FishTankHoldDesc": "Włączone: Ryba pokazana na końcu będzie używać teksturę z akwarium, jeśli ją posiada. Te tekstury są bardziej jednostajne niż tekstury item'ów. Lecz jeśli ich nie lubisz, lub masz zainstalowany jakiś mod który daje rybom animacje, możesz je tu wyłączyć.",
+
     "GenericMC.FestivalLabel": "Minigry Festiwalowe",
     "GenericMC.FestivalDesc": "Ma to znaczenie tylko dla festiwali Jesień 16 i Zima 8, ponieważ mają minigry wędkarskie, które mają miejsce w specjalnych scenariuszach.",
     "GenericMC.FestivalDesc2": "Oznacza to, że animacje mogą być trochę niezgrabne, i pełne minigry mogą być trudne do balansowania. Oto alternatywne opcje dla nich.",
