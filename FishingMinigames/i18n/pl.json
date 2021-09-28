@@ -74,7 +74,7 @@
     "GenericMC.ItemData": "Dane Osprzętu",
     "GenericMC.ItemDataDesc1": "Tu są efekty specyficzne dla wędek (podbieraków), przynęt i spławików (megafonów). Możesz najechać kursorem na nazwę efektu, aby zobaczyć jego opis.",
     "GenericMC.ItemDataDesc2": "Kilka przedmiotów ma \"hard-kodowane\" efekty. Nie są one tutaj wymienione, ale są w opisie przedmiotu w grze. Ustawienie efektu na 0 wyłączy go.",
-    "GenericMC.ItemDataDesc3": "DOUBLE, LIFE, QUALITY, TREASURE, i UNBREAKING są addytywne, reszta to mnożniki. Polecam mod \"Everlasting Baits...\" zamiast UNBREAKING dla immersji.",
+    "GenericMC.ItemDataDesc3": "EXTRA, LIFE, QUALITY, TREASURE, i UNBREAKING są addytywne, reszta to mnożniki. Polecam mod \"Everlasting Baits...\" zamiast UNBREAKING dla immersji.",
     "GenericMC.ItemDataDesc4": "Efekty mają być procentami/liczbami bez przecinka, ale GMCM obecnie nie wyświetla ich wartości - spróbuj być blisko liczb całych.",
 
 

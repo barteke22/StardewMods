@@ -74,7 +74,7 @@
     "GenericMC.ItemData": "Item Data",
     "GenericMC.ItemDataDesc1": "These are item specific effects for rods (nets), baits, and tackles (megaphones). You can hover over the effect name to see what it does.",
     "GenericMC.ItemDataDesc2": "A few items have hardcoded effects that aren't listed here, but are mentioned in the item's description. Setting an effect to 0 will disable it.",
-    "GenericMC.ItemDataDesc3": "DOUBLE, LIFE, QUALITY, TREASURE, and UNBREAKING are additive, the rest are multipliers. I recommend the \"Everlasting Baits...\" Mod instead of UNBREAKING for immersion.",
+    "GenericMC.ItemDataDesc3": "EXTRA, LIFE, QUALITY, TREASURE, and UNBREAKING are additive, the rest are multipliers. I recommend the \"Everlasting Baits...\" Mod instead of UNBREAKING for immersion.",
     "GenericMC.ItemDataDesc4": "The effects are meant to be non-decimal percentages/counts, but GMCM currently doesn't display their values - try being close to whole numbers.",
 
 

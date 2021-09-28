@@ -104,7 +104,7 @@ Meaning that the animations can look a little glitchy, and full lenght minigames
     These are item specific effects for rods (nets), baits, and tackles (megaphones).
     A few items have hardcoded effects that aren't listed here, but are mentioned in the item's description.
     Setting an effect to 0 will disable it, you can also remove the effect line completely, but be careful with the structure.
-    DOUBLE, LIFE, QUALITY, TREASURE, and UNBREAKING are additive, the rest are multipliers.
+    EXTRA, LIFE, QUALITY, TREASURE, and UNBREAKING are additive, the rest are multipliers.
     I recommend the "Everlasting Baits and Unbreakable Tackles" Mod instead of UNBREAKING for better immersion.
 
     The item names must be the original English names (item.Name, not the translated item.DisplayName).

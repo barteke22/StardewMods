@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CustomSpouseLocation", "Cus
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScreenshotKey", "ScreenshotKey\ScreenshotKey.csproj", "{3610378B-BD2A-4D99-9FF4-96709D5A7329}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TMXTest", "TMXTest\TMXTest.csproj", "{5154EE69-AD92-460D-A03C-3646A739CACC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{3610378B-BD2A-4D99-9FF4-96709D5A7329}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3610378B-BD2A-4D99-9FF4-96709D5A7329}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3610378B-BD2A-4D99-9FF4-96709D5A7329}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5154EE69-AD92-460D-A03C-3646A739CACC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5154EE69-AD92-460D-A03C-3646A739CACC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5154EE69-AD92-460D-A03C-3646A739CACC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5154EE69-AD92-460D-A03C-3646A739CACC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

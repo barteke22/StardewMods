@@ -12,7 +12,6 @@ using StardewValley.Tools;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using Object = StardewValley.Object;
 
 namespace FishingMinigames
@@ -1506,7 +1505,7 @@ namespace FishingMinigames
                             }
                             break;
                         case 3:
-                            if (KeybindList.Parse(endMinigameKey).JustPressed()) passed = true;
+                            if (endMinigameKey != null && KeybindList.Parse(endMinigameKey).JustPressed()) passed = true;
                             break;
                     }
                 }
@@ -1956,7 +1955,7 @@ namespace FishingMinigames
             { layerDepth = layer, scale = itemSpriteSize, owner = who, id = nexusKey });
         }
 
-        protected void SuppressAll(ButtonsChangedEventArgs e)
+        private void SuppressAll(ButtonsChangedEventArgs e)
         {
             if (Game1.activeClickableMenu == null || Game1.activeClickableMenu is DummyMenu)
             {
