@@ -9,7 +9,6 @@
     <GameModsPath>D:\Programs\Steam\steamapps\common\Stardew Valley 155\ModsTesting</GameModsPath>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="i18n %28unofficial languages%29\Polish\pt.json" />
     <None Include="i18n\default.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
