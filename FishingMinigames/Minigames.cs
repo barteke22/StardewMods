@@ -108,6 +108,7 @@ namespace FishingMinigames
         public static float[] minigameDifficulty = new float[4];
         public static bool[] tutorialSkip = new bool[4];
         public static Color minigameColor;
+        public static bool bossTransparency;
 
 
         /*  
@@ -1229,7 +1230,7 @@ namespace FishingMinigames
 
                         if (firstArrowLoc.X + data[2] - (6f * scale) >= screenMid.X - (width * 0.464f))//arrow didn't pass end
                         {
-                            float arrowOpacity = opacity > 2.9f ? (bossFish && i % 10 > 4 ? 0.5f : 1f) : 0f;
+                            float arrowOpacity = opacity > 2.9f ? (bossFish && bossTransparency && i % 10 > 4 ? 0.5f : 1f) : 0f;
 
                             Color color = (data[1] == 2f) ? Color.LimeGreen : ((int)data[1] == 1) ? Color.Orange : (data[1] == -1f) ? Color.Red : (i == startMinigameData[4]) ? Color.LightPink : minigameColor;
                             batch.Draw(startMinigameTextures[1], firstArrowLoc + new Vector2((data[2]), 0), new Rectangle((data[0] == 0f || data[0] == 2f) ? 338 : 322, 82, 12, 12),

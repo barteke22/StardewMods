@@ -69,6 +69,8 @@
 
     "GenericMC.Colors": "Opcje Kolorów",
     "GenericMC.MinigameColor": "Kolor Minigry",
+    "GenericMC.BossTransparency": "Przezroczystość Bossów",
+    "GenericMC.BossTransparencyDesc": "Włączone: Walki z bossem w minigrze Startu będą pokazywać lekko przezroczyste strzałki co kilka strzałek. Można to tu wyłączyć jeśli jest trudno za tym nadążyć.",
 
 
     "GenericMC.ItemData": "Dane Osprzętu",

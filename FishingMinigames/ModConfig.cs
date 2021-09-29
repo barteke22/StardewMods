@@ -22,6 +22,7 @@ namespace FishingMinigames
         public int[] FestivalMode { get; set; } = { 3, 3, 3, 3 };
         public bool[] TutorialSkip { get; set; } = { false, false, false, false };
         public Color MinigameColor { get; set; } = Color.Cyan;
+        public bool BossTransparency { get; set; } = true;
 
         public Dictionary<string, Dictionary<string, int>> SeeInfoForBelowData { get; set; } = new Dictionary<string, Dictionary<string, int>>()
         {

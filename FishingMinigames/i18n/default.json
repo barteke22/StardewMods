@@ -69,6 +69,8 @@
 
     "GenericMC.Colors": "Color Customization",
     "GenericMC.MinigameColor": "Minigame Color",
+    "GenericMC.BossTransparency": "Boss Transparency",
+    "GenericMC.BossTransparencyDesc": "Enabled: Boss fish in the Start Minigame will have semi-transparent arrows every couple arrows. You can disable this if it's hard to follow.",
 
 
     "GenericMC.ItemData": "Item Data",

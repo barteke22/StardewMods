@@ -100,6 +100,8 @@ namespace FishingMinigames
 
                     GenericMC.StartNewPage(ModManifest, translate.Get("GenericMC.Colors"));
                     GenericMCColorPicker(GenericMC, ModManifest, translate.Get("GenericMC.MinigameColor"), "");
+                    GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.BossTransparency"), translate.Get("GenericMC.BossTransparencyDesc"),
+                        () => config.BossTransparency, (bool val) => config.BossTransparency = val);
 
                     GenericMC.StartNewPage(ModManifest, translate.Get("GenericMC.ItemData"));
                     GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.ItemDataDesc1"));
@@ -309,6 +311,7 @@ namespace FishingMinigames
 
             GenericMC.RegisterLabel(mod, ".   " + optionName, optionDesc);
             GenericMC.RegisterComplexOption(mod, "", "", colorPickerUpdate, colorPickerDraw, colorPickerSave);
+            GenericMC.RegisterLabel(mod, ".", "");
             GenericMC.RegisterLabel(mod, ".", "");
             GenericMC.RegisterLabel(mod, ".", "");
         }
@@ -684,6 +687,7 @@ namespace FishingMinigames
                 Minigames.fishTankSprites = config.FishTankHoldSprites;
                 Minigames.tutorialSkip = config.TutorialSkip;
                 Minigames.minigameColor = config.MinigameColor;
+                Minigames.bossTransparency = config.BossTransparency;
                 if (LocalizedContentManager.CurrentLanguageCode == 0 && Minigames.metricSizes != config.ConvertToMetric)
                 {
                     Minigames.metricSizes = config.ConvertToMetric;
