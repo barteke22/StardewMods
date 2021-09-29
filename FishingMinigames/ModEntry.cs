@@ -330,6 +330,7 @@ namespace FishingMinigames
         //}
         private void Input_ButtonsChanged(object sender, ButtonsChangedEventArgs e)  //this.Monitor.Log(locationName, LogLevel.Debug);
         {
+            if (!Context.IsWorldReady) return;
             if (e.Pressed.Contains(SButton.F5))
             {
                 UpdateConfig(false);
@@ -359,6 +360,7 @@ namespace FishingMinigames
 
         private void Display_Rendered(object sender, RenderedEventArgs e)//festival 1
         {
+            if (!Context.IsWorldReady) return;
             try
             {
                 if (minigame.Value.fishingFestivalMinigame == 1) minigame.Value.Display_RenderedAll(e.SpriteBatch);
@@ -371,6 +373,7 @@ namespace FishingMinigames
         }
         private void Display_RenderedWorld(object sender, RenderedWorldEventArgs e)//regular
         {
+            if (!Context.IsWorldReady) return;
             try
             {
                 if (minigame.Value.fishingFestivalMinigame != 1) minigame.Value.Display_RenderedAll(e.SpriteBatch);
@@ -385,6 +388,7 @@ namespace FishingMinigames
 
         private void Display_RenderingWorld(object sender, RenderingWorldEventArgs e)
         {
+            if (!Context.IsWorldReady) return;
             try
             {
                 minigame.Value.Display_RenderingWorld(sender, e);

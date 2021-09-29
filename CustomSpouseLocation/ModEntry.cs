@@ -890,7 +890,11 @@ namespace StardewMods
             if (dayStartedDelay > -1)
             {
                 if (dayStartedDelay == 148) PlaceSpousesInside();
-                else if (dayStartedDelay < 1 && Context.IsMainPlayer) PlaceSpousesOutside();
+                else if (dayStartedDelay < 1 && Context.IsMainPlayer)
+                {
+                    PlaceSpousesOutside();
+                    dayStartedDelay = -1;
+                }
                 dayStartedDelay--;
             }
             if (spouses?.Count > 0)
@@ -912,6 +916,7 @@ namespace StardewMods
                     }
                 }
             }
+            if (dayStartedDelay > -2) return;
             Farmer who = Game1.player;
             if (!config.SpritePreviewName.Equals("", StringComparison.Ordinal) && (who.currentLocation is Cabin || (Context.IsMainPlayer && (who.currentLocation is FarmHouse || who.currentLocation is Farm))))
             {

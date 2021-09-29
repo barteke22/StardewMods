@@ -99,6 +99,8 @@ Meaning that the animations can look a little glitchy, and full lenght minigames
 	G: 0-255 (255)
 	B: 0-255 (255)
 
+    BossTransparency: true/false (true)
+    	true: Boss fish in the Start Minigame will have semi-transparent arrows every couple arrows. You can set this to false if it's hard to follow.
 
 
     These are item specific effects for rods (nets), baits, and tackles (megaphones).
