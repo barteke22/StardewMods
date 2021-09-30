@@ -27,7 +27,7 @@ namespace StardewMods
         private Dictionary<string, Vector2> patioPoints;
         private FarmHouse houseCache;
         private int mode;//0= 1.5.4, 1= 1.5.4 + multiple spouses, 2= 1.5.5, 3= 1.5.5 + multiple spouses
-        private Vector2 defaultTile;
+        private Vector2 defaultTile;//only used to room size in auto
         private Vector2 sebastianFrogTile;
 
         //editor stuff
@@ -836,6 +836,15 @@ namespace StardewMods
 
                 bool furniture = !(config.SpouseRoom_Auto_FurnitureChairs_UpOnly_Blacklist.ToLower().Contains("all") || config.SpouseRoom_Auto_FurnitureChairs_UpOnly_Blacklist.Contains(spouse.Name));
                 bool mapSeat = !(config.SpouseRoom_Auto_MapChairs_DownOnly_Blacklist.ToLower().Contains("all") || config.SpouseRoom_Auto_MapChairs_DownOnly_Blacklist.Contains(spouse.Name));
+
+                
+                Rectangle room = new Rectangle((int)this.defaultTile.X - 3, (int)this.defaultTile.Y - 1, 7, 6);
+
+                while (!room.Contains((int)tile.X, (int)tile.Y) && room.X < 500)
+                {
+                    room.X += 7;
+                }
+                Vector2 defaultTile = new Vector2(room.X + 3, room.Y + 1);
 
                 for (int x = -3; x < 3; x++)
                 {
