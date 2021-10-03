@@ -12,8 +12,6 @@
     <None Include="i18n\default.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="itemConfigs\items_exampleMod.json" />
-    <None Include="itemConfigs\items_vanilla.json" />
   </ItemGroup>
   <ItemGroup>
     <None Include="manifest.json">

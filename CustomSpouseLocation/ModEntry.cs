@@ -67,11 +67,13 @@ namespace StardewMods
             helper.Events.GameLoop.DayStarted += this.OnDayStarted;
             helper.Events.Display.RenderedWorld += this.OnRenderedWorld;
             helper.Events.Display.WindowResized += this.OnResized;
-            helper.Events.GameLoop.GameLaunched += this.GenericModConfigMenuIntegration;
+            helper.Events.Display.RenderedActiveMenu += GenericModConfigMenuIntegration;
         }
 
-        private void GenericModConfigMenuIntegration(object sender, GameLaunchedEventArgs e)//Generic Mod Config Menu API
+        private void GenericModConfigMenuIntegration(object sender, RenderedActiveMenuEventArgs e)//Generic Mod Config Menu API
         {
+            Helper.Events.Display.RenderedActiveMenu -= GenericModConfigMenuIntegration;
+
             lineSpacing = Game1.smallFont.LineSpacing * 1.5f;
             translate = Helper.Translation;
 

@@ -18,7 +18,7 @@
     "GenericMC.StartMinigameStyle": "Styl Minigry (Start)",
     "GenericMC.StartMinigameStyleDesc": "Ta minigra określa, czy w ogóle złapiesz rybę (tylko ryby\n mają tę część) i przyczynia się do ogólnego wyniku. \nStrzałki DDR: Klasyczna gra rytmiczna, w której dopasowujesz kierunek\n strzałek za pomocą przycisków ruchu, gdy dotrą do określonego obszaru. \nMinigame2: Do zrobienia \nMinigame3: Do zrobienia",
     "GenericMC.StartMinigameStyle1": "Strzałki DDR",
-    "GenericMC.StartMinigameStyle2": "todo",
+    "GenericMC.StartMinigameStyle2": "Wisielec",
     "GenericMC.StartMinigameStyle3": "todo",
 
     "GenericMC.EndMinigameStyle": "Styl Minigry (Koniec)",

@@ -3,10 +3,12 @@ using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
+using Netcode;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
+using StardewValley.Locations;
 using StardewValley.Tools;
 using System;
 using System.Collections.Generic;
@@ -31,7 +33,7 @@ namespace FishingMinigames
         {
             translate = Helper.Translation;
             UpdateConfig(false);
-            Minigames.startMinigameTextures = new Texture2D[] {
+            MinigamesStart.minigameTextures = new Texture2D[] {
                 Game1.content.Load<Texture2D>("LooseSprites\\boardGameBorder"),
                 Game1.content.Load<Texture2D>("LooseSprites\\CraneGame"),
                 Game1.content.Load<Texture2D>("LooseSprites\\buildingPlacementTiles") };
@@ -42,7 +44,7 @@ namespace FishingMinigames
             helper.Events.Display.RenderedWorld += Display_RenderedWorld;
             helper.Events.GameLoop.UpdateTicking += GameLoop_UpdateTicking;
             helper.Events.Input.ButtonsChanged += Input_ButtonsChanged;
-            helper.Events.GameLoop.GameLaunched += GenericModConfigMenuIntegration;
+            helper.Events.Display.RenderedActiveMenu += GenericModConfigMenuIntegration;
             helper.Events.GameLoop.SaveLoaded += GameLoop_SaveLoaded;
             helper.Events.Multiplayer.ModMessageReceived += OnModMessageReceived;
             //helper.Events.Player.Warped += OnWarped;
@@ -61,8 +63,9 @@ namespace FishingMinigames
         }
 
 
-        private void GenericModConfigMenuIntegration(object sender, GameLaunchedEventArgs e)     //Generic Mod Config Menu API
+        private void GenericModConfigMenuIntegration(object sender, RenderedActiveMenuEventArgs e)     //Generic Mod Config Menu API
         {
+            Helper.Events.Display.RenderedActiveMenu -= GenericModConfigMenuIntegration;
             if (Context.IsSplitScreen) return;
             canStartEditingAssets = true;
             Helper.Content.InvalidateCache("TileSheets/tools");
@@ -183,7 +186,7 @@ namespace FishingMinigames
             GenericMC.RegisterChoiceOption(ModManifest, translate.Get("GenericMC.StartMinigameStyle"), translate.Get("GenericMC.StartMinigameStyleDesc"),
                 () => (config.StartMinigameStyle[screen] == 0) ? translate.Get("GenericMC.Disabled") : (config.StartMinigameStyle[screen] == 1) ? translate.Get("GenericMC.StartMinigameStyle1") : (config.StartMinigameStyle[screen] == 2) ? translate.Get("GenericMC.StartMinigameStyle2") : translate.Get("GenericMC.StartMinigameStyle3"),
                 (string val) => config.StartMinigameStyle[screen] = Int32.Parse((val.Equals(translate.Get("GenericMC.Disabled"), StringComparison.Ordinal)) ? "0" : (val.Equals(translate.Get("GenericMC.StartMinigameStyle1"), StringComparison.Ordinal)) ? "1" : (val.Equals(translate.Get("GenericMC.StartMinigameStyle2"), StringComparison.Ordinal)) ? "2" : "3"),
-                new string[] { translate.Get("GenericMC.Disabled"), translate.Get("GenericMC.StartMinigameStyle1") });//, translate.Get("GenericMC.StartMinigameStyle2"), translate.Get("GenericMC.StartMinigameStyle3") });//small 'hack' so options appear as name strings, while config.json stores them as integers
+                new string[] { translate.Get("GenericMC.Disabled"), translate.Get("GenericMC.StartMinigameStyle1"), translate.Get("GenericMC.StartMinigameStyle2") });//, translate.Get("GenericMC.StartMinigameStyle3") });//small 'hack' so options appear as name strings, while config.json stores them as integers
 
             GenericMC.RegisterChoiceOption(ModManifest, translate.Get("GenericMC.EndMinigameStyle"), translate.Get("GenericMC.EndMinigameStyleDesc"),
                 () => (config.EndMinigameStyle[screen] == 0) ? translate.Get("GenericMC.Disabled") : (config.EndMinigameStyle[screen] == 1) ? translate.Get("GenericMC.EndMinigameStyle1") : (config.EndMinigameStyle[screen] == 2) ? translate.Get("GenericMC.EndMinigameStyle2") : translate.Get("GenericMC.EndMinigameStyle3"),
@@ -289,10 +292,10 @@ namespace FishingMinigames
                     Vector2 screenMid = new Vector2(pos.X - (width / 1.5f), pos.Y + 90);
 
                     b.Draw(Game1.mouseCursors, screenMid, new Rectangle(31, 1870, 73, 49), state.color, 0f, new Vector2(36.5f, 22.5f), 4f * scale, SpriteEffects.None, 0.2f);
-                    b.Draw(Minigames.startMinigameTextures[0], screenMid, null, state.color, 0f, new Vector2(69f, 37f), 2f * scale, SpriteEffects.None, 0.3f);
-                    b.Draw(Minigames.startMinigameTextures[1], screenMid + new Vector2(-50f, 0f), new Rectangle(355, 86, 26, 26), state.color, 0f, new Vector2(13f), 1f * scale, SpriteEffects.None, 0.4f);
+                    b.Draw(MinigamesStart.minigameTextures[0], screenMid, null, state.color, 0f, new Vector2(69f, 37f), 2f * scale, SpriteEffects.None, 0.3f);
+                    b.Draw(MinigamesStart.minigameTextures[1], screenMid + new Vector2(-50f, 0f), new Rectangle(355, 86, 26, 26), state.color, 0f, new Vector2(13f), 1f * scale, SpriteEffects.None, 0.4f);
 
-                    b.Draw(Minigames.startMinigameTextures[1], screenMid + new Vector2(50f, 0), new Rectangle(322, 82, 12, 12), state.color, 0f, new Vector2(6f), 2f * scale, SpriteEffects.None, 0.4f);
+                    b.Draw(MinigamesStart.minigameTextures[1], screenMid + new Vector2(50f, 0), new Rectangle(322, 82, 12, 12), state.color, 0f, new Vector2(6f), 2f * scale, SpriteEffects.None, 0.4f);
                     b.Draw(Game1.mouseCursors, screenMid, new Rectangle(301, 288, 15, 15), state.color * 0.95f, 0f, new Vector2(7.5f, 7.5f), 2f * scale, SpriteEffects.None, 0.5f);
                     b.DrawString(Game1.smallFont, "5", screenMid + new Vector2(0, 2f), state.color, 0f, Game1.smallFont.MeasureString("5") / 2f, 1f * scale, SpriteEffects.None, 0.51f);
 
@@ -570,47 +573,6 @@ namespace FishingMinigames
         {
             if (!GMCM) config = Helper.ReadConfig<ModConfig>();
 
-            //item configs
-            //Minigames.itemData = new Dictionary<string, string[]>();
-            //foreach (var file in Directory.GetFiles(Helper.DirectoryPath + "/itemConfigs", "*.json").Select(Path.GetFileName).OrderBy(f => f))
-            //{
-            //    (Helper.Data.ReadJsonFile<Dictionary<string, string[]>>("itemConfigs/" + file) ?? new Dictionary<string, string[]>()).ToList().ForEach(x => Minigames.itemData[x.Key] = x.Value);
-            //}
-
-            //bool reset;
-            //reset = Minigames.itemData == null || Minigames.itemData.Count != config.SeeInfoForBelowData.Count;
-            //if (!reset)
-            //{
-            //    foreach (var item in Minigames.itemData)
-            //    {
-            //        if (!config.SeeInfoForBelowData.ContainsKey(item.Key))
-            //        {
-            //            reset = true;
-            //            break;
-            //        }
-            //        else if (Minigames.itemData[item.Key].Count == config.SeeInfoForBelowData[item.Key].Count)
-            //        {
-            //            foreach (var effect in Minigames.itemData[item.Key])
-            //            {
-            //                if (!config.SeeInfoForBelowData[item.Key].Contains(effect))
-            //                {
-            //                    reset = true;
-            //                    break;
-            //                }
-            //            }
-            //        }
-            //        else
-            //        {
-            //            reset = true;
-            //            break;
-            //        }
-            //    }
-            //}
-            //if (reset)
-            //{
-            //    Minigames.itemData = config.SeeInfoForBelowData;
-            //    Helper.Content.InvalidateCache("Data/ObjectInformation");
-            //}
             int fix = 0;
             foreach (var item in config.SeeInfoForBelowData.ToArray())//updates old configs to new format
             {
@@ -686,12 +648,15 @@ namespace FishingMinigames
                 Minigames.minigameDamage = config.EndMinigameDamage;
                 Minigames.minigameDifficulty = config.MinigameDifficulty;
                 Minigames.festivalMode = config.FestivalMode;
-                Minigames.startMinigameScale = config.StartMinigameScale;
                 Minigames.realisticSizes = config.RealisticSizes;
                 Minigames.fishTankSprites = config.FishTankHoldSprites;
-                Minigames.tutorialSkip = config.TutorialSkip;
                 Minigames.minigameColor = config.MinigameColor;
-                Minigames.bossTransparency = config.BossTransparency;
+                MinigamesStart.minigameStyle = config.StartMinigameStyle;
+                MinigamesStart.minigameColor = config.MinigameColor;
+                MinigamesStart.minigameDifficulty = config.MinigameDifficulty;
+                MinigamesStart.startMinigameScale = config.StartMinigameScale;
+                MinigamesStart.tutorialSkip = config.TutorialSkip;
+                MinigamesStart.bossTransparency = config.BossTransparency;
                 if (LocalizedContentManager.CurrentLanguageCode == 0 && Minigames.metricSizes != config.ConvertToMetric)
                 {
                     Minigames.metricSizes = config.ConvertToMetric;

@@ -18,7 +18,7 @@
     "GenericMC.StartMinigameStyle": "Minigame Style (Start)",
     "GenericMC.StartMinigameStyleDesc": "This minigame determines whether you catch the fish at all\n (non-fish catches skip this part), and contributes to total score. \nDDR Arrows: The classic rhythm game where you match\n arrow directions with your Movement buttons as they reach a specific area. \nMinigame2: WIP \nMinigame3: WIP",
     "GenericMC.StartMinigameStyle1": "DDR Arrows",
-    "GenericMC.StartMinigameStyle2": "todo",
+    "GenericMC.StartMinigameStyle2": "Hangman",
     "GenericMC.StartMinigameStyle3": "todo",
 
     "GenericMC.EndMinigameStyle": "Minigame Style (End)",
