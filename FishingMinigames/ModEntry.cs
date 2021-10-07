@@ -366,7 +366,7 @@ namespace FishingMinigames
             if (!Context.IsWorldReady) return;
             try
             {
-                if (minigame.Value.fishingFestivalMinigame == 1) minigame.Value.Display_RenderedAll(e.SpriteBatch);
+                minigame.Value.Display_Rendered(e.SpriteBatch);
             }
             catch (Exception ex)
             {

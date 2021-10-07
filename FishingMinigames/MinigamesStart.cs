@@ -37,6 +37,9 @@ namespace FishingMinigames
         public int minigameDiff;
         private List<string> minigameText;
 
+        public float oldZoom;
+        public bool oldViewportFollow;
+
 
         public static int[] minigameStyle;
         public static Texture2D[] minigameTextures;
@@ -68,7 +71,9 @@ namespace FishingMinigames
         {
             //starting minigame init
             oldZoom = Game1.options.zoomLevel;
+            oldViewportFollow = who.currentLocation.forceViewportPlayerFollow;
             Game1.viewportFreeze = true;
+            who.currentLocation.forceViewportPlayerFollow = false;
 
             minigameData = new int[6];
 
@@ -125,24 +130,22 @@ namespace FishingMinigames
         }
 
 
-        public bool MainInput(ButtonsChangedEventArgs e)//true cancels
+        public void MainInput(ButtonsChangedEventArgs e)//true cancels
         {
             if (minigameStage > 0 && minigameStage < 5)//already in startMinigame
             {
-                if (minigameStage < 3 && (e.Pressed.Contains(SButton.Escape) || e.Pressed.Contains(SButton.ControllerB))) //cancel
+                if (minigameData[5] > 70 && minigameStage < 3 && (e.Pressed.Contains(SButton.Escape) || e.Pressed.Contains(SButton.ControllerB))) //cancel
                 {
                     data.Helper.Input.Suppress(SButton.Escape);
                     data.Helper.Input.Suppress(SButton.ControllerB);
                     minigameStage = 4;
-                    Game1.viewportFreeze = false;
-                    if (Context.IsSplitScreen) Game1.options.localCoopBaseZoomLevel = oldZoom;
-                    else Game1.options.singlePlayerBaseZoomLevel = oldZoom;
-                    return true; //cancel
+                    minigameData[5] = 70;
+                    //if (Context.IsSplitScreen) Game1.options.localCoopBaseZoomLevel = oldZoom;
+                    //else Game1.options.singlePlayerBaseZoomLevel = oldZoom;
+                    //return true; //cancel
                 }
-
-                if (minigameStage > 1) InputDDR();
+                else if (minigameStage > 1 && minigameStage != 4) InputDDR();
             }
-            return false;
         }
         public void MainUpdateTicked(UpdateTickingEventArgs e)
         {
@@ -237,7 +240,6 @@ namespace FishingMinigames
                 if ((Game1.paused || !Game1.game1.IsActiveNoOverlay) && (Game1.options == null || Game1.options.pauseWhenOutOfFocus || Game1.paused))
                 {
                     batch.Draw(Game1.mouseCursors, screenMid, new Rectangle(322, 498, 12, 12), Color.Brown, 0f, new Vector2(6f), scale * 2f, SpriteEffects.None, 0.4f);
-                    //DebugColours(screenMid - new Vector2(width * 0.5f, height * 0.5f));
                     return;
                 }
                 //hit area rings
@@ -459,14 +461,10 @@ namespace FishingMinigames
             }
             else
             {
-                if (debug)
-                {
-                    EmergencyCancel();
-                    return;
-                }
+                if (debug) minigameData[2] = 0;
 
                 Game1.exitActiveMenu();
-                minigameData[5] = 60;
+                minigameData[5] = 70;
 
                 if (minigameData[2] < minigameArrowData.Length * 0.76f)
                 {
@@ -483,31 +481,25 @@ namespace FishingMinigames
             }
         }
 
-        private float oldZoom;
+
         private void DrawHangman(SpriteBatch batch)
         {
+
             if (minigameStage == 1)//fade in (opacity calc)
             {
                 minigameData[5]++;
 
-                if (minigameData[5] < 150)
+                if (minigameData[5] < 70)
                 {
-                    Game1.viewport.X = (int)who.Position.X + 32 - (Game1.viewport.Width / 2);
-                    Game1.viewport.Y -= 1;
-                    if (Context.IsSplitScreen) Game1.options.localCoopBaseZoomLevel += 0.01f;
-                    else Game1.options.singlePlayerBaseZoomLevel += 0.01f;
-                }
-                else
-                {
-                    Game1.viewport.X = (int)who.Position.X + 32 - (Game1.viewport.Width / 2);
-                    Game1.viewport.Y += 1;
-                    if (Context.IsSplitScreen) Game1.options.localCoopBaseZoomLevel -= 0.01f;
-                    else Game1.options.singlePlayerBaseZoomLevel -= 0.01f;
-                }
+                    float f = (minigameData[5] / 250f) + 0.01f;
+                    if (Context.IsSplitScreen) Game1.options.localCoopBaseZoomLevel += f;
+                    else Game1.options.singlePlayerBaseZoomLevel += f;
 
-                if (minigameData[5] == 300)
+                    Game1.viewport.X = Math.Max(who.getStandingX() - (Game1.viewport.Width / 2), 0);
+                    Game1.viewport.Y = Math.Max(who.getStandingY() - Math.Min(minigameData[5] * 2, 80) - (Game1.viewport.Height / 2), 0);
+                }
+                else if (minigameData[5] == 300)
                 {
-                    Game1.viewportFreeze = false;
                     if (fishingFestivalMinigame == 0)
                     {
                         data.Helper.Multiplayer.SendMessage((whichFish < 167 || whichFish > 172) ? whichFish : 168, "whichFish", modIDs: new[] { "barteke22.FishingInfoOverlays" }, new[] { who.UniqueMultiplayerID });//notify overlay of which fish
@@ -536,7 +528,7 @@ namespace FishingMinigames
             float opacity = minigameData[5] / 100f;
 
             //scale/middle/bounds calculation
-            float scale = 7f * startMinigameScale * (1f / Game1.options.zoomLevel);
+            float scale = 7f * startMinigameScale;
             int width = (int)Math.Round(138f * scale);
             int height = (int)Math.Round(74f * scale);
             Vector2 screenMid = new Vector2(Game1.graphics.GraphicsDevice.Viewport.Width / 2, Game1.graphics.GraphicsDevice.Viewport.Height / 2);
@@ -567,7 +559,6 @@ namespace FishingMinigames
                 if ((Game1.paused || !Game1.game1.IsActiveNoOverlay) && (Game1.options == null || Game1.options.pauseWhenOutOfFocus || Game1.paused))
                 {
                     batch.Draw(Game1.mouseCursors, screenMid, new Rectangle(322, 498, 12, 12), Color.Brown, 0f, new Vector2(6f), scale * 2f, SpriteEffects.None, 0.4f);
-                    //DebugColours(screenMid - new Vector2(width * 0.5f, height * 0.5f));
                     return;
                 }
 
@@ -690,14 +681,10 @@ namespace FishingMinigames
             }
             else
             {
-                if (debug)
-                {
-                    EmergencyCancel();
-                    return;
-                }
+                if (debug) minigameData[2] = 0;
 
                 Game1.exitActiveMenu();
-                minigameData[5] = 60;
+                minigameData[5] = 70;
 
                 if (minigameData[2] < minigameArrowData.Length * 0.76f)
                 {

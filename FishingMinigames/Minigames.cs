@@ -175,12 +175,13 @@ namespace FishingMinigames
             else if (start != null)//already in startMinigame
             {
                 SuppressAll(e);
-                if (start.MainInput(e)) //cancel
-                {
-                    DrawAndEmote(who, 2);
-                    EmergencyCancel();
-                    return;
-                }
+                start.MainInput(e);
+                //if (start.MainInput(e)) //cancel
+                //{
+                //    DrawAndEmote(who, 2);
+                //    EmergencyCancel();
+                //    return;
+                //}
             }
             else if (keyBinds[screen].JustPressed() && freeAim[screen] && (fishingFestivalMinigame == 0 || festivalTimer > 3000)) TryFishingHere(aimTile);//start attempt
         }
@@ -210,7 +211,8 @@ namespace FishingMinigames
                         if (festivalTimer <= 1000 && fishingFestivalMinigame > 0 && festivalMode[screen] > 0) EmergencyCancel();
                     }
                 }
-                if (start != null) {
+                if (start != null)
+                {
                     start.fishingFestivalMinigame = fishingFestivalMinigame;
                     start.festivalTimer = festivalTimer;
                 }
@@ -358,13 +360,31 @@ namespace FishingMinigames
             }
             if (drawAttachments) DrawAndEmote(who, 4);//draw bait and tackle
 
-            if (start != null && start.minigameStage > 4 && start.minigameData[5] > 0)//fade out and continue - test if keeping it here fixes transition glitches
+            if (start != null && start.minigameStage > 3 && start.minigameData[5] > 0)//fade out and continue - test if keeping it here fixes transition glitches
             {
+                if (start.minigameData[5] > 0 && start.minigameData[5] < 70)
+                {
+                    float f = (start.minigameData[5] / 250f) + 0.01f;
+                    if (Context.IsSplitScreen) Game1.options.localCoopBaseZoomLevel -= f;
+                    else Game1.options.singlePlayerBaseZoomLevel -= f;
+
+                    int y = who.getStandingY() - Math.Min(start.minigameData[5] * 2, 80) - (Game1.viewport.Height / 2);
+                    if (y + Game1.viewport.Height < who.currentLocation.Map.DisplayHeight) Game1.viewport.Y = y;
+
+                    if (Game1.viewport.X < 0) Game1.viewport.X = 0;
+                    if (Game1.viewport.Y < 0) Game1.viewport.Y = 0;
+                }
+
                 start.minigameData[5]--;
+
                 if (start.minigameData[5] == 0)
                 {
+                    who.currentLocation.forceViewportPlayerFollow = start.oldViewportFollow;
+                    Game1.viewportFreeze = false;
+                    if (Context.IsSplitScreen) Game1.options.localCoopBaseZoomLevel = start.oldZoom;
+                    else Game1.options.singlePlayerBaseZoomLevel = start.oldZoom;
                     stage = null;
-                    if (start.minigameStage == 5)
+                    if (start.minigameStage < 6)//4= cancel, 5= fail
                     {
                         DrawAndEmote(who, 2);
                         EmergencyCancel();
@@ -373,6 +393,11 @@ namespace FishingMinigames
                     return;
                 }
             }
+        }
+        public void Display_Rendered(SpriteBatch e)
+        {
+            if (start != null) start.MainRendered(batch);
+            else if (fishingFestivalMinigame == 1) Display_RenderedAll(e);
         }
         public void Display_RenderedAll(SpriteBatch e)
         {
@@ -387,8 +412,7 @@ namespace FishingMinigames
                 }
             }
 
-            if (start != null) start.MainRendered(batch);
-            else
+            if (start == null)
             {
                 //draw mouse target on water
                 if ((!Game1.eventUp || (fishingFestivalMinigame != 0 && festivalMode[screen] != 0)) && !Game1.menuUp && who.CurrentItem is FishingRod && (!hereFishying || infoTimer > 0)) AimAssist(batch);
@@ -1236,7 +1260,8 @@ namespace FishingMinigames
             {
                 if (startMinigameStyle[screen] + endMinigameStyle[screen] > 0)
                 {
-                    if (start != null) {
+                    if (start != null)
+                    {
                         if (start.minigameStage == 4) //for now 4 = cancel = X
                         {
                             who.doEmote(36);
@@ -1246,7 +1271,7 @@ namespace FishingMinigames
                         {
                             who.doEmote(12);
                             who.netDoEmote("angry");
-                        } 
+                        }
                     }
                     else if (endMinigameStage == 8) //8 = hit = Uh
                     {
@@ -1473,7 +1498,7 @@ namespace FishingMinigames
                 }
             }
             else who.currentLocation.TemporarySprites.Add(new TemporaryAnimatedSprite(Furniture.furnitureTextureName, sourceRect, who.Position + new Vector2(-10f, -80f), false, 0f, Color.White)
-            { layerDepth = layer, scale = itemSpriteSize, owner = who, id = nexusKey });
+            { layerDepth = layer + 0.00000001f, scale = itemSpriteSize, owner = who, id = nexusKey });
         }
 
         private void SuppressAll(ButtonsChangedEventArgs e)
@@ -1490,7 +1515,14 @@ namespace FishingMinigames
         {
             if (Game1.activeClickableMenu is DummyMenu) Game1.exitActiveMenu();
             endMinigameStage = 0;
-            start = null;
+            if (start != null)
+            {
+                who.currentLocation.forceViewportPlayerFollow = start.oldViewportFollow;
+                Game1.viewportFreeze = false;
+                if (Context.IsSplitScreen) Game1.options.localCoopBaseZoomLevel = start.oldZoom;
+                else Game1.options.singlePlayerBaseZoomLevel = start.oldZoom;
+                start = null;
+            }
             who.UsingTool = false;
             who.Halt();
             who.completelyStopAnimatingOrDoingAction();
