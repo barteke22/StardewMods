@@ -31,6 +31,7 @@ namespace FishingMinigames
 
         public override void Entry(IModHelper helper)
         {
+            Log.Monitor = Monitor;
             translate = Helper.Translation;
             UpdateConfig(false);
             MinigamesStart.minigameTextures = new Texture2D[] {

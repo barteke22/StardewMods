@@ -37,8 +37,8 @@ namespace FishingMinigames
         public int minigameDiff;
         private List<string> minigameText;
 
-        public float oldZoom;
-        public bool oldViewportFollow;
+        //public float oldZoom;
+        //public bool oldViewportFollow;
 
 
         public static int[] minigameStyle;
@@ -70,10 +70,10 @@ namespace FishingMinigames
         public void StartMinigameSetup()
         {
             //starting minigame init
-            oldZoom = Game1.options.zoomLevel;
-            oldViewportFollow = who.currentLocation.forceViewportPlayerFollow;
-            Game1.viewportFreeze = true;
-            who.currentLocation.forceViewportPlayerFollow = false;
+            //oldZoom = Game1.options.zoomLevel;
+            //oldViewportFollow = who.currentLocation.forceViewportPlayerFollow;
+            //Game1.viewportFreeze = true;
+            //who.currentLocation.forceViewportPlayerFollow = false;
 
             minigameData = new int[6];
 
@@ -210,6 +210,7 @@ namespace FishingMinigames
 
             //scale/middle/bounds calculation
             float scale = 7f * startMinigameScale;
+            if (fishingFestivalMinigame == 1) scale *= (1f / Game1.options.zoomLevel);
             int width = (int)Math.Round(138f * scale);
             int height = (int)Math.Round(74f * scale);
             Vector2 screenMid = new Vector2(Game1.graphics.GraphicsDevice.Viewport.Width / 2, Game1.graphics.GraphicsDevice.Viewport.Height / 2);
@@ -489,16 +490,17 @@ namespace FishingMinigames
             {
                 minigameData[5]++;
 
-                if (minigameData[5] < 70)
-                {
-                    float f = (minigameData[5] / 250f) + 0.01f;
-                    if (Context.IsSplitScreen) Game1.options.localCoopBaseZoomLevel += f;
-                    else Game1.options.singlePlayerBaseZoomLevel += f;
+                //if (minigameData[5] < 70)
+                //{
+                //    float f = (minigameData[5] / 250f) + 0.01f;
+                //    if (Context.IsSplitScreen) Game1.options.localCoopBaseZoomLevel += f;
+                //    else Game1.options.singlePlayerBaseZoomLevel += f;
 
-                    Game1.viewport.X = Math.Max(who.getStandingX() - (Game1.viewport.Width / 2), 0);
-                    Game1.viewport.Y = Math.Max(who.getStandingY() - Math.Min(minigameData[5] * 2, 80) - (Game1.viewport.Height / 2), 0);
-                }
-                else if (minigameData[5] == 300)
+                //    Game1.viewport.X = Math.Max(who.getStandingX() - (Game1.viewport.Width / 2), 0);
+                //    Game1.viewport.Y = Math.Max(who.getStandingY() - Math.Min(minigameData[5] * 2, 80) - (Game1.viewport.Height / 2), 0);
+                //}
+                //else 
+                if (minigameData[5] == 300)
                 {
                     if (fishingFestivalMinigame == 0)
                     {
@@ -525,10 +527,26 @@ namespace FishingMinigames
                     }
                 }
             }
-            float opacity = minigameData[5] / 100f;
+            float opacity = 0f;
+
+            Texture2D animTexture = Game1.content.Load<Texture2D>("TileSheets\\animations");
+
+                batch.Draw(animTexture, who.getStandingPosition() + new Vector2(0f, -80f), new Rectangle(0, 320, 64, 64), Color.White, 0f, new Vector2(32f), 1f, SpriteEffects.None, 0.0f);
+            if (minigameData[5] < 15)
+            {
+
+                //who.currentLocation.TemporarySprites.Add(new TemporaryAnimatedSprite("TileSheets\\animations", new Rectangle(0, 320, 64, 64), 250f, 4, 0,
+                //        who.getStandingPosition(), false, false, 1f, 0f, Color.White, 1f, 0.003f, 0f, 0f));
+            }
+            else
+            {
+                opacity = minigameData[5] / 100f;
+            }
+
 
             //scale/middle/bounds calculation
             float scale = 7f * startMinigameScale;
+            if (fishingFestivalMinigame == 1) scale *= (1f / Game1.options.zoomLevel);
             int width = (int)Math.Round(138f * scale);
             int height = (int)Math.Round(74f * scale);
             Vector2 screenMid = new Vector2(Game1.graphics.GraphicsDevice.Viewport.Width / 2, Game1.graphics.GraphicsDevice.Viewport.Height / 2);

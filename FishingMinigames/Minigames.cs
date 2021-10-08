@@ -28,7 +28,7 @@ namespace FishingMinigames
         private SpriteBatch batch;
         private SparklingText sparklingText;
         private Farmer who;
-        private int fishingLevel;
+        //private int fishingLevel;
         private int screen;
         private int x;
         private int y;
@@ -116,22 +116,15 @@ namespace FishingMinigames
             this.Monitor = entry.Monitor;
             this.ModManifest = entry.ModManifest;
             this.translate = entry.Helper.Translation;
+
+            screen = Context.ScreenId;
+            who = Game1.player;
         }
 
         public void Input_ButtonsChanged(object sender, ButtonsChangedEventArgs e)  //this.Monitor.Log(locationName, LogLevel.Debug);
         {
-            if (Game1.emoteMenu != null) return;
+            if (!Context.IsWorldReady || Game1.emoteMenu != null) return;
 
-            screen = Context.ScreenId;
-            who = Game1.player;
-            fishingLevel = who.FishingLevel;
-
-            voiceVolumePersonal = 0;
-            if (voiceVolume > 0f)
-            {
-                voiceVolumePersonal = Math.Min((voiceVolume * 0.80f) + (fishingLevel * voiceVolume * 0.018f), (voiceVolume * 0.98f));
-                if (fishingLevel > 10) voiceVolumePersonal += Math.Min((fishingLevel - 10) * voiceVolume * 0.004f, (voiceVolume * 0.02f));
-            }
 
             if (infoTimer > 0 && infoTimer < 1001)//reset from bubble
             {
@@ -158,11 +151,14 @@ namespace FishingMinigames
                 }
             }
 
-            if (!Context.IsWorldReady) return;
-
             if (e.Pressed.Contains(SButton.F5))
             {
                 EmergencyCancel();
+                return;
+            }
+            if (e.Pressed.Contains(SButton.Z))//-----------------------------debug
+            {
+                if (start == null) DebugConsoleStartMinigameTest(new string[]{ "139" });
                 return;
             }
 
@@ -188,7 +184,6 @@ namespace FishingMinigames
 
         public void GameLoop_UpdateTicking(object sender, UpdateTickingEventArgs e)
         {
-            who = Game1.player;
             if (e.Ticks % 20 == 0)
             {
                 fishingFestivalMinigame = 0;
@@ -223,8 +218,42 @@ namespace FishingMinigames
                 sparklingText = null;
             }
 
+            //start fade-out
+            if (start != null && start.minigameStage > 3 && start.minigameData[5] > 0)//fade out and continue - test if keeping it here fixes transition glitches
+            {
+                //if (start.minigameData[5] > 0 && start.minigameData[5] < 70)
+                //{
+                //    float f = (start.minigameData[5] / 250f) + 0.01f;
+                //    if (Context.IsSplitScreen) Game1.options.localCoopBaseZoomLevel -= f;
+                //    else Game1.options.singlePlayerBaseZoomLevel -= f;
+
+                //    int y = who.getStandingY() - Math.Min(start.minigameData[5] * 2, 80) - (Game1.viewport.Height / 2);
+                //    if (y + Game1.viewport.Height < who.currentLocation.Map.DisplayHeight) Game1.viewport.Y = y;
+
+                //    if (Game1.viewport.X < 0) Game1.viewport.X = 0;
+                //    if (Game1.viewport.Y < 0) Game1.viewport.Y = 0;
+                //}
+
+                start.minigameData[5]--;
+
+                if (start.minigameData[5] == 0)
+                {
+                    //who.currentLocation.forceViewportPlayerFollow = start.oldViewportFollow;
+                    //Game1.viewportFreeze = false;
+                    //if (Context.IsSplitScreen) Game1.options.localCoopBaseZoomLevel = start.oldZoom;
+                    //else Game1.options.singlePlayerBaseZoomLevel = start.oldZoom;
+                    stage = null;
+                    if (start.minigameStage < 6)//4= cancel, 5= fail
+                    {
+                        DrawAndEmote(who, 2);
+                        EmergencyCancel();
+                    }
+                    else HereFishyAnimation(who, x, y);
+                    return;
+                }
+            }
             //fish flying
-            if (endMinigameStage > 0)
+            else if (endMinigameStage > 0)
             {
                 foreach (var anim in who.currentLocation.TemporarySprites)
                 {
@@ -359,40 +388,6 @@ namespace FishingMinigames
                 if (messages.ContainsKey(other.UniqueMultiplayerID) && who.currentLocation == other.currentLocation && messages[other.UniqueMultiplayerID].drawAttachments) DrawAndEmote(other, 4);//draw bait and tackle
             }
             if (drawAttachments) DrawAndEmote(who, 4);//draw bait and tackle
-
-            if (start != null && start.minigameStage > 3 && start.minigameData[5] > 0)//fade out and continue - test if keeping it here fixes transition glitches
-            {
-                if (start.minigameData[5] > 0 && start.minigameData[5] < 70)
-                {
-                    float f = (start.minigameData[5] / 250f) + 0.01f;
-                    if (Context.IsSplitScreen) Game1.options.localCoopBaseZoomLevel -= f;
-                    else Game1.options.singlePlayerBaseZoomLevel -= f;
-
-                    int y = who.getStandingY() - Math.Min(start.minigameData[5] * 2, 80) - (Game1.viewport.Height / 2);
-                    if (y + Game1.viewport.Height < who.currentLocation.Map.DisplayHeight) Game1.viewport.Y = y;
-
-                    if (Game1.viewport.X < 0) Game1.viewport.X = 0;
-                    if (Game1.viewport.Y < 0) Game1.viewport.Y = 0;
-                }
-
-                start.minigameData[5]--;
-
-                if (start.minigameData[5] == 0)
-                {
-                    who.currentLocation.forceViewportPlayerFollow = start.oldViewportFollow;
-                    Game1.viewportFreeze = false;
-                    if (Context.IsSplitScreen) Game1.options.localCoopBaseZoomLevel = start.oldZoom;
-                    else Game1.options.singlePlayerBaseZoomLevel = start.oldZoom;
-                    stage = null;
-                    if (start.minigameStage < 6)//4= cancel, 5= fail
-                    {
-                        DrawAndEmote(who, 2);
-                        EmergencyCancel();
-                    }
-                    else HereFishyAnimation(who, x, y);
-                    return;
-                }
-            }
         }
         public void Display_Rendered(SpriteBatch e)
         {
@@ -462,6 +457,7 @@ namespace FishingMinigames
                             x = (int)aimTile.X * 64;
                             y = (int)aimTile.Y * 64;
                             Game1.stats.timesFished++;
+
                             HereFishyFishy(who);
                         }
                     }
@@ -476,6 +472,12 @@ namespace FishingMinigames
 
         private void HereFishyFishy(Farmer who)
         {
+            voiceVolumePersonal = 0;
+            if (voiceVolume > 0f)
+            {
+                voiceVolumePersonal = Math.Min((voiceVolume * 0.80f) + (who.FishingLevel * voiceVolume * 0.018f), (voiceVolume * 0.98f));
+                if (who.FishingLevel > 10) voiceVolumePersonal += Math.Min((who.FishingLevel - 10) * voiceVolume * 0.004f, (voiceVolume * 0.02f));
+            }
             effects = new Dictionary<string, float>() { { "AREA", 1f }, { "DAMAGE", 1f }, { "DIFFICULTY", 1f }, { "EXTRA_MAX", 0f }, { "EXTRA_CHANCE", 0f }, { "LIFE", 0f },
                                                         { "QUALITY", 0f }, { "SIZE", 1f }, { "SPEED", 1f }, { "TREASURE", 0f }, { "UNBREAKING0", 0f }, { "UNBREAKING1", 0f } };
             if (fishingFestivalMinigame == 0)
@@ -492,7 +494,7 @@ namespace FishingMinigames
             if (!debug && who.IsLocalPlayer && fishingFestivalMinigame == 0)
             {
                 float oldStamina = who.Stamina;
-                who.Stamina -= 8f - (float)fishingLevel * 0.1f;
+                who.Stamina -= 8f - (float)who.FishingLevel * 0.1f;
                 who.checkForExhaustion(oldStamina);
             }
 
@@ -653,7 +655,7 @@ namespace FishingMinigames
                 if (maxFishSize > 0)
                 {
                     fishSize = Math.Min(clearWaterDistance / 5f, 1f);
-                    int minimumSizeContribution = 1 + fishingLevel / 2;
+                    int minimumSizeContribution = 1 + who.FishingLevel / 2;
                     fishSize *= Game1.random.Next(minimumSizeContribution, Math.Max(6, minimumSizeContribution)) / 5f;
 
                     fishSize *= 1f + Game1.random.Next(-10, 11) / 100f;
@@ -689,7 +691,7 @@ namespace FishingMinigames
                 //fishSize = 51;
             }
 
-            modifier = (fishingLevel / 5f) - ((difficulty / 12f + 3) - (fishSize / 40f)) + who.LuckLevel + (Game1.random.Next(0, 50) / 100f);
+            modifier = (who.FishingLevel / 5f) - ((difficulty / 12f + 3) - (fishSize / 40f)) + who.LuckLevel + (Game1.random.Next(0, 50) / 100f);
             endMinigameDiff = (int)((60 + (endMinigameStyle[screen] == 3 ? 35f : endMinigameStyle[screen] == 2 ? 20f : 0f) + modifier) / minigameDifficulty[screen] / effects["DIFFICULTY"]);
         }
         private void CatchFishAfterMinigame(Farmer who)
@@ -704,7 +706,7 @@ namespace FishingMinigames
                 if (rod.Name.Equals("Training Rod", StringComparison.Ordinal)) fishQuality = 0;
                 else
                 {
-                    fishQuality = (int)effects["QUALITY"] + ((fishSize * (0.9f + (fishingLevel / 5.0)) < 0.33f) ? 0 : ((fishSize * (0.9f + (fishingLevel / 5.0f)) < 0.66f) ? 1 : 2));//init quality
+                    fishQuality = (int)effects["QUALITY"] + ((fishSize * (0.9f + (who.FishingLevel / 5.0)) < 0.33f) ? 0 : ((fishSize * (0.9f + (who.FishingLevel / 5.0f)) < 0.66f) ? 1 : 2));//init quality
 
                     if (start != null && endMinigameStyle[screen] > 0) //minigame score reductions
                     {
@@ -751,7 +753,7 @@ namespace FishingMinigames
                     who.gainExperience(1, experience);
                     if (minigameDamage[screen] > 0 && endMinigameStyle[screen] > 0 && endMinigameStage == 8)
                     {
-                        who.takeDamage((int)((10 + (difficulty / 10) + (int)(fishSize / 10) - fishingLevel) * minigameDamage[screen] * effects["DAMAGE"]), true, null);
+                        who.takeDamage((int)((10 + (difficulty / 10) + (int)(fishSize / 10) - who.FishingLevel) * minigameDamage[screen] * effects["DAMAGE"]), true, null);
                         who.temporarilyInvincible = false;
                     }
                 }
@@ -766,7 +768,7 @@ namespace FishingMinigames
                 who.gainExperience(1, 3);
                 if (!fromFishPond && minigameDamage[screen] > 0 && endMinigameStyle[screen] > 0 && endMinigameStage == 8)
                 {
-                    who.takeDamage((int)((16 - fishingLevel) * minigameDamage[screen] * effects["DAMAGE"]), true, null);
+                    who.takeDamage((int)((16 - who.FishingLevel) * minigameDamage[screen] * effects["DAMAGE"]), true, null);
                     who.temporarilyInvincible = false;
                 }
             }
@@ -804,7 +806,7 @@ namespace FishingMinigames
                     break;
 
                 case "Starting1":
-                    if (startMinigameStyle[screen] + endMinigameStyle[screen] == 0 && Game1.random.Next(fishingLevel, 20) > 16)
+                    if (startMinigameStyle[screen] + endMinigameStyle[screen] == 0 && Game1.random.Next(who.FishingLevel, 20) > 16)
                     {
                         showPerfect = true;
                     }
@@ -1517,10 +1519,10 @@ namespace FishingMinigames
             endMinigameStage = 0;
             if (start != null)
             {
-                who.currentLocation.forceViewportPlayerFollow = start.oldViewportFollow;
-                Game1.viewportFreeze = false;
-                if (Context.IsSplitScreen) Game1.options.localCoopBaseZoomLevel = start.oldZoom;
-                else Game1.options.singlePlayerBaseZoomLevel = start.oldZoom;
+                //who.currentLocation.forceViewportPlayerFollow = start.oldViewportFollow;
+                //Game1.viewportFreeze = false;
+                //if (Context.IsSplitScreen) Game1.options.localCoopBaseZoomLevel = start.oldZoom;
+                //else Game1.options.singlePlayerBaseZoomLevel = start.oldZoom;
                 start = null;
             }
             who.UsingTool = false;
@@ -1532,6 +1534,7 @@ namespace FishingMinigames
             hereFishying = false;
             stage = null;
             Game1.displayHUD = true;
+            who.canMove = true;
             Helper.Multiplayer.SendMessage(-1, "whichFish", modIDs: new[] { "barteke22.FishingInfoOverlays" }, new[] { who.UniqueMultiplayerID });//clear overlay
             Helper.Multiplayer.SendMessage(false, "hideText", modIDs: new[] { "barteke22.FishingInfoOverlays" }, new[] { who.UniqueMultiplayerID });//clear overlay
         }
@@ -1975,7 +1978,6 @@ namespace FishingMinigames
 
         public void DebugConsoleStartMinigameTest(string[] args)
         {
-            debug = true;
             rodDummy = (who.CurrentTool as FishingRod) ?? new FishingRod();
 
             try
@@ -2011,7 +2013,7 @@ namespace FishingMinigames
 
                     Monitor.Log("Starting minigame for difficulty: " + difficulty + ", size: " + fishSize + ", boss: " + bossFish, LogLevel.Debug);
                 }
-
+                debug = true;
                 HereFishyFishy(who);
             }
             catch (Exception)
