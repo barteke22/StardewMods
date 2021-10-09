@@ -86,10 +86,11 @@ namespace FishingMinigames
 
 
         //config values
-        public static SoundEffect fishySound;
+        public static Dictionary<string, SoundEffect> voices;
         public static KeybindList[] keyBinds = new KeybindList[4];
         public static Dictionary<string, Dictionary<string, int>> itemData;
         public static float voiceVolume;
+        public static string[] voiceType = new string[4];
         public static float[] voicePitch = new float[4];
         public static float[] minigameDamage = new float[4];
         public static bool[] freeAim = new bool[4];
@@ -786,7 +787,7 @@ namespace FishingMinigames
                     {
                         Helper.Multiplayer.SendMessage((whichFish < 167 || whichFish > 172) ? whichFish : 168, "whichFish", modIDs: new[] { "barteke22.FishingInfoOverlays" }, new[] { who.UniqueMultiplayerID });//notify overlay of which fish
                     }
-                    if (fishySound != null && !Context.IsSplitScreen) fishySound.Play(voiceVolumePersonal, voicePitch[screen], 0);
+                    if (!Context.IsSplitScreen && voices.TryGetValue(voiceType[screen], out SoundEffect sfx)) sfx.Play(voiceVolumePersonal, voicePitch[screen], 0);
 
                     if ((who.CurrentTool as FishingRod).getBaitAttachmentIndex() != -1 || (who.CurrentTool as FishingRod).getBobberAttachmentIndex() != -1) drawAttachments = true;
                     SendMessage(who);
@@ -1753,7 +1754,7 @@ namespace FishingMinigames
                 stack = item.Stack;
                 furniture = item is Furniture;
             }
-            Helper.Multiplayer.SendMessage(new MinigameMessage(who, stageRequested, voicePitch[screen], drawAttachments, whichFish, fishQuality, maxFishSize, fishSize, itemSpriteSize,
+            Helper.Multiplayer.SendMessage(new MinigameMessage(who, stageRequested, voiceType[screen], voicePitch[screen], drawAttachments, whichFish, fishQuality, maxFishSize, fishSize, itemSpriteSize,
                 stack, recordSize, furniture, sourceRect, x, y, oldFacingDirection), "Animation", modIDs: new[] { ModManifest.UniqueID }, IDs);
         }
 
@@ -1824,7 +1825,7 @@ namespace FishingMinigames
                         case "Fail":
                         case null:
                             if (message.stage != null) PlayPause(who);
-                            else if (fishySound != null)//volume based on distance? will be iffy in split... play at the same time?
+                            else if (voices.TryGetValue(message.voiceType, out SoundEffect sfx))//volume based on distance? will be iffy in split... play at the same time?
                             {
                                 float volume = 0f;
                                 volume = Math.Min(Math.Max((Vector2.Distance(who.Position, this.who.Position) - 2560f) / -2560f, 0f), 1f);//distance based volume within 40ish tiles
@@ -1834,13 +1835,13 @@ namespace FishingMinigames
                                     if (Helper.Multiplayer.GetConnectedPlayer(message.multiplayerID).IsSplitScreen)
                                     {
                                         int screen2 = (int)Helper.Multiplayer.GetConnectedPlayer(message.multiplayerID).ScreenID;
-                                        fishySound.Play(voiceVolumePersonal, message.voicePitch, (screen2 == 0 || screen2 == 2) ? -1f : 1f); //if local split screen, screen 0 and 2 play on left, 1, 3 on right, * distance on other side
+                                        sfx.Play(voiceVolumePersonal, message.voicePitch, (screen2 == 0 || screen2 == 2) ? -1f : 1f); //if local split screen, screen 0 and 2 play on left, 1, 3 on right, * distance on other side
                                         if (((screen == 0 || screen == 2) && (screen2 == 1 || screen2 == 3)) ||
-                                            ((screen == 1 || screen == 3) && (screen2 == 0 || screen2 == 2))) fishySound.Play(volume * voiceVolumePersonal, message.voicePitch, (screen == 0 || screen == 2) ? -1f : 1f);
+                                            ((screen == 1 || screen == 3) && (screen2 == 0 || screen2 == 2))) sfx.Play(volume * voiceVolumePersonal, message.voicePitch, (screen == 0 || screen == 2) ? -1f : 1f);
                                     }
-                                    else fishySound.Play(volume * voiceVolumePersonal, message.voicePitch, (screen == 0 || screen == 2) ? -1f : 1f); //if split screen, but sender is not split screen (same as above * distance)
+                                    else sfx.Play(volume * voiceVolumePersonal, message.voicePitch, (screen == 0 || screen == 2) ? -1f : 1f); //if split screen, but sender is not split screen (same as above * distance)
                                 }
-                                else fishySound.Play(volume * voiceVolumePersonal, message.voicePitch, 0); //not scplit screen, won't do directional sound as it can be annoying
+                                else sfx.Play(volume * voiceVolumePersonal, message.voicePitch, 0); //not scplit screen, won't do directional sound as it can be annoying
                             }
                             who.completelyStopAnimatingOrDoingAction();
                             who.jitterStrength = 2f;

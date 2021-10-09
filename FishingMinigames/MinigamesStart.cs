@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Netcode;
 using StardewModdingAPI;
@@ -334,7 +335,7 @@ namespace FishingMinigames
                             if (fishingFestivalMinigame != 0 && festivalDifficulty * 20 <= minigameData[2])
                             {
                                 Game1.CurrentEvent.caughtFish(137, festivalDifficulty * 2, who);
-                                if (Minigames.fishySound != null) Minigames.fishySound.Play(Minigames.voiceVolume * 0.5f, Minigames.voicePitch[screen], 0);
+                                if (Minigames.voices.TryGetValue(Minigames.voiceType[screen], out SoundEffect sfx)) sfx.Play(Minigames.voiceVolume * 0.5f, Minigames.voicePitch[screen], 0);
                             }
                         }
                     }

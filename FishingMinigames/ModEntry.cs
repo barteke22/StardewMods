@@ -3,12 +3,10 @@ using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
-using Netcode;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
-using StardewValley.Locations;
 using StardewValley.Tools;
 using System;
 using System.Collections.Generic;
@@ -175,6 +173,9 @@ namespace FishingMinigames
             {
                 GenericMC.StartNewPage(ModManifest, translate.Get("GenericMC.SplitScreen" + (screen + 1)));
             }
+            GenericMC.RegisterChoiceOption(ModManifest, translate.Get("GenericMC.VoiceType"), translate.Get("GenericMC.VoiceTypeDesc"),
+                () => config.VoiceType[screen], (string val) => config.VoiceType[screen] = val, new string[] { "Silent" }.Concat(Minigames.voices.Keys).ToArray());
+
             GenericMC.RegisterClampedOption(ModManifest, translate.Get("GenericMC.Pitch"), translate.Get("GenericMC.PitchDesc"),
                 () => config.VoicePitch[screen], (int val) => config.VoicePitch[screen] = val, -100, 100);
 
@@ -600,26 +601,35 @@ namespace FishingMinigames
 
             Minigames.itemData = config.SeeInfoForBelowData;
 
-
-            if (Minigames.fishySound == null)
+            if (Minigames.voices == null)
             {
+                Minigames.voices = new Dictionary<string, SoundEffect>();
                 try
                 {
-                    Minigames.fishySound = SoundEffect.FromStream(new FileStream(Path.Combine(Helper.DirectoryPath, "assets", "fishy.wav"), FileMode.Open));
+                    DirectoryInfo dir = new DirectoryInfo(Path.Combine(Helper.DirectoryPath, "assets/audio"));
+
+                    if (!dir.Exists) throw new DirectoryNotFoundException();
+
+                    FileInfo[] files = dir.GetFiles("*.wav");
+
+                    foreach (FileInfo file in files)
+                    {
+                        Minigames.voices[Path.GetFileNameWithoutExtension(file.Name)] = SoundEffect.FromStream(file.Open(FileMode.Open));
+                    }
+                    //Minigames.fishySound["Mute"] = SoundEffect.FromStream(new FileStream(Path.Combine(Helper.DirectoryPath, "assets/audio", "Mute.wav"), FileMode.Open));
                 }
                 catch (Exception ex)
                 {
-                    Monitor.Log($"error loading fishy.wav: {ex}", LogLevel.Error);
+                    Monitor.Log($"error loading audio: {ex}", LogLevel.Error);
                 }
             }
 
-
             for (int i = 0; i < 4; i++)
             {
-                if (!config.Voice_Test_Ignore_Me[i].Equals(config.VoiceVolume + "/" + config.VoicePitch[i], StringComparison.Ordinal)) //play voice and save it if changed
+                if (!config.Voice_Test_Ignore_Me[i].Equals(config.VoiceVolume + "/" + config.VoiceType[i] + "/" + config.VoicePitch[i], StringComparison.Ordinal)) //play voice and save it if changed
                 {
-                    config.Voice_Test_Ignore_Me[i] = config.VoiceVolume + "/" + config.VoicePitch[i];
-                    Minigames.fishySound.Play(config.VoiceVolume / 100f * 0.98f, config.VoicePitch[i] / 100f, 0f);
+                    config.Voice_Test_Ignore_Me[i] = config.VoiceVolume + "/" + config.VoiceType[i] + "/" + config.VoicePitch[i];
+                    if (Minigames.voices.TryGetValue(config.VoiceType[i], out SoundEffect sfx)) sfx.Play(config.VoiceVolume / 100f * 0.98f, config.VoicePitch[i] / 100f, 0f);
                     Helper.WriteConfig(config);
                 }
 
@@ -642,6 +652,7 @@ namespace FishingMinigames
             if (Context.IsWorldReady)
             {
                 Minigames.voiceVolume = config.VoiceVolume / 100f;
+                Minigames.voiceType = config.VoiceType;
                 Minigames.freeAim = config.FreeAim;
                 Minigames.startMinigameStyle = config.StartMinigameStyle;
                 Minigames.endMinigameStyle = config.EndMinigameStyle;
