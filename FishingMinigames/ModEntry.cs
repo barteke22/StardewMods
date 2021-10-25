@@ -26,7 +26,6 @@ namespace FishingMinigames
         private bool canStartEditingAssets = false;
 
 
-
         public override void Entry(IModHelper helper)
         {
             Log.Monitor = Monitor;
@@ -75,41 +74,36 @@ namespace FishingMinigames
             var GenericMC = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
             if (GenericMC != null)
             {
-                GenericMC.RegisterModConfig(ModManifest, () => config = new ModConfig(), () => Helper.WriteConfig(config));
-                GenericMC.SetDefaultIngameOptinValue(ModManifest, true);
-                GenericMC.RegisterLabel(ModManifest, translate.Get("GenericMC.MainLabel"), ""); //All of these strings are stored in the traslation files.
-                GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.MainDesc"));
-                GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.MainDesc2"));
-                GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.MainDesc3"));
+                GenericMC.Register(ModManifest, () => config = new ModConfig(), () => Helper.WriteConfig(config));
+                GenericMC.AddSectionTitle(ModManifest, () => translate.Get("GenericMC.MainLabel")); //All of these strings are stored in the traslation files.
+                GenericMC.AddParagraph(ModManifest, () => translate.Get("GenericMC.MainDesc"));
+                GenericMC.AddParagraph(ModManifest, () => translate.Get("GenericMC.MainDesc2"));
+                GenericMC.AddParagraph(ModManifest, () => translate.Get("GenericMC.MainDesc3"));
 
                 try
                 {
-                    GenericMC.RegisterClampedOption(ModManifest, translate.Get("GenericMC.Volume"), translate.Get("GenericMC.VolumeDesc"),
-                        () => config.VoiceVolume, (int val) => config.VoiceVolume = val, 0, 100);
+                    GenericMC.AddNumberOption(ModManifest, () => config.VoiceVolume, (int val) => config.VoiceVolume = val, () => translate.Get("GenericMC.Volume"), () => translate.Get("GenericMC.VolumeDesc"), 0, 100);
 
                     GenericMCPerScreen(GenericMC, 0);
-                    GenericMC.RegisterPageLabel(ModManifest, translate.Get("GenericMC.Colors"), translate.Get("GenericMC.Colors"), translate.Get("GenericMC.Colors"));
-                    GenericMC.RegisterPageLabel(ModManifest, translate.Get("GenericMC.ItemData"), translate.Get("GenericMC.ItemData"), translate.Get("GenericMC.ItemData"));
+                    GenericMC.AddPageLink(ModManifest, "colors", () => translate.Get("GenericMC.Colors"), () => translate.Get("GenericMC.Colors"));
+                    GenericMC.AddPageLink(ModManifest, "itemData", () => translate.Get("GenericMC.ItemData"), () => translate.Get("GenericMC.ItemData"));
 
-                    for (int i = 2; i < 5; i++)
-                    {
-                        GenericMC.RegisterPageLabel(ModManifest, translate.Get("GenericMC.SplitScreen" + i), translate.Get("GenericMC.SplitScreenDesc"), translate.Get("GenericMC.SplitScreen" + i));
-                    }
-
+                    GenericMC.AddPageLink(ModManifest, "s2", () => translate.Get("GenericMC.SplitScreen2"), () => translate.Get("GenericMC.SplitScreenDesc"));
+                    GenericMC.AddPageLink(ModManifest, "s3", () => translate.Get("GenericMC.SplitScreen3"), () => translate.Get("GenericMC.SplitScreenDesc"));
+                    GenericMC.AddPageLink(ModManifest, "s4", () => translate.Get("GenericMC.SplitScreen4"), () => translate.Get("GenericMC.SplitScreenDesc"));
                     GenericMCPerScreen(GenericMC, 1);
                     GenericMCPerScreen(GenericMC, 2);
                     GenericMCPerScreen(GenericMC, 3);
 
-                    GenericMC.StartNewPage(ModManifest, translate.Get("GenericMC.Colors"));
-                    GenericMCColorPicker(GenericMC, ModManifest, translate.Get("GenericMC.MinigameColor"), "");
-                    GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.BossTransparency"), translate.Get("GenericMC.BossTransparencyDesc"),
-                        () => config.BossTransparency, (bool val) => config.BossTransparency = val);
+                    GenericMC.AddPage(ModManifest, "colors", () => translate.Get("GenericMC.Colors"));
+                    GenericMCColorPicker(GenericMC, ModManifest);
+                    GenericMC.AddBoolOption(ModManifest, () => config.BossTransparency, (bool val) => config.BossTransparency = val, () => translate.Get("GenericMC.BossTransparency"), () => translate.Get("GenericMC.BossTransparencyDesc"));
 
-                    GenericMC.StartNewPage(ModManifest, translate.Get("GenericMC.ItemData"));
-                    GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.ItemDataDesc1"));
-                    GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.ItemDataDesc2"));
-                    GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.ItemDataDesc3"));
-                    GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.ItemDataDesc4"));
+                    GenericMC.AddPage(ModManifest, "itemData", () => translate.Get("GenericMC.ItemData"));
+                    GenericMC.AddParagraph(ModManifest, () => translate.Get("GenericMC.ItemDataDesc1"));
+                    GenericMC.AddParagraph(ModManifest, () => translate.Get("GenericMC.ItemDataDesc2"));
+                    GenericMC.AddParagraph(ModManifest, () => translate.Get("GenericMC.ItemDataDesc3"));
+                    GenericMC.AddParagraph(ModManifest, () => translate.Get("GenericMC.ItemDataDesc4"));
 
                     foreach (var item in config.SeeInfoForBelowData)
                     {
@@ -134,9 +128,9 @@ namespace FishingMinigames
                             {
                                 space += " ";
                             }
-                            if (o is FishingRod) GenericMC.RegisterImage(ModManifest, Game1.toolSpriteSheetName, Game1.getSourceRectForStandardTileSheet(Game1.toolSpriteSheet, (o as FishingRod).IndexOfMenuItemView, 16, 16), 4);
-                            else GenericMC.RegisterImage(ModManifest, Game1.objectSpriteSheetName, Game1.getSourceRectForStandardTileSheet(Game1.objectSpriteSheet, o.ParentSheetIndex, 16, 16), 4);
-                            GenericMC.RegisterLabel(ModManifest, space + o.DisplayName, item.Key);
+                            if (o is FishingRod) GenericMC.AddImage(ModManifest, () => Game1.toolSpriteSheet, Game1.getSourceRectForStandardTileSheet(Game1.toolSpriteSheet, (o as FishingRod).IndexOfMenuItemView, 16, 16), 4);
+                            else GenericMC.AddImage(ModManifest, () => Game1.objectSpriteSheet, Game1.getSourceRectForStandardTileSheet(Game1.objectSpriteSheet, o.ParentSheetIndex, 16, 16), 4);
+                            GenericMC.AddSectionTitle(ModManifest, () => space + o.DisplayName, () => item.Key);
                         }
                         else
                         {
@@ -144,22 +138,23 @@ namespace FishingMinigames
                             {
                                 space += " ";
                             }
-                            GenericMC.RegisterLabel(ModManifest, space + item.Key, item.Key);
+                            GenericMC.AddSectionTitle(ModManifest, () => space + item.Key, () => item.Key);
                         }
 
                         foreach (var effect in item.Value)
                         {
-                            if (effect.Key.StartsWith("EXTRA_", StringComparison.Ordinal)) GenericMC.RegisterClampedOption(ModManifest, effect.Key, translate.Get("Effects.EXTRA").Tokens(new { max = "MAX", chance = "CHANCE" }),
-                                () => config.SeeInfoForBelowData[item.Key][effect.Key], (float val) => config.SeeInfoForBelowData[item.Key][effect.Key] = (int)Math.Round(val), 0, effect.Key.Equals("EXTRA_MAX", StringComparison.Ordinal) ? 10 : 100);
-                            else GenericMC.RegisterClampedOption(ModManifest, effect.Key, translate.Get("Effects." + effect.Key).Tokens(new { val = "X" }),
-                                () => config.SeeInfoForBelowData[item.Key][effect.Key], (float val) => config.SeeInfoForBelowData[item.Key][effect.Key] = (int)Math.Round(val),
+                            if (effect.Key.StartsWith("EXTRA_", StringComparison.Ordinal)) GenericMC.AddNumberOption(ModManifest, () => config.SeeInfoForBelowData[item.Key][effect.Key],
+                                (int val) => config.SeeInfoForBelowData[item.Key][effect.Key] = val, () => effect.Key, () => translate.Get("Effects.EXTRA").Tokens(new { max = "MAX", chance = "CHANCE" }),
+                                0, effect.Key.Equals("EXTRA_MAX", StringComparison.Ordinal) ? 10 : 100);
+                            else GenericMC.AddNumberOption(ModManifest, () => config.SeeInfoForBelowData[item.Key][effect.Key], (int val) => config.SeeInfoForBelowData[item.Key][effect.Key] = val,
+                                () => effect.Key, () => translate.Get("Effects." + effect.Key).Tokens(new { val = "X" }),
                                 (effect.Key.Equals("QUALITY", StringComparison.Ordinal) ? -4 : effect.Key.Equals("LIFE", StringComparison.Ordinal) ? 0 : -100),
                                 (effect.Key.Equals("QUALITY", StringComparison.Ordinal) ? 4 : effect.Key.Equals("LIFE", StringComparison.Ordinal) ? 50 : 300));
                         }
                     }
 
                     //dummy value validation trigger - must be the last thing, so all values are saved before validation
-                    GenericMC.RegisterComplexOption(ModManifest, "", "", (Vector2 pos, object state_) => null, (SpriteBatch b, Vector2 pos, object state_) => null, (object state) => UpdateConfig(true));
+                    GenericMC.AddComplexOption(ModManifest, () => "", () => "", null, () => UpdateConfig(true));
                 }
                 catch (Exception)
                 {
@@ -171,154 +166,134 @@ namespace FishingMinigames
         {
             if (screen > 0)//make new page
             {
-                GenericMC.StartNewPage(ModManifest, translate.Get("GenericMC.SplitScreen" + (screen + 1)));
+                GenericMC.AddPage(ModManifest, "s" + (screen + 1), () => translate.Get("GenericMC.SplitScreen" + (screen + 1)));
             }
-            GenericMC.RegisterChoiceOption(ModManifest, translate.Get("GenericMC.VoiceType"), translate.Get("GenericMC.VoiceTypeDesc"),
-                () => config.VoiceType[screen], (string val) => config.VoiceType[screen] = val, new string[] { "Silent" }.Concat(Minigames.voices.Keys).ToArray());
+            GenericMC.AddTextOption(ModManifest, () => config.VoiceType[screen], (string val) => config.VoiceType[screen] = val,
+                () => translate.Get("GenericMC.VoiceType"), () => translate.Get("GenericMC.VoiceTypeDesc"), new string[] { "Silent" }.Concat(Minigames.voices.Keys).ToArray());
 
-            GenericMC.RegisterClampedOption(ModManifest, translate.Get("GenericMC.Pitch"), translate.Get("GenericMC.PitchDesc"),
-                () => config.VoicePitch[screen], (int val) => config.VoicePitch[screen] = val, -100, 100);
+            GenericMC.AddNumberOption(ModManifest, () => config.VoicePitch[screen], (int val) => config.VoicePitch[screen] = val,
+                () => translate.Get("GenericMC.Pitch"), () => translate.Get("GenericMC.PitchDesc"), -100, 100);
 
-            GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.KeyBinds"), translate.Get("GenericMC.KeyBindsDesc"),
-                () => config.KeyBinds[screen], (string val) => config.KeyBinds[screen] = val);
+            GenericMC.AddTextOption(ModManifest, () => config.KeyBinds[screen], (string val) => config.KeyBinds[screen] = val,
+                () => translate.Get("GenericMC.KeyBinds"), () => translate.Get("GenericMC.KeyBindsDesc"));
 
-            GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.FreeAim"), translate.Get("GenericMC.FreeAimDesc"),
-                () => config.FreeAim[screen], (bool val) => config.FreeAim[screen] = val);
+            GenericMC.AddBoolOption(ModManifest, () => config.FreeAim[screen], (bool val) => config.FreeAim[screen] = val,
+                () => translate.Get("GenericMC.FreeAim"), () => translate.Get("GenericMC.FreeAimDesc"));
 
-            GenericMC.RegisterChoiceOption(ModManifest, translate.Get("GenericMC.StartMinigameStyle"), translate.Get("GenericMC.StartMinigameStyleDesc"),
-                () => (config.StartMinigameStyle[screen] == 0) ? translate.Get("GenericMC.Disabled") : (config.StartMinigameStyle[screen] == 1) ? translate.Get("GenericMC.StartMinigameStyle1") : (config.StartMinigameStyle[screen] == 2) ? translate.Get("GenericMC.StartMinigameStyle2") : translate.Get("GenericMC.StartMinigameStyle3"),
+            GenericMC.AddTextOption(ModManifest, () => (config.StartMinigameStyle[screen] == 0) ? translate.Get("GenericMC.Disabled") : (config.StartMinigameStyle[screen] == 1) ? translate.Get("GenericMC.StartMinigameStyle1") : (config.StartMinigameStyle[screen] == 2) ? translate.Get("GenericMC.StartMinigameStyle2") : translate.Get("GenericMC.StartMinigameStyle3"),
                 (string val) => config.StartMinigameStyle[screen] = Int32.Parse((val.Equals(translate.Get("GenericMC.Disabled"), StringComparison.Ordinal)) ? "0" : (val.Equals(translate.Get("GenericMC.StartMinigameStyle1"), StringComparison.Ordinal)) ? "1" : (val.Equals(translate.Get("GenericMC.StartMinigameStyle2"), StringComparison.Ordinal)) ? "2" : "3"),
-                new string[] { translate.Get("GenericMC.Disabled"), translate.Get("GenericMC.StartMinigameStyle1"), translate.Get("GenericMC.StartMinigameStyle2") });//, translate.Get("GenericMC.StartMinigameStyle3") });//small 'hack' so options appear as name strings, while config.json stores them as integers
+                 () => translate.Get("GenericMC.StartMinigameStyle"), () => translate.Get("GenericMC.StartMinigameStyleDesc"), new string[] { translate.Get("GenericMC.Disabled"), translate.Get("GenericMC.StartMinigameStyle1"), translate.Get("GenericMC.StartMinigameStyle2") });//, translate.Get("GenericMC.StartMinigameStyle3") });//small 'hack' so options appear as name strings, while config.json stores them as integers
 
-            GenericMC.RegisterChoiceOption(ModManifest, translate.Get("GenericMC.EndMinigameStyle"), translate.Get("GenericMC.EndMinigameStyleDesc"),
-                () => (config.EndMinigameStyle[screen] == 0) ? translate.Get("GenericMC.Disabled") : (config.EndMinigameStyle[screen] == 1) ? translate.Get("GenericMC.EndMinigameStyle1") : (config.EndMinigameStyle[screen] == 2) ? translate.Get("GenericMC.EndMinigameStyle2") : translate.Get("GenericMC.EndMinigameStyle3"),
+            GenericMC.AddTextOption(ModManifest, () => (config.EndMinigameStyle[screen] == 0) ? translate.Get("GenericMC.Disabled") : (config.EndMinigameStyle[screen] == 1) ? translate.Get("GenericMC.EndMinigameStyle1") : (config.EndMinigameStyle[screen] == 2) ? translate.Get("GenericMC.EndMinigameStyle2") : translate.Get("GenericMC.EndMinigameStyle3"),
                 (string val) => config.EndMinigameStyle[screen] = Int32.Parse((val.Equals(translate.Get("GenericMC.Disabled"), StringComparison.Ordinal)) ? "0" : (val.Equals(translate.Get("GenericMC.EndMinigameStyle1"), StringComparison.Ordinal)) ? "1" : (val.Equals(translate.Get("GenericMC.EndMinigameStyle2"), StringComparison.Ordinal)) ? "2" : "3"),
-                new string[] { translate.Get("GenericMC.Disabled"), translate.Get("GenericMC.EndMinigameStyle1"), translate.Get("GenericMC.EndMinigameStyle2"), translate.Get("GenericMC.EndMinigameStyle3") });
+                () => translate.Get("GenericMC.EndMinigameStyle"), () => translate.Get("GenericMC.EndMinigameStyleDesc"), new string[] { translate.Get("GenericMC.Disabled"), translate.Get("GenericMC.EndMinigameStyle1"), translate.Get("GenericMC.EndMinigameStyle2"), translate.Get("GenericMC.EndMinigameStyle3") });
 
-            GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.EndLoseTreasure"), translate.Get("GenericMC.EndLoseTreasureDesc"),
-                () => config.EndLoseTreasureIfFailed[screen], (bool val) => config.EndLoseTreasureIfFailed[screen] = val);
-            GenericMC.RegisterClampedOption(ModManifest, translate.Get("GenericMC.EndDamage"), translate.Get("GenericMC.EndDamageDesc"),
-                () => config.EndMinigameDamage[screen], (float val) => config.EndMinigameDamage[screen] = val, 0f, 2f);
-            GenericMC.RegisterClampedOption(ModManifest, translate.Get("GenericMC.Difficulty"), translate.Get("GenericMC.DifficultyDesc"),
-                () => config.MinigameDifficulty[screen], (float val) => config.MinigameDifficulty[screen] = val, 0.1f, 2f);
+            GenericMC.AddBoolOption(ModManifest, () => config.EndLoseTreasureIfFailed[screen], (bool val) => config.EndLoseTreasureIfFailed[screen] = val,
+                () => translate.Get("GenericMC.EndLoseTreasure"), () => translate.Get("GenericMC.EndLoseTreasureDesc"));
+            GenericMC.AddNumberOption(ModManifest, () => config.EndMinigameDamage[screen], (float val) => config.EndMinigameDamage[screen] = val,
+                () => translate.Get("GenericMC.EndDamage"), () => translate.Get("GenericMC.EndDamageDesc"), 0f, 2f, 0.05f);
+            GenericMC.AddNumberOption(ModManifest, () => config.MinigameDifficulty[screen], (float val) => config.MinigameDifficulty[screen] = val,
+                () => translate.Get("GenericMC.Difficulty"), () => translate.Get("GenericMC.DifficultyDesc"), 0.1f, 2f, 0.05f);
 
-            GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.TutorialSkip"), translate.Get("GenericMC.TutorialSkipDesc"),
-                () => config.TutorialSkip[screen], (bool val) => config.TutorialSkip[screen] = val);
+            GenericMC.AddBoolOption(ModManifest, () => config.TutorialSkip[screen], (bool val) => config.TutorialSkip[screen] = val,
+                () => translate.Get("GenericMC.TutorialSkip"), () => translate.Get("GenericMC.TutorialSkipDesc"));
 
             if (screen == 0)//only page 0
             {
-                GenericMC.RegisterClampedOption(ModManifest, translate.Get("GenericMC.StartMinigameScale"), translate.Get("GenericMC.StartMinigameScale"),
-                    () => config.StartMinigameScale, (float val) => config.StartMinigameScale = val, 0.5f, 5f);
+                GenericMC.AddNumberOption(ModManifest, () => config.StartMinigameScale, (float val) => config.StartMinigameScale = val,
+                    () => translate.Get("GenericMC.StartMinigameScale"), () => translate.Get("GenericMC.StartMinigameScale"), 0.5f, 5f, 0.05f);
 
-                GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.RealisticSizes"), translate.Get("GenericMC.RealisticSizesDesc"),
-                    () => config.RealisticSizes, (bool val) => config.RealisticSizes = val);
+                GenericMC.AddBoolOption(ModManifest, () => config.RealisticSizes, (bool val) => config.RealisticSizes = val,
+                    () => translate.Get("GenericMC.RealisticSizes"), () => translate.Get("GenericMC.RealisticSizesDesc"));
 
-                if (LocalizedContentManager.CurrentLanguageCode == 0) GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.ConvertToMetric"), translate.Get("GenericMC.ConvertToMetricDesc"),
-                    () => config.ConvertToMetric, (bool val) => config.ConvertToMetric = val);
+                if (LocalizedContentManager.CurrentLanguageCode == 0) GenericMC.AddBoolOption(ModManifest, () => config.ConvertToMetric, (bool val) => config.ConvertToMetric = val,
+                    () => translate.Get("GenericMC.ConvertToMetric"), () => translate.Get("GenericMC.ConvertToMetricDesc"));
 
-                GenericMC.RegisterSimpleOption(ModManifest, translate.Get("GenericMC.FishTankHold"), translate.Get("GenericMC.FishTankHoldDesc"),
-                    () => config.FishTankHoldSprites, (bool val) => config.FishTankHoldSprites = val);
+                GenericMC.AddBoolOption(ModManifest, () => config.FishTankHoldSprites, (bool val) => config.FishTankHoldSprites = val,
+                    () => translate.Get("GenericMC.FishTankHold"), () => translate.Get("GenericMC.FishTankHoldDesc"));
 
-                GenericMC.RegisterLabel(ModManifest, translate.Get("GenericMC.FestivalLabel"), "");
-                GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.FestivalDesc"));
-                GenericMC.RegisterParagraph(ModManifest, translate.Get("GenericMC.FestivalDesc2"));
+                GenericMC.AddSectionTitle(ModManifest, () => translate.Get("GenericMC.FestivalLabel"));
+                GenericMC.AddParagraph(ModManifest, () => translate.Get("GenericMC.FestivalDesc"));
+                GenericMC.AddParagraph(ModManifest, () => translate.Get("GenericMC.FestivalDesc2"));
             }
-            GenericMC.RegisterChoiceOption(ModManifest, translate.Get("GenericMC.FestivalMode"), translate.Get("GenericMC.FestivalModeDesc"),
-                () => (config.FestivalMode[screen] == 0) ? translate.Get("GenericMC.FestivalModeVanilla") : (config.FestivalMode[screen] == 1) ? translate.Get("GenericMC.FestivalModeSimple") : (config.FestivalMode[screen] == 2) ? translate.Get("GenericMC.FestivalModePerfectOnly") : translate.Get("GenericMC.FestivalModeStartOnly"),
+            GenericMC.AddTextOption(ModManifest, () => (config.FestivalMode[screen] == 0) ? translate.Get("GenericMC.FestivalModeVanilla") : (config.FestivalMode[screen] == 1) ? translate.Get("GenericMC.FestivalModeSimple") : (config.FestivalMode[screen] == 2) ? translate.Get("GenericMC.FestivalModePerfectOnly") : translate.Get("GenericMC.FestivalModeStartOnly"),
                 (string val) => config.FestivalMode[screen] = Int32.Parse((val.Equals(translate.Get("GenericMC.FestivalModeVanilla"), StringComparison.Ordinal)) ? "0" : (val.Equals(translate.Get("GenericMC.FestivalModeSimple"), StringComparison.Ordinal)) ? "1" : (val.Equals(translate.Get("GenericMC.FestivalModePerfectOnly"), StringComparison.Ordinal)) ? "2" : "3"),
-                new string[] { translate.Get("GenericMC.FestivalModeVanilla"), translate.Get("GenericMC.FestivalModeSimple"), translate.Get("GenericMC.FestivalModePerfectOnly"), translate.Get("GenericMC.FestivalModeStartOnly") });
+                () => translate.Get("GenericMC.FestivalMode"), () => translate.Get("GenericMC.FestivalModeDesc"), new string[] { translate.Get("GenericMC.FestivalModeVanilla"), translate.Get("GenericMC.FestivalModeSimple"), translate.Get("GenericMC.FestivalModePerfectOnly"), translate.Get("GenericMC.FestivalModeStartOnly") });
         }
-        private void GenericMCColorPicker(IGenericModConfigMenuApi GenericMC, IManifest mod, string optionName, string optionDesc)
+        private void GenericMCColorPicker(IGenericModConfigMenuApi GenericMC, IManifest mod)
         {
-            Func<Vector2, object, object> colorPickerUpdate =
-                (Vector2 pos, object state_) =>
+            MinigameColor state = null;
+            void Draw(SpriteBatch b, Vector2 pos)
+            {
+                if (state == null) state = new MinigameColor() { color = config.MinigameColor, pos = pos, whichSlider = 0 };
+
+                KeybindList click = KeybindList.Parse("MouseLeft");
+                int width = Math.Min(Game1.uiViewport.Width / 4, 400);
+
+                byte mousePercentage = (byte)(int)((Utility.Clamp(Game1.getOldMouseX(), pos.X, pos.X + width) - pos.X) / width * 255);
+
+                Rectangle barR = new Rectangle((int)pos.X, (int)pos.Y, width, 24);
+                Rectangle barG = new Rectangle((int)pos.X, (int)pos.Y + 80, width, 24);
+                Rectangle barB = new Rectangle((int)pos.X, (int)pos.Y + 160, width, 24);
+
+                if ((barR.Contains(Game1.getMouseX(), Game1.getMouseY()) && click.JustPressed()) || (state.whichSlider == 1 && click.IsDown()))
                 {
-                    var state = state_ as MinigameColor;
-                    if (state == null) state = new MinigameColor() { color = config.MinigameColor, pos = pos, whichSlider = 0 };
-
-                    KeybindList click = KeybindList.Parse("MouseLeft");
-                    int width = Math.Min(Game1.uiViewport.Width / 4, 400);
-
-                    byte mousePercentage = (byte)(int)((Utility.Clamp(Game1.getOldMouseX(), pos.X, pos.X + width) - pos.X) / width * 255);
-
-                    Rectangle barR = new Rectangle((int)pos.X, (int)pos.Y, width, 24);
-                    Rectangle barG = new Rectangle((int)pos.X, (int)pos.Y + 80, width, 24);
-                    Rectangle barB = new Rectangle((int)pos.X, (int)pos.Y + 160, width, 24);
-
-                    if ((barR.Contains(Game1.getMouseX(), Game1.getMouseY()) && click.JustPressed()) || (state.whichSlider == 1 && click.IsDown()))
-                    {
-                        state.whichSlider = 1;
-                        state.color.R = mousePercentage;
-                    }
-                    else if ((barG.Contains(Game1.getMouseX(), Game1.getMouseY()) && click.JustPressed()) || (state.whichSlider == 2 && click.IsDown()))
-                    {
-                        state.whichSlider = 2;
-                        state.color.G = mousePercentage;
-                    }
-                    else if ((barB.Contains(Game1.getMouseX(), Game1.getMouseY()) && click.JustPressed()) || (state.whichSlider == 3 && click.IsDown()))
-                    {
-                        state.whichSlider = 3;
-                        state.color.B = mousePercentage;
-                    }
-                    else if (state.whichSlider != 0) state.whichSlider = 0;
-
-
-                    return state;
-                };
-            Func<SpriteBatch, Vector2, object, object> colorPickerDraw =
-                (SpriteBatch b, Vector2 pos, object state_) =>
+                    state.whichSlider = 1;
+                    state.color.R = mousePercentage;
+                }
+                else if ((barG.Contains(Game1.getMouseX(), Game1.getMouseY()) && click.JustPressed()) || (state.whichSlider == 2 && click.IsDown()))
                 {
-                    var state = state_ as MinigameColor;
-                    int width = Math.Min(Game1.uiViewport.Width / 4, 400);
-                    float scale = width / 400f;
-
-                    Rectangle barR = new Rectangle((int)pos.X, (int)pos.Y, width, 24);
-                    Rectangle barG = new Rectangle((int)pos.X, (int)pos.Y + 80, width, 24);
-                    Rectangle barB = new Rectangle((int)pos.X, (int)pos.Y + 160, width, 24);
-                    Rectangle posR = new Rectangle((int)(pos.X + (state.color.R / 255f) * (width - 40)), (int)pos.Y, 40, 24);
-                    Rectangle posG = new Rectangle((int)(pos.X + (state.color.G / 255f) * (width - 40)), (int)pos.Y + 80, 40, 24);
-                    Rectangle posB = new Rectangle((int)(pos.X + (state.color.B / 255f) * (width - 40)), (int)pos.Y + 160, 40, 24);
-
-                    StardewValley.Menus.IClickableMenu.drawTextureBox(b, Game1.mouseCursors, new Rectangle(403, 383, 6, 6), barR.X, barR.Y, barR.Width, barR.Height, Color.White, Game1.pixelZoom, false);
-                    StardewValley.Menus.IClickableMenu.drawTextureBox(b, Game1.mouseCursors, new Rectangle(403, 383, 6, 6), barG.X, barG.Y, barG.Width, barG.Height, Color.White, Game1.pixelZoom, false);
-                    StardewValley.Menus.IClickableMenu.drawTextureBox(b, Game1.mouseCursors, new Rectangle(403, 383, 6, 6), barB.X, barB.Y, barB.Width, barB.Height, Color.White, Game1.pixelZoom, false);
-
-                    b.Draw(Game1.mouseCursors, new Vector2(posR.X, posR.Y), new Rectangle(420, 441, 10, 6), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.9f);
-                    b.Draw(Game1.mouseCursors, new Vector2(posG.X, posG.Y), new Rectangle(420, 441, 10, 6), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.9f);
-                    b.Draw(Game1.mouseCursors, new Vector2(posB.X, posB.Y), new Rectangle(420, 441, 10, 6), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.9f);
-
-                    b.DrawString(Game1.smallFont, "R:" + string.Format("{0,6}", state.color.R), new Vector2(barR.X + width + 20, barR.Y - 4), Color.Black);
-                    b.DrawString(Game1.smallFont, "G:" + string.Format("{0,6}", state.color.G), new Vector2(barG.X + width + 20, barG.Y - 4), Color.Black);
-                    b.DrawString(Game1.smallFont, "B:" + string.Format("{0,6}", state.color.B), new Vector2(barB.X + width + 20, barB.Y - 4), Color.Black);
-
-                    Vector2 screenMid = new Vector2(pos.X - (width / 1.5f), pos.Y + 90);
-
-                    b.Draw(Game1.mouseCursors, screenMid, new Rectangle(31, 1870, 73, 49), state.color, 0f, new Vector2(36.5f, 22.5f), 4f * scale, SpriteEffects.None, 0.2f);
-                    b.Draw(MinigamesStart.minigameTextures[0], screenMid, null, state.color, 0f, new Vector2(69f, 37f), 2f * scale, SpriteEffects.None, 0.3f);
-                    b.Draw(MinigamesStart.minigameTextures[1], screenMid + new Vector2(-50f, 0f), new Rectangle(355, 86, 26, 26), state.color, 0f, new Vector2(13f), 1f * scale, SpriteEffects.None, 0.4f);
-
-                    b.Draw(MinigamesStart.minigameTextures[1], screenMid + new Vector2(50f, 0), new Rectangle(322, 82, 12, 12), state.color, 0f, new Vector2(6f), 2f * scale, SpriteEffects.None, 0.4f);
-                    b.Draw(Game1.mouseCursors, screenMid, new Rectangle(301, 288, 15, 15), state.color * 0.95f, 0f, new Vector2(7.5f, 7.5f), 2f * scale, SpriteEffects.None, 0.5f);
-                    b.DrawString(Game1.smallFont, "5", screenMid + new Vector2(0, 2f), state.color, 0f, Game1.smallFont.MeasureString("5") / 2f, 1f * scale, SpriteEffects.None, 0.51f);
-
-                    b.Draw(Game1.mouseCursors, screenMid + new Vector2(width * -0.6f, -45), new Rectangle(395, 497, 3, 8), state.color, 0f, new Vector2(1.5f, 4f), 4f, SpriteEffects.None, 0.98f);
-                    b.Draw(Game1.mouseCursors, screenMid + new Vector2(width * -0.6f, 0), new Rectangle(407, 1660, 10, 10), state.color, 0f, new Vector2(5f), 3.3f, SpriteEffects.None, 0.98f);
-                    b.Draw(Game1.mouseCursors, screenMid + new Vector2(width * -0.6f, 45), new Rectangle(473, 36, 24, 24), state.color, 0f, new Vector2(12f), 2f, SpriteEffects.None, 0.98f);
-                    b.DrawString(Game1.smallFont, "A", screenMid + new Vector2(width * -0.6f, 47) - (Game1.smallFont.MeasureString("A") / 2 * 1.2f), state.color, 0f, Vector2.Zero, 1.2f, SpriteEffects.None, 1f); //text
-                    return state;
-                };
-            Action<object> colorPickerSave =
-                (object state) =>
+                    state.whichSlider = 2;
+                    state.color.G = mousePercentage;
+                }
+                else if ((barB.Contains(Game1.getMouseX(), Game1.getMouseY()) && click.JustPressed()) || (state.whichSlider == 3 && click.IsDown()))
                 {
-                    if (state == null) return;
-                    config.MinigameColor = (state as MinigameColor).color;
-                };
+                    state.whichSlider = 3;
+                    state.color.B = mousePercentage;
+                }
+                else if (state.whichSlider != 0) state.whichSlider = 0;
 
-            GenericMC.RegisterLabel(mod, ".   " + optionName, optionDesc);
-            GenericMC.RegisterComplexOption(mod, "", "", colorPickerUpdate, colorPickerDraw, colorPickerSave);
-            GenericMC.RegisterLabel(mod, ".", "");
-            GenericMC.RegisterLabel(mod, ".", "");
-            GenericMC.RegisterLabel(mod, ".", "");
+                float scale = width / 400f;
+
+                Rectangle posR = new Rectangle((int)(pos.X + (state.color.R / 255f) * (width - 40)), (int)pos.Y, 40, 24);
+                Rectangle posG = new Rectangle((int)(pos.X + (state.color.G / 255f) * (width - 40)), (int)pos.Y + 80, 40, 24);
+                Rectangle posB = new Rectangle((int)(pos.X + (state.color.B / 255f) * (width - 40)), (int)pos.Y + 160, 40, 24);
+
+                StardewValley.Menus.IClickableMenu.drawTextureBox(b, Game1.mouseCursors, new Rectangle(403, 383, 6, 6), barR.X, barR.Y, barR.Width, barR.Height, Color.White, Game1.pixelZoom, false);
+                StardewValley.Menus.IClickableMenu.drawTextureBox(b, Game1.mouseCursors, new Rectangle(403, 383, 6, 6), barG.X, barG.Y, barG.Width, barG.Height, Color.White, Game1.pixelZoom, false);
+                StardewValley.Menus.IClickableMenu.drawTextureBox(b, Game1.mouseCursors, new Rectangle(403, 383, 6, 6), barB.X, barB.Y, barB.Width, barB.Height, Color.White, Game1.pixelZoom, false);
+
+                b.Draw(Game1.mouseCursors, new Vector2(posR.X, posR.Y), new Rectangle(420, 441, 10, 6), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.9f);
+                b.Draw(Game1.mouseCursors, new Vector2(posG.X, posG.Y), new Rectangle(420, 441, 10, 6), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.9f);
+                b.Draw(Game1.mouseCursors, new Vector2(posB.X, posB.Y), new Rectangle(420, 441, 10, 6), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.9f);
+
+                b.DrawString(Game1.smallFont, "R:" + string.Format("{0,6}", state.color.R), new Vector2(barR.X + width + 20, barR.Y - 4), Color.Black);
+                b.DrawString(Game1.smallFont, "G:" + string.Format("{0,6}", state.color.G), new Vector2(barG.X + width + 20, barG.Y - 4), Color.Black);
+                b.DrawString(Game1.smallFont, "B:" + string.Format("{0,6}", state.color.B), new Vector2(barB.X + width + 20, barB.Y - 4), Color.Black);
+
+                Vector2 screenMid = new Vector2(pos.X - (width / 1.5f), pos.Y + 90);
+
+                b.Draw(Game1.mouseCursors, screenMid, new Rectangle(31, 1870, 73, 49), state.color, 0f, new Vector2(36.5f, 22.5f), 4f * scale, SpriteEffects.None, 0.2f);
+                b.Draw(MinigamesStart.minigameTextures[0], screenMid, null, state.color, 0f, new Vector2(69f, 37f), 2f * scale, SpriteEffects.None, 0.3f);
+                b.Draw(MinigamesStart.minigameTextures[1], screenMid + new Vector2(-50f, 0f), new Rectangle(355, 86, 26, 26), state.color, 0f, new Vector2(13f), 1f * scale, SpriteEffects.None, 0.4f);
+
+                b.Draw(MinigamesStart.minigameTextures[1], screenMid + new Vector2(50f, 0), new Rectangle(322, 82, 12, 12), state.color, 0f, new Vector2(6f), 2f * scale, SpriteEffects.None, 0.4f);
+                b.Draw(Game1.mouseCursors, screenMid, new Rectangle(301, 288, 15, 15), state.color * 0.95f, 0f, new Vector2(7.5f, 7.5f), 2f * scale, SpriteEffects.None, 0.5f);
+                b.DrawString(Game1.smallFont, "5", screenMid + new Vector2(0, 2f), state.color, 0f, Game1.smallFont.MeasureString("5") / 2f, 1f * scale, SpriteEffects.None, 0.51f);
+
+                b.Draw(Game1.mouseCursors, screenMid + new Vector2(width * -0.6f, -45), new Rectangle(395, 497, 3, 8), state.color, 0f, new Vector2(1.5f, 4f), 4f, SpriteEffects.None, 0.98f);
+                b.Draw(Game1.mouseCursors, screenMid + new Vector2(width * -0.6f, 0), new Rectangle(407, 1660, 10, 10), state.color, 0f, new Vector2(5f), 3.3f, SpriteEffects.None, 0.98f);
+                b.Draw(Game1.mouseCursors, screenMid + new Vector2(width * -0.6f, 45), new Rectangle(473, 36, 24, 24), state.color, 0f, new Vector2(12f), 2f, SpriteEffects.None, 0.98f);
+                b.DrawString(Game1.smallFont, "A", screenMid + new Vector2(width * -0.6f, 47) - (Game1.smallFont.MeasureString("A") / 2 * 1.2f), state.color, 0f, Vector2.Zero, 1.2f, SpriteEffects.None, 1f); //text
+            }
+            void Save()
+            {
+                if (state == null) return;
+                config.MinigameColor = state.color;
+            }
+
+            GenericMC.AddSectionTitle(mod, () => ".   " + translate.Get("GenericMC.MinigameColor"));
+            GenericMC.AddComplexOption(mod, () => "", () => "", Draw, Save, () => 300);
         }
 
         private void GameLoop_SaveLoaded(object sender, SaveLoadedEventArgs e)

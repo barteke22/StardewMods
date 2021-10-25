@@ -159,7 +159,7 @@ namespace FishingMinigames
             }
             if (e.Pressed.Contains(SButton.Z))//-----------------------------debug
             {
-                if (start == null) DebugConsoleStartMinigameTest(new string[]{ "139" });
+                if (start == null) DebugConsoleStartMinigameTest(new string[] { "139" });
                 return;
             }
 
@@ -185,33 +185,30 @@ namespace FishingMinigames
 
         public void GameLoop_UpdateTicking(object sender, UpdateTickingEventArgs e)
         {
-            if (e.Ticks % 20 == 0)
+            fishingFestivalMinigame = 0;
+            if (Game1.isFestival())
             {
-                fishingFestivalMinigame = 0;
-                if (Game1.isFestival())
+                string data = Helper.Reflection.GetField<Dictionary<string, string>>(Game1.CurrentEvent, "festivalData").GetValue()["file"];
+                if (data != null)
                 {
-                    string data = Helper.Reflection.GetField<Dictionary<string, string>>(Game1.CurrentEvent, "festivalData").GetValue()["file"];
-                    if (data != null)
+                    festivalTimer = 0;
+                    if (data.Equals("fall16") && Game1.currentMinigame is StardewValley.Minigames.FishingGame)
                     {
-                        festivalTimer = 0;
-                        if (data.Equals("fall16") && Game1.currentMinigame is StardewValley.Minigames.FishingGame)
-                        {
-                            festivalTimer = Helper.Reflection.GetField<int>(Game1.currentMinigame as StardewValley.Minigames.FishingGame, "gameEndTimer").GetValue();
-                            if (festivalTimer < 100000 && festivalTimer > 0) fishingFestivalMinigame = 1;
-                        }
-                        else if (data.Equals("winter8"))
-                        {
-                            festivalTimer = Game1.CurrentEvent.festivalTimer;
-                            if (festivalTimer < 120000 && festivalTimer > 0) fishingFestivalMinigame = 2;
-                        }
-                        if (festivalTimer <= 1000 && fishingFestivalMinigame > 0 && festivalMode[screen] > 0) EmergencyCancel();
+                        festivalTimer = Helper.Reflection.GetField<int>(Game1.currentMinigame as StardewValley.Minigames.FishingGame, "gameEndTimer").GetValue();
+                        if (festivalTimer < 100000 && festivalTimer > 0) fishingFestivalMinigame = 1;
                     }
+                    else if (data.Equals("winter8"))
+                    {
+                        festivalTimer = Game1.CurrentEvent.festivalTimer;
+                        if (festivalTimer < 120000 && festivalTimer > 0) fishingFestivalMinigame = 2;
+                    }
+                    if (festivalTimer <= 1000 && fishingFestivalMinigame > 0 && festivalMode[screen] > 0) EmergencyCancel();
                 }
-                if (start != null)
-                {
-                    start.fishingFestivalMinigame = fishingFestivalMinigame;
-                    start.festivalTimer = festivalTimer;
-                }
+            }
+            if (start != null)
+            {
+                start.fishingFestivalMinigame = fishingFestivalMinigame;
+                start.festivalTimer = festivalTimer;
             }
 
             if (sparklingText != null && sparklingText.update(Game1.currentGameTime))

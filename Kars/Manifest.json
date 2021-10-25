@@ -1,0 +1,10 @@
+﻿{
+    "Name": "Kars",
+    "Author": "barteke22",
+    "Version": "1.1.1",
+    "Description": "Bleh.",
+    "UniqueID": "barteke22.Kars",
+    "EntryDll": "Kars.dll",
+    "MinimumApiVersion": "3.8.0",
+    "UpdateKeys": [ "Nexus:8970" ]
+}

@@ -9,6 +9,9 @@
     <GameModsPath>D:\Programs\Steam\steamapps\common\Stardew Valley 155\ModsTesting</GameModsPath>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="assets\audio\source\**" />
+    <EmbeddedResource Remove="assets\audio\source\**" />
+    <None Remove="assets\audio\source\**" />
   </ItemGroup>
   <ItemGroup>
     <None Include="i18n\default.json">
