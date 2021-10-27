@@ -484,7 +484,7 @@ namespace FishingMinigames
 
         private void DrawHangman(SpriteBatch batch)
         {
-
+            Log.Error("hi", "bye", new Vector2(9), new List<int>() { 1,2,3}, new Dictionary<string, int>() { { "lol", 1 }, { "ey", 5 } });
             if (minigameStage == 1)//fade in (opacity calc)
             {
                 minigameData[5]++;
@@ -571,11 +571,15 @@ namespace FishingMinigames
 
 
             Texture2D cloud = data.Helper.Content.Load<Texture2D>("assets/Textures.png", ContentSource.ModFolder);//  MOVE this and anims above TO TEXTURE array
+            Texture2D cloud2 = Log.ColorizeTexture2D(cloud, Color.Red, new Rectangle(10, 5, 50, 20));
 
-            batch.Draw(cloud, new Rectangle((int)screenMid.X, (int)screenMid.Y, (int)(scale * 162f), (int)(scale * 88f)), new Rectangle(0, 0, 84, 48), Color.White * opacity, 0f, new Vector2(42f, 24f), SpriteEffects.None, 0.1f);
+            batch.Draw(cloud, new Rectangle((int)screenMid.X, (int)screenMid.Y + 300, (int)(scale * 162f), (int)(scale * 88f)), new Rectangle(0, 0, 84, 48), Color.White * opacity, 0f, new Vector2(42f, 24f), SpriteEffects.None, 0.1f);
+            batch.Draw(cloud, new Rectangle((int)screenMid.X, (int)screenMid.Y + 0, (int)(scale * 162f), (int)(scale * 88f)), new Rectangle(0, 0, 84, 48), Color.Red * opacity, 0f, new Vector2(42f, 24f), SpriteEffects.None, 0.1f);
+            screenMid.Y -= 300;
+
+            batch.Draw(cloud2, new Rectangle((int)screenMid.X, (int)screenMid.Y, (int)(scale * 162f), (int)(scale * 88f)), new Rectangle(0, 0, 84, 48), Color.White * opacity, 0f, new Vector2(42f, 24f), SpriteEffects.None, 0.1f);
             ////board
-            //batch.Draw(Game1.mouseCursors, screenMid, new Rectangle(31, 1870, 73, 49), minigameColor * (opacity / 3f), 0f, new Vector2(36.5f, 22.5f), scale * 1.84f, SpriteEffects.None, 0.2f);
-            batch.Draw(minigameTextures[0], screenMid, null, minigameColor * Math.Min((opacity / 1.5f), 1f), 0f, new Vector2(69f, 37f), scale, SpriteEffects.None, 0.3f);
+            //batch.Draw(minigameTextures[0], screenMid, null, minigameColor * Math.Min((opacity / 1.5f), 1f), 0f, new Vector2(69f, 37f), scale, SpriteEffects.None, 0.3f);
 
 
 

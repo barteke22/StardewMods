@@ -88,24 +88,6 @@ namespace GenericModConfigMenu
         /// <param name="fieldId">The unique field ID for use with <see cref="OnFieldChanged"/>, or <c>null</c> to auto-generate a randomized ID.</param>
         void AddTextOption(IManifest mod, Func<string> getValue, Action<string> setValue, Func<string> name, Func<string> tooltip = null, string[] allowedValues = null, string fieldId = null);
 
-        /// <summary>Add a key binding at the current position in the form.</summary>
-        /// <param name="mod">The mod's manifest.</param>
-        /// <param name="getValue">Get the current value from the mod config.</param>
-        /// <param name="setValue">Set a new value in the mod config.</param>
-        /// <param name="name">The label text to show in the form.</param>
-        /// <param name="tooltip">The tooltip text shown when the cursor hovers on the field, or <c>null</c> to disable the tooltip.</param>
-        /// <param name="fieldId">The unique field ID for use with <see cref="OnFieldChanged"/>, or <c>null</c> to auto-generate a randomized ID.</param>
-        void AddKeybind(IManifest mod, Func<SButton> getValue, Action<SButton> setValue, Func<string> name, Func<string> tooltip = null, string fieldId = null);
-
-        /// <summary>Add a key binding list at the current position in the form.</summary>
-        /// <param name="mod">The mod's manifest.</param>
-        /// <param name="getValue">Get the current value from the mod config.</param>
-        /// <param name="setValue">Set a new value in the mod config.</param>
-        /// <param name="name">The label text to show in the form.</param>
-        /// <param name="tooltip">The tooltip text shown when the cursor hovers on the field, or <c>null</c> to disable the tooltip.</param>
-        /// <param name="fieldId">The unique field ID for use with <see cref="OnFieldChanged"/>, or <c>null</c> to auto-generate a randomized ID.</param>
-        void AddKeybindList(IManifest mod, Func<KeybindList> getValue, Action<KeybindList> setValue, Func<string> name, Func<string> tooltip = null, string fieldId = null);
-
 
         /****
         ** Multi-page management
@@ -139,62 +121,9 @@ namespace GenericModConfigMenu
         /// <remarks>The custom logic represented by <paramref name="draw"/> and <paramref name="saveChanges"/> is responsible for managing its own state if needed. For example, you can store state in a static field or use closures to use a state variable.</remarks>
         void AddComplexOption(IManifest mod, Func<string> name, Func<string> tooltip, Action<SpriteBatch, Vector2> draw, Action saveChanges, Func<int> height = null, string fieldId = null);
 
-        /// <summary>Set whether the options registered after this point can only be edited from the title screen.</summary>
-        /// <param name="mod">The mod's manifest.</param>
-        /// <param name="titleScreenOnly">Whether the options can only be edited from the title screen.</param>
-        /// <remarks>This lets you have different values per-field. Most mods should just set it once in <see cref="Register"/>.</remarks>
-        void SetTitleScreenOnlyForNextOptions(IManifest mod, bool titleScreenOnly);
-
-        /// <summary>Register a method to notify when any option registered by this mod is edited through the config UI.</summary>
-        /// <param name="mod">The mod's manifest.</param>
-        /// <param name="onChange">The method to call with the option's unique field ID and new value.</param>
-        /// <remarks>Options use a randomized ID by default; you'll likely want to specify the <c>fieldId</c> argument when adding options if you use this.</remarks>
-        void OnFieldChanged(IManifest mod, Action<string, object> onChange);
-
-        /// <summary>Open the config UI for a specific mod.</summary>
-        /// <param name="mod">The mod's manifest.</param>
-        void OpenModMenu(IManifest mod);
-
-        /// <summary>Get the currently-displayed mod config menu, if any.</summary>
-        /// <param name="mod">The manifest of the mod whose config menu is being shown, or <c>null</c> if not applicable.</param>
-        /// <param name="page">The page ID being shown for the current config menu, or <c>null</c> if not applicable. This may be <c>null</c> even if a mod config menu is shown (e.g. because the mod doesn't have pages).</param>
-        /// <returns>Returns whether a mod config menu is being shown.</returns>
-        bool TryGetCurrentMenu(out IManifest mod, out string page);
-
         /// <summary>Remove a mod from the config UI and delete all its options and pages.</summary>
         /// <param name="mod">The mod's manifest.</param>
         void Unregister(IManifest mod);
-
-
-
-
-        //void RegisterModConfig(IManifest mod, Action revertToDefault, Action saveToFile);
-
-        //void SetDefaultIngameOptinValue(IManifest mod, bool optedIn);
-
-        //void StartNewPage(IManifest mod, string pageName);
-        //void OverridePageDisplayName(IManifest mod, string pageName, string displayName);
-
-        //void RegisterLabel(IManifest mod, string labelName, string labelDesc);
-        //void RegisterPageLabel(IManifest mod, string labelName, string labelDesc, string newPage);
-        //void RegisterParagraph(IManifest mod, string paragraph);
-        //void RegisterImage(IManifest mod, string texPath, Rectangle? texRect = null, int scale = 4);
-
-        //void RegisterSimpleOption(IManifest mod, string optionName, string optionDesc, Func<bool> optionGet, Action<bool> optionSet);
-        //void RegisterSimpleOption(IManifest mod, string optionName, string optionDesc, Func<int> optionGet, Action<int> optionSet);
-        //void RegisterSimpleOption(IManifest mod, string optionName, string optionDesc, Func<float> optionGet, Action<float> optionSet);
-        //void RegisterSimpleOption(IManifest mod, string optionName, string optionDesc, Func<string> optionGet, Action<string> optionSet);
-        //void RegisterSimpleOption(IManifest mod, string optionName, string optionDesc, Func<SButton> optionGet, Action<SButton> optionSet);
-        //void RegisterSimpleOption(IManifest mod, string optionName, string optionDesc, Func<KeybindList> optionGet, Action<KeybindList> optionSet);
-
-        //void RegisterClampedOption(IManifest mod, string optionName, string optionDesc, Func<int> optionGet, Action<int> optionSet, int min, int max);
-        //void RegisterClampedOption(IManifest mod, string optionName, string optionDesc, Func<float> optionGet, Action<float> optionSet, float min, float max);
-        //void RegisterClampedOption(IManifest mod, string optionName, string optionDesc, Func<int> optionGet, Action<int> optionSet, int min, int max, int interval);
-        //void RegisterClampedOption(IManifest mod, string optionName, string optionDesc, Func<float> optionGet, Action<float> optionSet, float min, float max, float interval);
-
-        //void RegisterChoiceOption(IManifest mod, string optionName, string optionDesc, Func<string> optionGet, Action<string> optionSet, string[] choices);
-
-        //void RegisterComplexOption(IManifest mod, string optionName, string optionDesc, Func<Vector2, object, object> widgetUpdate, Func<SpriteBatch, Vector2, object, object> widgetDraw, Action<object> onSave);
     }
 }
 

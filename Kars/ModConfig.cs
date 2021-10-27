@@ -1,6 +1,6 @@
 using StardewModdingAPI;
 
-namespace QuickLoad
+namespace DiagonalAim
 {
     public class ModConfig
     {

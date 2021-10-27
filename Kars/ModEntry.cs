@@ -7,7 +7,7 @@ using StardewValley.Menus;
 using System;
 using System.Linq;
 
-namespace QuickLoad
+namespace DiagonalAim
 {
     public class ModEntry : Mod
     {
