@@ -157,7 +157,7 @@ namespace FishingMinigames
                     }
 
                     //dummy value validation trigger - must be the last thing, so all values are saved before validation
-                    GenericMC.AddComplexOption(ModManifest, () => "", () => "", null, () => UpdateConfig(true));
+                    GenericMC.AddComplexOption(ModManifest, () => "", () => "", (SpriteBatch b, Vector2 pos) => { }, () => UpdateConfig(true));
                 }
                 catch (Exception)
                 {
