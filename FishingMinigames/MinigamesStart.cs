@@ -119,7 +119,16 @@ namespace FishingMinigames
                 else offset += (int)(140 * startMinigameScale);
             }
             //vanilla treasure chance calculation
-            if (fishingFestivalMinigame == 0 && who.fishCaught != null && who.fishCaught.Count() > 1 && Game1.random.NextDouble() < who.LuckLevel * 0.005 + data.effects["TREASURE"] + who.DailyLuck / 2.0 + ((who.professions.Contains(9) ? FishingRod.baseChanceForTreasure : 0)))
+            if (fishingFestivalMinigame == 0                                                    // Not in a festival
+                && who.fishCaught != null && who.fishCaught.Count() > 1                         // Caught a fish
+                && Game1.random.NextDouble()                                                    // RNG
+                < (   who.LuckLevel * 0.005                                                     // Consumables + Rings
+                    + data.effects["TREASURE"]                                                  // The modifier on rods
+                    + who.DailyLuck / 2.0                                                       // Daily Luck
+                    + 0.07                                                                      // Flat amount - in vanilla this is 15%, but we can fish 2-3x as fast so make it 7%
+                    + ((who.professions.Contains(9) ? FishingRod.baseChanceForTreasure : 0))    // The Pirate profession
+                  )
+               )
             {
                 minigameData[4] = Game1.random.Next(minigameArrowData.Length / 2, minigameArrowData.Length - 1);
             }
@@ -257,6 +266,7 @@ namespace FishingMinigames
                     else if (fishingFestivalMinigame == 1) speed += (festivalDifficulty / 2f - (fishingLevel / 10f)) * minigameDifficulty[screen];
                     else if (fishingFestivalMinigame == 2) speed += (festivalDifficulty / 1.6f - (fishingLevel / 10f)) * minigameDifficulty[screen];
 
+                    if (speed <= 1f) speed = 1f;
                     minigameTimer -= (int)(startMinigameScale * speed);
                 }
 
