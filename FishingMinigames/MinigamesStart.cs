@@ -266,7 +266,7 @@ namespace FishingMinigames
                     else if (fishingFestivalMinigame == 1) speed += (festivalDifficulty / 2f - (fishingLevel / 10f)) * minigameDifficulty[screen];
                     else if (fishingFestivalMinigame == 2) speed += (festivalDifficulty / 1.6f - (fishingLevel / 10f)) * minigameDifficulty[screen];
 
-                    if (speed <= 1f) speed = 1f;
+                    if (speed <= 1) speed = 1f;
                     minigameTimer -= (int)(startMinigameScale * speed);
                 }
 
@@ -625,6 +625,7 @@ namespace FishingMinigames
                     else if (fishingFestivalMinigame == 1) speed += (festivalDifficulty / 2f - (fishingLevel / 10f)) * minigameDifficulty[screen];
                     else if (fishingFestivalMinigame == 2) speed += (festivalDifficulty / 1.6f - (fishingLevel / 10f)) * minigameDifficulty[screen];
 
+                    if (speed <= 1) speed = 1f;
                     minigameTimer -= (int)(startMinigameScale * speed);
                 }
 
