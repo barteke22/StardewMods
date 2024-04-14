@@ -10,7 +10,7 @@
     <GameModsPath>D:\Programs\Steam\steamapps\common\Stardew Valley 1.6.3\Mods</GameModsPath>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="3.3.0" />
+    <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.1.1" />
   </ItemGroup>
   <ItemGroup>
     <None Update="config info readme.txt">

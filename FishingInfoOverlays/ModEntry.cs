@@ -32,6 +32,7 @@ namespace StardewMods
             helper.Events.Display.RenderedActiveMenu += this.OnRenderMenu;
             helper.Events.Display.RenderedActiveMenu += GenericModConfigMenuIntegration;
             helper.Events.Multiplayer.ModMessageReceived += this.OnModMessageReceived;
+            helper.Events.Player.Warped += this.OnWarped;
         }
 
 
@@ -184,6 +185,10 @@ namespace StardewMods
             if (Context.IsWorldReady) overlay.Value.OnModMessageReceived(sender, e);
         }
 
+        private void OnWarped(object sender, WarpedEventArgs e)
+        {
+            overlay.Value?.OnWarped(sender, e);
+        }
 
         private void UpdateConfig(bool GMCM)
         {
