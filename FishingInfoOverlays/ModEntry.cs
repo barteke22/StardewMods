@@ -7,6 +7,7 @@ using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
+using StardewValley.GameData.Locations;
 
 namespace StardewMods
 {
@@ -31,6 +32,7 @@ namespace StardewMods
             helper.Events.Display.RenderedActiveMenu += this.OnRenderMenu;
             helper.Events.Display.RenderedActiveMenu += GenericModConfigMenuIntegration;
             helper.Events.Multiplayer.ModMessageReceived += this.OnModMessageReceived;
+            helper.Events.Player.Warped += this.OnWarped;
         }
 
 
@@ -183,6 +185,10 @@ namespace StardewMods
             if (Context.IsWorldReady) overlay.Value.OnModMessageReceived(sender, e);
         }
 
+        private void OnWarped(object sender, WarpedEventArgs e)
+        {
+            overlay.Value?.OnWarped(sender, e);
+        }
 
         private void UpdateConfig(bool GMCM)
         {
@@ -212,8 +218,8 @@ namespace StardewMods
 
             if (!GMCM)
             {
-                Overlay.locationData = Game1.content.Load<Dictionary<string, string>>("Data\\Locations");       //gets location data (which fish are here)
-                Overlay.fishData = Game1.content.Load<Dictionary<int, string>>("Data\\Fish");                   //gets fish data
+                Overlay.locationData = DataLoader.Locations(Game1.content);       //gets location data (which fish are here)
+                Overlay.fishData = DataLoader.Fish(Game1.content);                   //gets fish data
                 Overlay.background[0] = WhiteCircle(17, 30);
                 Overlay.background[1] = WhitePixel();
             }
