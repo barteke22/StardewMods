@@ -17,7 +17,7 @@ namespace StardewMods
 		public bool[] BarShowPercentages { get; set; } = { true, true, true, true };
 		public int[] BarSortMode { get; set; } = { 0, 0, 0, 0 };
 		public string Comment_BarSortMode { get; set; } = "Above BarSortMode values: 0= Sort Icons by Name (text mode only), 1= Sort icons by catch chance (Extra Check Frequency based), 2= Off";
-		public int BarExtraCheckFrequency { get; set; } = 100;
+		public int BarExtraCheckFrequency { get; set; } = 0;
 		public int[] BarScanRadius { get; set; } = { 20, 20, 20, 20 };
 		public bool[] BarCrabPotEnabled { get; set; } = { true, true, true, true };
 		public bool[] UncaughtFishAreDark { get; set; } = { true, true, true, true };

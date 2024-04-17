@@ -74,7 +74,9 @@ namespace StardewMods
                     GenericMC.AddNumberOption(ModManifest, () => config.BarTextColorRGBA[3], (int val) => config.BarTextColorRGBA[3] = val, () => "A", null, 0, 255);
 
                     //dummy value validation trigger - must be the last thing, so all values are saved before validation
-                    GenericMC.AddComplexOption(ModManifest, () => "", () => "", (SpriteBatch b, Vector2 pos) => { }, () => UpdateConfig(true));
+                    GenericMC.AddComplexOption(ModManifest, () => "", (SpriteBatch b, Vector2 pos) => { }, afterSave: () => UpdateConfig(true));
+
+                    //void AddComplexOption(IManifest mod, Func<string> name, Func<string> tooltip, Action<SpriteBatch, Vector2> draw, Action saveChanges, Func<int> height = null, string fieldId = null);
                 }
                 catch (Exception)
                 {
@@ -134,7 +136,7 @@ namespace StardewMods
             if (screen == 0)//only page 0
             {
                 GenericMC.AddNumberOption(ModManifest, () => config.BarExtraCheckFrequency, (int val) => config.BarExtraCheckFrequency = val,
-                    () => translate.Get("GenericMC.barExtraCheckFrequency"), () => translate.Get("GenericMC.barExtraCheckFrequencyDesc"), 20, 220);
+                    () => translate.Get("GenericMC.barExtraCheckFrequency"), () => translate.Get("GenericMC.barExtraCheckFrequencyDesc"), 0, 22);
 
                 GenericMC.AddSectionTitle(ModManifest, () => translate.Get("GenericMC.MinigameLabel"));
                 GenericMC.AddParagraph(ModManifest, () => translate.Get("GenericMC.MinigameDescription"));
@@ -143,8 +145,8 @@ namespace StardewMods
             GenericMC.AddTextOption(ModManifest, name: () => translate.Get("GenericMC.MinigameMode"), tooltip: () => translate.Get("GenericMC.MinigameModeDesc"),
                 getValue: () => config.MinigamePreviewMode[screen].ToString(),
                 setValue: value => config.MinigamePreviewMode[screen] = int.Parse(value),
-                allowedValues: new string[] { "0", "1", "2", "3" },
-                formatAllowedValue: value => value == "3" ? translate.Get($"GenericMC.Disabled") : translate.Get($"GenericMC.MinigameMode{value}"));
+                allowedValues: new string[] { "0", "1", "2", "3", "4" },
+                formatAllowedValue: value => value == "4" ? translate.Get($"GenericMC.Disabled") : translate.Get($"GenericMC.MinigameMode{value}"));
         }
 
 
@@ -211,6 +213,7 @@ namespace StardewMods
             Overlay.sortMode = config.BarSortMode;                                                                          //config: 0= By Name (text mode only), 1= By Percentage, 2=Off
             Overlay.uncaughtDark = config.UncaughtFishAreDark;                                                              //config: Whether uncaught fish are displayed as ??? and use dark icons
 
+            if (config.BarExtraCheckFrequency > 22) config.BarExtraCheckFrequency /= 10;
             Overlay.extraCheckFrequency = config.BarExtraCheckFrequency;                                                    //config: 20-220: Bad performance dynamic check to see if there's modded/hardcoded fish
 
             Overlay.colorBg = new Color(config.BarBackgroundColorRGBA[0], config.BarBackgroundColorRGBA[1], config.BarBackgroundColorRGBA[2], config.BarBackgroundColorRGBA[3]);

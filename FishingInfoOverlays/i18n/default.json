@@ -60,10 +60,11 @@
 	"GenericMC.MinigameDescription2": "So long as the mod overrides the BobberBar position variable it should work, otherwise you can try another mode, or disable the preview here.",
 
 	"GenericMC.MinigameMode": "Minigame Mode",
-	"GenericMC.MinigameModeDesc": "Full: Copies multiple layers to look better.\nSimple: Only overlays the fish, looks worse, but might perform/work better.\nBar Only (included in the above two): Outlines the fish in the regular location bar (if it's enabled).",
+	"GenericMC.MinigameModeDesc": "Full: Copies multiple layers to look better (if Sonar variant requires Sonar tackle).\nSimple: Only overlays the fish, looks worse, but might perform/work better.\nBar Only (included in the above two): Outlines the fish in the regular location bar (if it's enabled).",
 	"GenericMC.MinigameMode0": "Full",
-	"GenericMC.MinigameMode1": "Simple",
-	"GenericMC.MinigameMode2": "Bar Only",
+	"GenericMC.MinigameMode1": "Full (if Sonar)",
+	"GenericMC.MinigameMode2": "Simple",
+	"GenericMC.MinigameMode3": "Bar Only",
 
 	"GenericMC.SplitScreenDesc": "Split Screen-specific settings, these only matter for Split Screen players. Only the main player should change these.",
 	"GenericMC.SplitScreen2": "Split Screen 2: (Top) Right",

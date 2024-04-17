@@ -5,9 +5,9 @@
 
 	"GenericMC.barIconMode": "アイコンモード",
 	"GenericMC.barIconModeDesc": "エサ・釣り具・ゴミ・魚のアイコンが移動する方向で、行・列に分割されます.",
-	"GenericMC.barIconModeHor": "水平方向のアイコン",
-	"GenericMC.barIconModeVert": "垂直方向のアイコン",
-	"GenericMC.barIconModeVertText": "垂直方向のアイコン＋テキスト",
+	"GenericMC.barIconMode0": "水平方向のアイコン",
+	"GenericMC.barIconMode1": "垂直方向のアイコン",
+	"GenericMC.barIconMode2": "垂直方向のアイコン＋テキスト",
 
 	"GenericMC.Disabled": "使用しない",
 
@@ -26,8 +26,8 @@
 
 	"GenericMC.barBackgroundMode": "バックグランドモード",
 	"GenericMC.barBackgroundModeDesc": "アイコンの背後にある暗い背景は、主にテキストアイコンモードで有効です.円は各アイコンより背面、四角は最背面に描かれます（より良いパフォーマンスのため）.",
-	"GenericMC.barBackgroundModeCircles": "円",
-	"GenericMC.barBackgroundModeRect": "四角",
+	"GenericMC.barBackgroundMode0": "円",
+	"GenericMC.barBackgroundMode1": "四角",
 
 	"GenericMC.barShowBaitTackle": "餌と釣り具のアイコンを示す",
 	"GenericMC.barShowBaitTackleDesc": "現在使用している釣竿のエサや釣り具の耐久性を示すアイコンが示すようになります.",
@@ -37,8 +37,8 @@
 
 	"GenericMC.barSortMode": "ソートモード",
 	"GenericMC.barSortModeDesc": "名前順にすると、アイコンがアルファベット順に並びます.\n捕獲率(%)でソートすると、エクストラチェック頻度が高い方から並びます.\nソートしない場合は、以下の順序になります.ごみ、ID、おまけの順です.",
-	"GenericMC.barSortModeName": "名前",
-	"GenericMC.barSortModeChance": "捕獲率",
+	"GenericMC.barSortMode0": "名前",
+	"GenericMC.barSortMode1": "捕獲率",
 
 	"GenericMC.barExtraCheckFrequency": "エクストラチェック頻度",
 	"GenericMC.barExtraCheckFrequencyDesc": "現在地での釣りをシミュレートするパフォーマンス重視のチェック.数値が高いほど試行回数が多くなる(精度が上がり、ちらつきが減る).どのようなMODでも正確であるべきですが、高い場合、パフォーマンスを悪化させる可能性があります.画面分割モードでは、パフォーマンスを助けるために画面数で割り算されます.",
@@ -61,9 +61,10 @@
 
 	"GenericMC.MinigameMode": "ミニゲームモード",
 	"GenericMC.MinigameModeDesc": "フル：複数のレイヤーをコピーして見栄えを良くします.\nシンプル.魚を重ねるだけなので、見た目は悪くなりますが、性能・機能は良くなるかもしれません.\nバーのみ（上記2つに含まれる）：通常のロケーションバー（有効になっている場合）に魚をアウトライン化します.",
-	"GenericMC.MinigameModeFull": "フル",
-	"GenericMC.MinigameModeSimple": "シンプル",
-	"GenericMC.MinigameModeBarOnly": "バーのみ",
+	"GenericMC.MinigameMode0": "フル",
+	"GenericMC.MinigameMode1": "フル (if Sonar)",
+	"GenericMC.MinigameMode2": "シンプル",
+	"GenericMC.MinigameMode3": "バーのみ",
 
 	"GenericMC.SplitScreenDesc": "画面分割固有の設定です.これらは画面分割のプレイヤーにのみ関係します.メインプレーヤーだけが変更する必要があります.",
 	"GenericMC.SplitScreen2": "分割画面2: 右",
