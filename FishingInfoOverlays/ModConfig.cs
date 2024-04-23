@@ -1,8 +1,9 @@
 namespace StardewMods
 {
 	internal class ModConfig
-	{
-		public int[] BarIconMode { get; set; } = new int[] { 0, 0, 0, 0 };
+    {
+        public int BarSonarMode { get; set; } = 2;
+        public int[] BarIconMode { get; set; } = new int[] { 0, 0, 0, 0 };
 		public string Comment_BarIconMode { get; set; } = "Above BarIconMode values: 0= Horizontal Icons, 1= Vertical Icons, 2= Vertical Icons + Text, 3= Off. The arrays represent splitscreen screens, with first element being the default user.";
 		public int[] BarTopLeftLocationX { get; set; } = { 20, 20, 20, 20 };
 		public int[] BarTopLeftLocationY { get; set; } = { 20, 20, 20, 20 };

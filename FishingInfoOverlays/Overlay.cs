@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
+using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.Extensions;
 using StardewValley.GameData;
@@ -42,7 +42,7 @@ namespace StardewMods
 
         private bool isMinigame = false;    //minigame fish preview data, Reflection
         private string miniFish;
-        private bool hasSonar;                                  //MAYBE MAKE SONAR A SEPARATE SETTING: ignore (pointless item), minigame only, full mod (required for mod to work)
+        private bool hasSonar;
 
 
         public static Dictionary<string, LocationData> locationData;
@@ -55,6 +55,7 @@ namespace StardewMods
         public static int[] miniMode = new int[4];   //config values
         public static bool[] barCrabEnabled = new bool[4];
         public static Vector2[] barPosition = new Vector2[4];
+        public static int sonarMode;
         public static int[] iconMode = new int[4];
         public static float[] barScale = new float[4];
         public static int[] maxIcons = new int[4];
@@ -67,6 +68,7 @@ namespace StardewMods
         public static int[] sortMode = new int[4];
         public static bool[] uncaughtDark = new bool[4];
         public static bool[] onlyFish = new bool[4];
+        public static KeybindList scanKey = new(SButton.LeftShift);
 
 
         public Overlay(ModEntry entry)
@@ -92,8 +94,17 @@ namespace StardewMods
                 if (peer.IsSplitScreen) totalPlayersOnThisPC++;
             }
 
+            hasSonar = false;
+            int maxDist = 0;
             FishingRod rod = Game1.player.CurrentItem as FishingRod;
-            hasSonar = rod != null && rod.GetTackleQualifiedItemIDs().Contains("(O)SonarBobber");
+            if (rod != null)
+            {
+                hasSonar = rod.GetTackleQualifiedItemIDs().Contains("(O)SonarBobber");
+                if (sonarMode == 0 && !hasSonar) return;
+
+                var m = typeof(FishingRod).GetMethod("getAddedDistance", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                maxDist = (int)m?.Invoke(rod, [who]) + 4;
+            }
 
             SpriteFont font = Game1.smallFont;
             var miniData = ItemRegistry.GetDataOrErrorItem(miniFish);                                   //UI INIT
@@ -104,7 +115,7 @@ namespace StardewMods
             batch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise);
 
             //MINIGAME PREVIEW
-            if (isMinigame && miniMode[screen] < 3 && Game1.activeClickableMenu is BobberBar bar && bar.scale == 1f && (hasSonar || miniMode[screen] != 1)) //scale == 1f when moving elements appear
+            if (isMinigame && miniMode[screen] < 3 && Game1.activeClickableMenu is BobberBar bar && bar.scale == 1f && (hasSonar || sonarMode > 1)) //scale == 1f when moving elements appear
             {
                 if (miniMode[screen] < 2) //Full minigame
                 {
@@ -222,19 +233,62 @@ namespace StardewMods
                 Vector2 nearestWaterTile = new Vector2(99999f, 99999f);      //any water nearby + nearest water tile check
                 if (who.currentLocation.canFishHere())
                 {
-                    Vector2 scanTopLeft = who.Tile - new Vector2(scanRadius[screen] + 1);
-                    Vector2 scanBottomRight = who.Tile + new Vector2(scanRadius[screen] + 2);
-                    for (int x = (int)scanTopLeft.X; x < (int)scanBottomRight.X; x++)
+                    if (rod != null)
                     {
-                        for (int y = (int)scanTopLeft.Y; y < (int)scanBottomRight.Y; y++)
+                        if (screen == 0 && (hasSonar || sonarMode == 4) && scanKey.IsDown())
                         {
+                            int x = (int)Game1.currentCursorTile.X;
+                            int y = (int)Game1.currentCursorTile.Y;
                             if (who.currentLocation.isTileFishable(x, y) && !who.currentLocation.isTileBuildingFishable(x, y))
                             {
-                                Vector2 tile = new Vector2(x, y);
-                                float distance = Vector2.DistanceSquared(who.Tile, tile);
-                                float distanceNearest = Vector2.DistanceSquared(who.Tile, nearestWaterTile);
-                                if (distance < distanceNearest || (distance == distanceNearest && Game1.player.GetGrabTile() == tile)) nearestWaterTile = tile;
+                                nearestWaterTile = new(x, y);
                                 foundWater = true;
+                            }
+                        }
+                        if (!foundWater)
+                        {
+                            int dir = who.getFacingDirection();
+                            bool isX = dir < 2;
+                            bool positive = dir is 0 or 2;
+                            for (int i = maxDist; i >= 0; i--)
+                            {
+                                int x = (int)who.Tile.X;
+                                int y = (int)who.Tile.Y;
+                                if (isX)
+                                {
+                                    if (positive) x += i;
+                                    else x -= i;
+                                }
+                                else
+                                {
+                                    if (positive) y += i;
+                                    else y -= i;
+                                }
+                                if (who.currentLocation.isTileFishable(x, y) && !who.currentLocation.isTileBuildingFishable(x, y))
+                                {
+                                    nearestWaterTile = new(x, y);
+                                    foundWater = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (!foundWater)
+                    {
+                        Vector2 scanTopLeft = who.Tile - new Vector2(scanRadius[screen] + 1);
+                        Vector2 scanBottomRight = who.Tile + new Vector2(scanRadius[screen] + 2);
+                        for (int x = (int)scanTopLeft.X; x < (int)scanBottomRight.X; x++)
+                        {
+                            for (int y = (int)scanTopLeft.Y; y < (int)scanBottomRight.Y; y++)
+                            {
+                                if (who.currentLocation.isTileFishable(x, y) && !who.currentLocation.isTileBuildingFishable(x, y))
+                                {
+                                    Vector2 tile = new Vector2(x, y);
+                                    float distance = Vector2.DistanceSquared(who.Tile, tile);
+                                    float distanceNearest = Vector2.DistanceSquared(who.Tile, nearestWaterTile);
+                                    if (distance < distanceNearest || (distance == distanceNearest && Game1.player.GetGrabTile() == tile)) nearestWaterTile = tile;
+                                    foundWater = true;
+                                }
                             }
                         }
                     }
@@ -243,7 +297,7 @@ namespace StardewMods
                 var defaultSource = new Rectangle(0, 0, 16, 16);
                 if (foundWater)
                 {
-                    if (who.CurrentItem is FishingRod)   //LOCATION FISH PREVIEW
+                    if (rod != null)   //LOCATION FISH PREVIEW
                     {
                         if (!isMinigame)
                         {
@@ -356,37 +410,54 @@ namespace StardewMods
 
         private void AddGenericFishToList(Vector2 bobberTile)
         {
-            if (Game1.ticks % 30 == 0 || oldGeneric == null)
+            if (Game1.ticks % (isMinigame ? 600 : 30) == 0 || oldGeneric == null)
             {
                 oldGeneric = new();
                 fishHere = new() { "(O)168" };
                 fishChancesSlow = new() { { "-1", 100 }, { "(O)168", 0 } };//-1 represents the total
 
-                var data = GetFishFromLocationData(who.currentLocation.Name, bobberTile, 5, who, !who.fishCaught.Any(), false, who.currentLocation, null);
-
-                float total = data.Sum(f => f.Value);
-                var j = data.FirstOrDefault(f => junk.Contains(f.Key));
-                float notJunk = j.Key != null ? j.Value : 1f;
-                total -= notJunk;
-                foreach (var fish in data)
+                var hard = AddHardcoded(bobberTile, false);
+                if (hard != "-2")
                 {
-                    if (!junk.Contains(fish.Key))
-                    {
-                        notJunk *= 1f - fish.Value;
-                    }
-                }
-                total += notJunk;
-                foreach (var fish in data)
-                {
-                    if (!junk.Contains(fish.Key))
-                    {
-                        if (sortMode[screen] == 0) SortItemIntoListByDisplayName(fish.Key); //sort by name
-                        else fishHere.Add(fish.Key);
-                        fishChancesSlow[fish.Key] = (int)Math.Round(fish.Value / total * 100);
-                    }
-                }
-                fishChancesSlow["(O)168"] = (int)Math.Round(notJunk / total * 100);
+                    Dictionary<string, float> data = GetFishFromLocationData(who.currentLocation.Name, bobberTile, 5, who, !who.fishCaught.Any(), false, who.currentLocation, null);
 
+                    if (hard != "-1")
+                    {
+                        if (hard.Contains('|'))
+                        {
+                            var d = hard.Split('|');
+                            for (int i = 0; i < d.Length; i += 2)
+                            {
+                                var c = float.Parse(d[i + 1]);
+                                data[d[i]] = c * (data.Sum(f => f.Value) + c);
+                            }
+                        }
+                        else data[hard] = 1;
+                    }
+
+                    float total = data.Sum(f => f.Value);
+                    var j = data.FirstOrDefault(f => junk.Contains(f.Key));
+                    float notJunk = j.Key != null ? j.Value : 1f;
+                    total -= notJunk;
+                    foreach (var fish in data)
+                    {
+                        if (!junk.Contains(fish.Key))
+                        {
+                            notJunk *= 1f - fish.Value;
+                        }
+                    }
+                    total += notJunk;
+                    foreach (var fish in data)
+                    {
+                        if (!junk.Contains(fish.Key))
+                        {
+                            if (sortMode[screen] == 0) SortItemIntoListByDisplayName(fish.Key); //sort by name
+                            else fishHere.Add(fish.Key);
+                            fishChancesSlow[fish.Key] = (int)Math.Round(fish.Value / total * 100);
+                        }
+                    }
+                    fishChancesSlow["(O)168"] = (int)Math.Round(notJunk / total * 100);
+                }
                 if (sortMode[screen] == 1) SortListByPercentages(); //sort by %
             }
         }
@@ -671,7 +742,7 @@ namespace StardewMods
         }
 
 
-        private void AddFishToListDynamic(Vector2 bobberTile)                            //very performance intensive check for fish fish available in this area - simulates fishing
+        private void AddFishToListDynamic(Vector2 bobberTile)              //very performance intensive check for fish fish available in this area - simulates fishing
         {
             Farmer backup = Game1.player;
             try
@@ -691,7 +762,6 @@ namespace StardewMods
                     who.luckLevel.Value = Game1.player.LuckLevel;
                     foreach (var item in Game1.player.fishCaught) who.fishCaught.Add(item);
                     foreach (var m in Game1.player.secretNotesSeen) who.secretNotesSeen.Add(m);
-                    hasSonar = rod.GetTackleQualifiedItemIDs().Contains("(O)SonarBobber");
                     Game1.player = who;
                 }
                 if (oldGeneric == null)
@@ -707,7 +777,7 @@ namespace StardewMods
                 for (int i = 0; i < freq; i++)
                 {
                     Game1.stats.TimesFished++;
-                    string fish = "-1";//AddHardcoded();
+                    string fish = AddHardcoded(bobberTile, true);
                     Game1.stats.TimesFished--;
                     if (fish != "-2")//not fully hardcoded
                     {
@@ -815,20 +885,14 @@ namespace StardewMods
 
         private static string[] junk = { "(O)167", "(O)168", "(O)169", "(O)170", "(O)171", "(O)172" };
 
-        private string AddHardcoded()//-2 skip dynamic, -1 dynamic, above -1 = item to add to dynamic
+        private string AddHardcoded(Vector2 bobberTile, bool dynamic)//-2 skip dynamic, -1 dynamic, above -1 = item to add to dynamic
         {
+            FishingRod rod = who.CurrentTool as FishingRod;
             if (who.currentLocation is IslandLocation)
             {
-                if (new Random((int)(Game1.stats.DaysPlayed + Game1.stats.TimesFished + Game1.uniqueIDForThisGame)).NextDouble() < 0.15 && (!Game1.player.team.limitedNutDrops.ContainsKey("IslandFishing") || Game1.player.team.limitedNutDrops["IslandFishing"] < 5)) return "(O)73";//nut
+                if (Utility.CreateRandom(Game1.stats.DaysPlayed, Game1.stats.TimesFished, Game1.uniqueIDForThisGame).NextDouble() < 0.15 && (!Game1.player.team.limitedNutDrops.ContainsKey("IslandFishing") || Game1.player.team.limitedNutDrops["IslandFishing"] < 5)) return "(O)73|100";//nut
 
-                if (who.currentLocation is IslandNorth)
-                {
-                    if ((bool)(Game1.getLocationFromName("IslandNorth") as IslandNorth).bridgeFixed.Value &&
-                        (new Random((int)who.Tile.X * 2000 + (int)who.Tile.Y * 777 + (int)Game1.uniqueIDForThisGame / 2 + (int)Game1.stats.DaysPlayed + (int)Game1.stats.TimesFished)).NextDouble() < 0.1) return "(O)821";//spine
-                    return "-1";
-                }
-
-                if (who.currentLocation is IslandSouthEast && who.Tile.X >= 17 && who.Tile.X <= 21 && who.Tile.Y >= 19 && who.Tile.Y <= 23)
+                if (who.currentLocation is IslandSouthEast && bobberTile.X >= 17 && bobberTile.X <= 21 && bobberTile.Y >= 19 && bobberTile.Y <= 23)
                 {
                     if (!(Game1.player.currentLocation as IslandSouthEast).fishedWalnut.Value)
                     {
@@ -841,14 +905,88 @@ namespace StardewMods
                         fishChancesSlow = new() { { "-1", 1 }, { "(O)168", 1 } };
                     }
                     oldGeneric = null;
-                    return "-2";
+                    return "-2";//prevents alering game state in dynamic
                 }
-
-                if (who.currentLocation is IslandWest)
+            }
+            else if (who.currentLocation is Railroad)
+            {
+                if (who.secretNotesSeen.Contains(GameLocation.NECKLACE_SECRET_NOTE_INDEX) && !who.hasOrWillReceiveMail(GameLocation.CAROLINES_NECKLACE_MAIL))
                 {
-                    if (Game1.player.hasOrWillReceiveMail("islandNorthCaveOpened") &&
-                        (new Random((int)who.Tile.X * 2000 + (int)who.Tile.Y * 777 + (int)Game1.uniqueIDForThisGame / 2 + (int)Game1.stats.DaysPlayed + (int)Game1.stats.TimesFished)).NextDouble() < 0.1) return "(O)825";//skull
-                    return "-1";
+                    return GameLocation.CAROLINES_NECKLACE_ITEM_QID;
+                }
+            }
+            else if (who.currentLocation is Forest)
+            {
+                if (bobberTile.X > 50f && bobberTile.X < 66f && bobberTile.Y > 100f)
+                {
+                    if (!rod.QualifiedItemId.Contains("TrainingRod"))
+                    {
+                        float gobyChance = 0.15f;
+                        if (rod != null)
+                        {
+                            if (rod.HasCuriosityLure())
+                            {
+                                gobyChance += 0.15f;
+                            }
+                            if (rod.GetBait() != null && rod.GetBait().Name.Contains("Goby"))
+                            {
+                                gobyChance += 0.2f;
+                            }
+                        }
+                        if (dynamic)
+                        {
+                            if (Game1.random.NextDouble() < gobyChance)
+                            {
+                                return "(O)Goby";
+                            }
+                            if (Game1.random.NextDouble() < 0.15 && Game1.IsFall)
+                            {
+                                return "(O)139";
+                            }
+                        }
+                        else
+                        {
+                            if (gobyChance > 0)
+                            {
+                                return "(O)Goby|" + gobyChance;
+                            }
+                            if (Game1.IsFall)
+                            {
+                                return "(O)139|0.15";
+                            }
+                        }
+                    }
+                }
+            }
+            else if (who.currentLocation is MineShaft mine)
+            {
+                if (!rod.QualifiedItemId.Contains("TrainingRod"))
+                {
+                    double chanceMultiplier = 1.5;
+                    chanceMultiplier += 0.4 * who.FishingLevel;
+                    string baitName = "";
+                    if (rod != null)
+                    {
+                        if (rod.HasCuriosityLure())
+                        {
+                            chanceMultiplier += 5.0;
+                        }
+                        baitName = rod.GetBait()?.Name ?? "";
+                    }
+                    switch (mine.getMineArea())
+                    {
+                        case 0:
+                        case 10:
+                            chanceMultiplier += (baitName.Contains("Stonefish") ? 10 : 0);
+                            return "(O)158|" + 0.02 + 0.01 * chanceMultiplier;
+                        case 40:
+                            chanceMultiplier += (baitName.Contains("Ice Pip") ? 10 : 0);
+                            return "(O)161|" + 0.015 + 0.009 * chanceMultiplier;
+                        case 80:
+                            chanceMultiplier += (baitName.Contains("Lava Eel") ? 10 : 0);
+                            return "(O)162|" + 0.01 + 0.008 * chanceMultiplier
+                                + "(O)CaveJelly|" + 0.05 + who.LuckLevel * 0.05;
+                    }
                 }
             }
             return "-1";
