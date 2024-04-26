@@ -230,6 +230,7 @@ namespace StardewMods
 
 
                 bool foundWater = false;
+                bool showTile = false;
                 Vector2 nearestWaterTile = new Vector2(99999f, 99999f);      //any water nearby + nearest water tile check
                 if (who.currentLocation.canFishHere())
                 {
@@ -237,6 +238,7 @@ namespace StardewMods
                     {
                         if (screen == 0 && (hasSonar || sonarMode == 4) && scanKey.IsDown())
                         {
+                            showTile = true;
                             int x = (int)Game1.currentCursorTile.X;
                             int y = (int)Game1.currentCursorTile.Y;
                             if (who.currentLocation.isTileFishable(x, y) && !who.currentLocation.isTileBuildingFishable(x, y))
@@ -247,17 +249,18 @@ namespace StardewMods
                         }
                         if (!foundWater)
                         {
-                            int dir = who.getFacingDirection();
-                            bool isX = dir < 2;
-                            bool positive = dir is 0 or 2;
+                            int dir = who.FacingDirection;//0=up,1=r,2=d,3=l
+                            bool isX = dir is 1 or 3;
+                            bool positive = dir > 1;
+                            if (!isX) maxDist--;
                             for (int i = maxDist; i >= 0; i--)
                             {
                                 int x = (int)who.Tile.X;
                                 int y = (int)who.Tile.Y;
                                 if (isX)
                                 {
-                                    if (positive) x += i;
-                                    else x -= i;
+                                    if (positive) x -= i;
+                                    else x += i;
                                 }
                                 else
                                 {
@@ -307,6 +310,11 @@ namespace StardewMods
                     }
                     else AddCrabPotFish();
 
+                    if (showTile)
+                    {
+                        batch.Draw(Game1.mouseCursors, new Vector2((int)nearestWaterTile.X * 64 - Game1.viewport.X, (int)nearestWaterTile.Y * 64 - Game1.viewport.Y), new Rectangle(652, 204, 44, 44),
+                            new Color(0, 255, 0, 0.5f), 0f, Vector2.Zero, 1.45f, SpriteEffects.None, 1f);
+                    }
 
                     foreach (var fish in fishHere)
                     {
@@ -441,7 +449,7 @@ namespace StardewMods
                     total -= notJunk;
                     foreach (var fish in data)
                     {
-                        if (!junk.Contains(fish.Key))
+                        if (fish.Value < 1f && !junk.Contains(fish.Key))
                         {
                             notJunk *= 1f - fish.Value;
                         }
@@ -890,7 +898,7 @@ namespace StardewMods
             FishingRod rod = who.CurrentTool as FishingRod;
             if (who.currentLocation is IslandLocation)
             {
-                if (Utility.CreateRandom(Game1.stats.DaysPlayed, Game1.stats.TimesFished, Game1.uniqueIDForThisGame).NextDouble() < 0.15 && (!Game1.player.team.limitedNutDrops.ContainsKey("IslandFishing") || Game1.player.team.limitedNutDrops["IslandFishing"] < 5)) return "(O)73|100";//nut
+                if (Utility.CreateRandom(Game1.stats.DaysPlayed, Game1.stats.TimesFished + 1, Game1.uniqueIDForThisGame).NextDouble() < 0.15 && (!Game1.player.team.limitedNutDrops.ContainsKey("IslandFishing") || Game1.player.team.limitedNutDrops["IslandFishing"] < 5)) return "(O)73|100";//nut
 
                 if (who.currentLocation is IslandSouthEast && bobberTile.X >= 17 && bobberTile.X <= 21 && bobberTile.Y >= 19 && bobberTile.Y <= 23)
                 {
