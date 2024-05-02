@@ -440,7 +440,7 @@ namespace StardewMods
                                 data[d[i]] = c * (data.Sum(f => f.Value) + c);
                             }
                         }
-                        else data[hard] = 1;
+                        else data[hard] = 1000;
                     }
 
                     float total = data.Sum(f => f.Value);
@@ -770,6 +770,7 @@ namespace StardewMods
                     who.luckLevel.Value = Game1.player.LuckLevel;
                     foreach (var item in Game1.player.fishCaught) who.fishCaught.Add(item);
                     foreach (var m in Game1.player.secretNotesSeen) who.secretNotesSeen.Add(m);
+                    who.stats.Values = new(Game1.player.stats.Values);
                     Game1.player = who;
                 }
                 if (oldGeneric == null)
@@ -784,9 +785,7 @@ namespace StardewMods
                 int freq = (isMinigame || isMinigameOther) ? (6 / totalPlayersOnThisPC) : (extraCheckFrequency * 10 / totalPlayersOnThisPC); //minigame lowers frequency
                 for (int i = 0; i < freq; i++)
                 {
-                    Game1.stats.TimesFished++;
                     string fish = AddHardcoded(bobberTile, true);
-                    Game1.stats.TimesFished--;
                     if (fish != "-2")//not fully hardcoded
                     {
                         if (fish == "-1")//dynamic
@@ -805,7 +804,7 @@ namespace StardewMods
                             //}
 
                             Game1.stats.TimesFished++;
-                            item = who.currentLocation.getFish(0, (who.CurrentTool as FishingRod).GetBait()?.ItemId, 5, who, 100, bobberTile, who.currentLocation.Name);
+                            item = who.currentLocation.getFish(0, (who.CurrentTool as FishingRod).GetBait()?.ItemId, 5, who, 100, bobberTile);
                             Game1.stats.TimesFished--;
                             try
                             {
@@ -898,7 +897,7 @@ namespace StardewMods
             FishingRod rod = who.CurrentTool as FishingRod;
             if (who.currentLocation is IslandLocation)
             {
-                if (Utility.CreateRandom(Game1.stats.DaysPlayed, Game1.stats.TimesFished + 1, Game1.uniqueIDForThisGame).NextDouble() < 0.15 && (!Game1.player.team.limitedNutDrops.ContainsKey("IslandFishing") || Game1.player.team.limitedNutDrops["IslandFishing"] < 5)) return "(O)73|100";//nut
+                if (Utility.CreateRandom(Game1.stats.DaysPlayed, Game1.stats.TimesFished + 1, Game1.uniqueIDForThisGame).NextDouble() < 0.15 && (!Game1.player.team.limitedNutDrops.ContainsKey("IslandFishing") || Game1.player.team.limitedNutDrops["IslandFishing"] < 5)) return "(O)73";//nut
 
                 if (who.currentLocation is IslandSouthEast && bobberTile.X >= 17 && bobberTile.X <= 21 && bobberTile.Y >= 19 && bobberTile.Y <= 23)
                 {
@@ -916,7 +915,9 @@ namespace StardewMods
                     return "-2";//prevents alering game state in dynamic
                 }
             }
-            else if (who.currentLocation is Railroad)
+            else if (!dynamic)
+            {
+                if (who.currentLocation is Railroad)
             {
                 if (who.secretNotesSeen.Contains(GameLocation.NECKLACE_SECRET_NOTE_INDEX) && !who.hasOrWillReceiveMail(GameLocation.CAROLINES_NECKLACE_MAIL))
                 {
@@ -941,19 +942,6 @@ namespace StardewMods
                                 gobyChance += 0.2f;
                             }
                         }
-                        if (dynamic)
-                        {
-                            if (Game1.random.NextDouble() < gobyChance)
-                            {
-                                return "(O)Goby";
-                            }
-                            if (Game1.random.NextDouble() < 0.15 && Game1.IsFall)
-                            {
-                                return "(O)139";
-                            }
-                        }
-                        else
-                        {
                             if (gobyChance > 0)
                             {
                                 return "(O)Goby|" + gobyChance;
@@ -965,7 +953,6 @@ namespace StardewMods
                         }
                     }
                 }
-            }
             else if (who.currentLocation is MineShaft mine)
             {
                 if (!rod.QualifiedItemId.Contains("TrainingRod"))
@@ -986,14 +973,15 @@ namespace StardewMods
                         case 0:
                         case 10:
                             chanceMultiplier += (baitName.Contains("Stonefish") ? 10 : 0);
-                            return "(O)158|" + 0.02 + 0.01 * chanceMultiplier;
+                                return "(O)158|" + (0.02 + 0.01 * chanceMultiplier);
                         case 40:
                             chanceMultiplier += (baitName.Contains("Ice Pip") ? 10 : 0);
-                            return "(O)161|" + 0.015 + 0.009 * chanceMultiplier;
+                                return "(O)161|" + (0.015 + 0.009 * chanceMultiplier);
                         case 80:
                             chanceMultiplier += (baitName.Contains("Lava Eel") ? 10 : 0);
-                            return "(O)162|" + 0.01 + 0.008 * chanceMultiplier
-                                + "(O)CaveJelly|" + 0.05 + who.LuckLevel * 0.05;
+                                return "(O)162|" + (0.01 + 0.008 * chanceMultiplier)
+                                    + "|(O)CaveJelly|" + (0.05 + who.LuckLevel * 0.05);
+                        }
                     }
                 }
             }
