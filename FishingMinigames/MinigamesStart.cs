@@ -22,7 +22,7 @@ namespace FishingMinigames
         private int fishingLevel;
         private int screen;
         public Action EmergencyCancel;
-        private int whichFish;
+        private string whichFish;
         private bool bossFish;
         private string behavior;
 
@@ -64,7 +64,7 @@ namespace FishingMinigames
 
             who = Game1.player;
             fishingLevel = who.FishingLevel;
-            bossFish = FishingRod.isFishBossFish(whichFish);
+            bossFish = (who.CurrentItem as FishingRod).bossFish;
             screen = Context.ScreenId;
         }
 
@@ -185,7 +185,7 @@ namespace FishingMinigames
                 {
                     if (fishingFestivalMinigame == 0)
                     {
-                        data.Helper.Multiplayer.SendMessage((whichFish < 167 || whichFish > 172) ? whichFish : 168, "whichFish", modIDs: new[] { "barteke22.FishingInfoOverlays" }, new[] { who.UniqueMultiplayerID });//notify overlay of which fish
+                        data.Helper.Multiplayer.SendMessage(Minigames.JUNK.Contains(whichFish) ? Minigames.TRASH : whichFish, "whichFish", modIDs: new[] { "barteke22.FishingInfoOverlays" }, new[] { who.UniqueMultiplayerID });//notify overlay of which fish
                     }
                     Game1.activeClickableMenu = new DummyMenu();
                     minigameStage = 2;
@@ -388,7 +388,7 @@ namespace FishingMinigames
                             }
                             if (fishingFestivalMinigame != 0 && festivalDifficulty * 20 <= minigameData[2])
                             {
-                                Game1.CurrentEvent.caughtFish(137, festivalDifficulty * 2, who);
+                                Game1.CurrentEvent.caughtFish("(O)137", festivalDifficulty * 2, who);
                                 if (Minigames.voices.TryGetValue(Minigames.voiceType[screen], out SoundEffect sfx)) sfx.Play(Minigames.voiceVolume * 0.5f, Minigames.voicePitch[screen], 0);
                             }
                         }
