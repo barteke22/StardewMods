@@ -7,6 +7,7 @@ using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.BellsAndWhistles;
 using StardewValley.Buildings;
+using StardewValley.Extensions;
 using StardewValley.Objects;
 using StardewValley.SpecialOrders;
 using StardewValley.Tools;
@@ -572,7 +573,8 @@ namespace FishingMinigames
                 fromFishPond = who.currentLocation.isTileBuildingFishable((int)bobberTile.X, (int)bobberTile.Y);
 
                 clearWaterDistance = FishingRod.distanceToLand((int)bobberTile.X, (int)bobberTile.Y, who.currentLocation);
-                double baitPotency = ((rod.attachments[0] != null) ? ((float)rod.attachments[0].Price / 10f) : 0f);
+                Object bait = rod.GetBait();
+                double baitPotency = ((bait != null) ? ((float)bait.Price / 10f) : 0f);
 
                 Rectangle fishSplashRect = new Rectangle(who.currentLocation.fishSplashPoint.X * 64, who.currentLocation.fishSplashPoint.Y * 64, 64, 64);
                 Rectangle bobberRect = new Rectangle(x - 80, y - 80, 64, 64);
@@ -603,11 +605,10 @@ namespace FishingMinigames
 
                 if (item != null) whichFish = item.QualifiedItemId;//fix here for fishpond
 
-                if (item == null || whichFish == null)
+                if (item == null || whichFish == null || ItemRegistry.GetDataOrErrorItem(item.QualifiedItemId).IsErrorItem)
                 {
-                    item = new Object("(O)" + Game1.random.Next(167, 173), 1);//trash
+                    item = ItemRegistry.Create("(O)" + Game1.random.Next(167, 173));//trash
                     whichFish = item.QualifiedItemId;
-
                     fromFishPond = false;
                 }
 
@@ -617,14 +618,15 @@ namespace FishingMinigames
                 minFishSize = 0;
                 maxFishSize = 0;
 
-                Dictionary<string, string> data = Game1.content.Load<Dictionary<string, string>>("Data\\Fish");
+                Dictionary<string, string> data = DataLoader.Fish(Game1.content);
                 string[] fishData = null;
-                if (data.ContainsKey(whichFish)) fishData = data[whichFish].Split('/');
-
+                if (data.TryGetValue(item.ItemId, out string val))
+                {
+                    fishData = val.Split('/');
+                }
 
                 itemIsInstantCatch = false;
-                if (item is Furniture) itemIsInstantCatch = true;
-                else if (Utility.IsNormalObjectAtParentSheetIndex(item, whichFish) && data.ContainsKey(whichFish))
+                if (item.HasTypeObject() && fishData != null)
                 {
                     if (int.TryParse(fishData[1], out difficulty) && int.TryParse(fishData[3], out minFishSize) && int.TryParse(fishData[4], out maxFishSize))
                     {
@@ -635,13 +637,35 @@ namespace FishingMinigames
                 }
                 else itemIsInstantCatch = true;
 
-                if (itemIsInstantCatch || item.Category == -20 || item.QualifiedItemId == "(O)152" || item.QualifiedItemId == "(O)153" || item.QualifiedItemId == "(O)157" 
-                    || item.QualifiedItemId == "(O)797" || item.QualifiedItemId == "(O)79" || item.QualifiedItemId == "(O)73" || item.QualifiedItemId == "(O)842" 
-                    || (item.ParentSheetIndex >= 820 && item.ParentSheetIndex <= 828) || item.QualifiedItemId == GameLocation.CAROLINES_NECKLACE_ITEM_QID 
-                    || item.QualifiedItemId == "(O)890" || fromFishPond)
+                if (!itemIsInstantCatch)
                 {
-                    itemIsInstantCatch = true;
+                    switch (item.QualifiedItemId)
+                    {
+                        case "(O)152":
+                        case "(O)153":
+                        case "(O)157":
+                        case "(O)797":
+                        case "(O)79":
+                        case "(O)73":
+                        case "(O)842":
+                        case "(O)890":
+                        case "(O)820":
+                        case "(O)821":
+                        case "(O)822":
+                        case "(O)823":
+                        case "(O)824":
+                        case "(O)825":
+                        case "(O)826":
+                        case "(O)827":
+                        case "(O)828":
+                            itemIsInstantCatch = true;
+                            break;
+                        default:
+                            itemIsInstantCatch = item.Category == -20 || item.QualifiedItemId == GameLocation.CAROLINES_NECKLACE_ITEM_QID;
+                            break;
+                    }
                 }
+                rod.lastCatchWasJunk = itemIsInstantCatch;
 
                 //special item handling
                 if (fishingFestivalMinigame == 0 && !(item is Furniture) && !fromFishPond && who.team.specialOrders != null)
@@ -1440,8 +1464,8 @@ namespace FishingMinigames
                 Vector2 tankOffset = Vector2.Zero;
                 if (fishTankSprites)
                 {
-                    Object fish = new Object(whichFish, 1);
-                    FishTankFurniture tank = new FishTankFurniture("(F)2322", Vector2.Zero);
+                    Item fish = ItemRegistry.Create(whichFish);
+                    FishTankFurniture tank = new FishTankFurniture("2322", Vector2.Zero);
                     if (fish.Category == Object.FishCategory && tank.CanBeDeposited(fish))//fishtank sprites
                     {
                         tank.boundingBox.Value = new Rectangle(0, 0, 300, 100);

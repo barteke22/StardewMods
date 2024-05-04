@@ -162,7 +162,7 @@ namespace FishingMinigames
         public void MainRendered(SpriteBatch batch)
         {
             if (minigameStyle[screen] == 1 && ((minigameStage > 0 && minigameStage < 5) || (minigameStage > 4 && minigameData[5] > 0))) DrawDDR(batch);
-            if (minigameStyle[screen] == 2 && ((minigameStage > 0 && minigameStage < 5) || (minigameStage > 4 && minigameData[5] > 0))) DrawHangman(batch);
+            else if (minigameStyle[screen] == 2 && ((minigameStage > 0 && minigameStage < 5) || (minigameStage > 4 && minigameData[5] > 0))) DrawHangman(batch);
         }
 
         private float DrawIntro(SpriteBatch batch, Vector2 screenMid, float scale)

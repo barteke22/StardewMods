@@ -37,7 +37,7 @@ namespace FishingMinigames
                 Game1.content.Load<Texture2D>("LooseSprites\\boardGameBorder"),
                 Game1.content.Load<Texture2D>("LooseSprites\\CraneGame"),
                 Game1.content.Load<Texture2D>("LooseSprites\\buildingPlacementTiles"),
-                //Helper.ModContent.Load<Texture2D>("assets/Textures.png") //WHAT IS THIS SUPPOSED TO BE???
+                Helper.ModContent.Load<Texture2D>("assets/Textures.png") //custom textures
             };
 
 
@@ -189,7 +189,7 @@ namespace FishingMinigames
             GenericMC.AddTextOption(ModManifest, name: () => translate.Get("GenericMC.StartMinigameStyle"), tooltip: () => translate.Get("GenericMC.StartMinigameStyleDesc"),
                 getValue: () => config.StartMinigameStyle[screen].ToString(),
                 setValue: value => config.StartMinigameStyle[screen] = int.Parse(value),
-                allowedValues: new string[] { "0", "1", "2" },
+                allowedValues: new string[] { "0", "1" },
                 formatAllowedValue: value => value == "0" ? translate.Get($"GenericMC.Disabled") : translate.Get($"GenericMC.StartMinigameStyle{value}"));
 
             GenericMC.AddTextOption(ModManifest, name: () => translate.Get("GenericMC.EndMinigameStyle"), tooltip: () => translate.Get("GenericMC.EndMinigameStyleDesc"),
