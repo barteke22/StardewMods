@@ -444,14 +444,15 @@ namespace StardewMods
                         }
                         else data[hard] = 1000;
                     }
-
+                    
                     float total = data.Sum(f => f.Value);
-                    var j = data.FirstOrDefault(f => junk.Contains(f.Key));
+                    var j = data.FirstOrDefault(f => ItemRegistry.GetDataOrErrorItem(f.Key).Category == Object.junkCategory);
                     float notJunk = j.Key != null ? j.Value : 1f;
                     total -= notJunk;
                     foreach (var fish in data)
                     {
-                        if (fish.Value < 1f && !junk.Contains(fish.Key))
+                        int itemCategory = ItemRegistry.GetDataOrErrorItem(fish.Key).Category;
+                        if (fish.Value < 1f && itemCategory != Object.junkCategory)
                         {
                             notJunk *= 1f - fish.Value;
                         }
@@ -459,7 +460,8 @@ namespace StardewMods
                     total += notJunk;
                     foreach (var fish in data)
                     {
-                        if (!junk.Contains(fish.Key))
+                        int itemCategory = ItemRegistry.GetDataOrErrorItem(fish.Key).Category;
+                        if (itemCategory != Object.junkCategory)
                         {
                             if (sortMode[screen] == 0) SortItemIntoListByDisplayName(fish.Key); //sort by name
                             else fishHere.Add(fish.Key);
@@ -580,7 +582,7 @@ namespace StardewMods
                     }
                     foreach (var fish in items)
                     {
-                        if (junk.Contains(fish.QualifiedItemId)) fish.ItemId = "168";
+                        if (fish.Category == Object.junkCategory) fish.ItemId = "168";
                         if (!string.IsNullOrWhiteSpace(spawn.SetFlagOnCatch))
                         {
                             fish.SetFlagOnPickup = spawn.SetFlagOnCatch;
@@ -833,7 +835,7 @@ namespace StardewMods
                         int val;
                         if (fishChances["-1"] < int.MaxValue) //percentages, slow version (the one shown) is updated less over time
                         {
-                            if (junk.Contains(fish))
+                            if (item.Category == Object.junkCategory)
                             {
                                 fishChances.TryGetValue("(O)168", out val);
                                 fishChances["(O)168"] = val + 1;
@@ -867,7 +869,7 @@ namespace StardewMods
 
 
                         //if fish not in last X attempts, redo lists
-                        if (!junk.Contains(fish))
+                        if (item.Category != Object.junkCategory)
                         {
                             fishChances.TryGetValue(fish, out val);
                             float chance = (float)val / fishChances["-1"] * 100f;
@@ -891,8 +893,6 @@ namespace StardewMods
                 Game1.player = backup;
             }
         }
-
-        private static string[] junk = { "(O)167", "(O)168", "(O)169", "(O)170", "(O)171", "(O)172" };
 
         private string AddHardcoded(Vector2 bobberTile, bool dynamic)//-2 skip dynamic, -1 dynamic, above -1 = item to add to dynamic
         {
