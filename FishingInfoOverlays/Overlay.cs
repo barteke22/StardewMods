@@ -320,7 +320,7 @@ namespace StardewMods
 
                     foreach (var fish in fishHere)
                     {
-                        if (onlyFish[screen] && fish != "(O)168" && !fishData.ContainsKey(fish)) continue;//skip if not fish, except trash
+                        if (onlyFish[screen] && fish != "(O)168" && !fishData.ContainsKey(fish.Replace("(O)", ""))) continue;//skip if not fish, except trash
 
                         int percent = fishChancesSlow.ContainsKey(fish) ? (int)Math.Round((float)fishChancesSlow[fish] / fishChancesSlow["-1"] * 100f) : 0; //chance of this fish
 
