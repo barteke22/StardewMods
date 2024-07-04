@@ -87,7 +87,7 @@ namespace StardewMods
             who = Game1.player;
             screen = Context.ScreenId;
             if (Game1.eventUp || who.CurrentItem == null ||
-                !((who.CurrentItem is FishingRod) || (who.CurrentItem.Name.Equals("Crab Pot", StringComparison.Ordinal) && barCrabEnabled[screen]))) return;//code stop conditions
+                !((who.CurrentItem is FishingRod) || ("Crab Pot".Equals(who.CurrentItem.Name, StringComparison.Ordinal) && barCrabEnabled[screen]))) return;//code stop conditions
 
             totalPlayersOnThisPC = 1;
             foreach (IMultiplayerPeer peer in Helper.Multiplayer.GetConnectedPlayers())
@@ -116,9 +116,9 @@ namespace StardewMods
             batch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise);
 
             //MINIGAME PREVIEW
-            if (isMinigame && miniMode[screen] < 3 && Game1.activeClickableMenu is BobberBar bar && bar.scale == 1f && (hasSonar || sonarMode > 1)) //scale == 1f when moving elements appear
+            if (isMinigame && miniMode[screen] < 2 && Game1.activeClickableMenu is BobberBar bar && bar.scale == 1f && (hasSonar || sonarMode > 1)) //scale == 1f when moving elements appear
             {
-                if (miniMode[screen] < 2) //Full minigame
+                if (miniMode[screen] == 0) //Full minigame
                 {
                     //rod+bar textture cut to only cover the minigame bar
                     batch.Draw(Game1.mouseCursors, (new Vector2(bar.xPositionOnScreen + 126, bar.yPositionOnScreen + 292) + bar.everythingShake),
@@ -165,7 +165,7 @@ namespace StardewMods
 
 
                 //this.Monitor.Log("\n", LogLevel.Debug);
-                if (who.currentLocation is MineShaft && who.CurrentItem.Name.Equals("Crab Pot", StringComparison.Ordinal))//crab pot
+                if (who.currentLocation is MineShaft && "Crab Pot".Equals(who.CurrentItem.Name, StringComparison.Ordinal))//crab pot
                 {
                     string warning = translate.Get("Bar.CrabMineWarning");
                     DrawStringWithBorder(batch, font, warning, boxBottomLeft + new Vector2(source.Width * iconScale, 0), Color.Red, 0f, Vector2.Zero, FixIconScale(1f), SpriteEffects.None, 1f, colorBg); //text
@@ -347,8 +347,8 @@ namespace StardewMods
                                     (caught) ? colorText : colorText * 0.8f, 0f, new Vector2(font.MeasureString(percent + "%").X / 2f, 0f), FixIconScale(0.58f), SpriteEffects.None, 1f, colorBg);//%
                             }
 
-                            if (fish == miniFish && miniMode[screen] < 4) batch.Draw(background[screen], new Rectangle((int)boxBottomLeft.X - 1, (int)boxBottomLeft.Y - 1, (int)(16 * iconScale) + 1, (int)((16 * iconScale) + (showPercentages[screen] ? FixIconScale(10) : 0) + 1)),
-                                null, Color.GreenYellow, 0f, Vector2.Zero, SpriteEffects.None, 0.9f);//minigame outline
+                            if (fish.Replace("(O)", "") == miniFish && miniMode[screen] < 3) batch.Draw(background[screen], new Rectangle((int)boxBottomLeft.X - 1, (int)boxBottomLeft.Y - 1, (int)(16 * iconScale) + 1, (int)((16 * iconScale) + (showPercentages[screen] ? FixIconScale(10) : 0) + 1)),
+                                null, Color.GreenYellow, 0f, Vector2.Zero, SpriteEffects.None, 0.9f);//green minigame outline on bar
 
                             if (backgroundMode[screen] == 0) AddBackground(batch, boxTopLeft, boxBottomLeft, iconCount, defaultSource, iconScale, boxWidth, boxHeight);
 
