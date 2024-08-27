@@ -444,7 +444,7 @@ namespace StardewMods
                         }
                         else data[hard] = 1000;
                     }
-                    
+
                     float total = data.Sum(f => f.Value);
                     var j = data.FirstOrDefault(f => ItemRegistry.GetDataOrErrorItem(f.Key).Category == Object.junkCategory);
                     float notJunk = j.Key != null ? j.Value : 1f;
@@ -756,11 +756,9 @@ namespace StardewMods
 
         private void AddFishToListDynamic(Vector2 bobberTile)              //very performance intensive check for fish fish available in this area - simulates fishing
         {
-            Farmer backup = Game1.player;
             try
             {
-                FishingRod rod = Game1.player.CurrentItem as FishingRod;
-                if (rod != null)  //dummy workaround for preventing player from getting special items
+                if (Game1.player.CurrentItem is FishingRod rod)  //dummy workaround for preventing player from getting special items
                 {
                     who = new Farmer();
                     foreach (var m in Game1.player.mailReceived) who.mailReceived.Add(m);
@@ -775,7 +773,6 @@ namespace StardewMods
                     foreach (var item in Game1.player.fishCaught) who.fishCaught.Add(item);
                     foreach (var m in Game1.player.secretNotesSeen) who.secretNotesSeen.Add(m);
                     who.stats.Values = new(Game1.player.stats.Values);
-                    Game1.player = who;
                 }
                 if (oldGeneric == null)
                 {
@@ -831,6 +828,10 @@ namespace StardewMods
                             //    if (mail1) Game1.player.mailReceived.Add("islandNorthCaveOpened");
                             //    if (mail2) Game1.player.mailForTomorrow.Add("islandNorthCaveOpened");                                                                                //-----end2
                             //}
+                        }
+                        else
+                        {
+                            item = ItemRegistry.Create(fish);
                         }
                         int val;
                         if (fishChances["-1"] < int.MaxValue) //percentages, slow version (the one shown) is updated less over time
@@ -888,10 +889,8 @@ namespace StardewMods
                     }
                 }
             }
-            finally
-            {
-                Game1.player = backup;
-            }
+            catch
+            { }
         }
 
         private string AddHardcoded(Vector2 bobberTile, bool dynamic)//-2 skip dynamic, -1 dynamic, above -1 = item to add to dynamic
@@ -903,7 +902,7 @@ namespace StardewMods
 
                 if (who.currentLocation is IslandSouthEast && bobberTile.X >= 17 && bobberTile.X <= 21 && bobberTile.Y >= 19 && bobberTile.Y <= 23)
                 {
-                    if (!(Game1.player.currentLocation as IslandSouthEast).fishedWalnut.Value)
+                    if (!(who.currentLocation as IslandSouthEast).fishedWalnut.Value)
                     {
                         fishHere = new() { "(O)73" };
                         fishChancesSlow = new() { { "-1", 1 }, { "(O)73", 1 }, { "(O)168", 0 } };
@@ -914,7 +913,7 @@ namespace StardewMods
                         fishChancesSlow = new() { { "-1", 1 }, { "(O)168", 1 } };
                     }
                     oldGeneric = null;
-                    return "-2";//prevents alering game state in dynamic
+                    return "-2";//prevents altering game state in dynamic
                 }
             }
             else if (!dynamic)
