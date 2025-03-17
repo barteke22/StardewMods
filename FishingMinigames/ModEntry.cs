@@ -1,38 +1,68 @@
-﻿using System;
-using System.Collections.Generic;
-using GenericModConfigMenu;
+﻿using GenericModConfigMenu;
+using HarmonyLib;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
-using StardewValley.GameData.Locations;
+using StardewValley.Tools;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
 
-namespace StardewMods
+namespace FishingMinigames
 {
-    /// <summary>The mod entry point.</summary>
     public class ModEntry : Mod
     {
-        ITranslationHelper translate;
-        private ModConfig config;
-        private readonly PerScreen<Overlay> overlay = new PerScreen<Overlay>();
+        public static ITranslationHelper translate;
+        public static ModConfig config;
+        public static Regex exception = new Regex(@"([^\\]*)\.cs:.*");
+        private readonly PerScreen<Minigames> minigame = new PerScreen<Minigames>();
+        private Dictionary<string, string> itemIDs = new();
+        private bool canStartEditingAssets = false;
 
+        private enum StartMinigame { DDR, Hangman }
 
 
         public override void Entry(IModHelper helper)
         {
-            config = helper.ReadConfig<ModConfig>();
-            translate = helper.Translation;
+            Log.Monitor = Monitor;
+            translate = Helper.Translation;
+            UpdateConfig(false);
+            MinigamesStart.minigameTextures = new Texture2D[] {
+                Game1.content.Load<Texture2D>("LooseSprites\\boardGameBorder"),
+                Game1.content.Load<Texture2D>("LooseSprites\\CraneGame"),
+                Game1.content.Load<Texture2D>("LooseSprites\\buildingPlacementTiles"),
+                Helper.ModContent.Load<Texture2D>("assets/Textures.png") //custom textures
+            };
 
-            helper.Events.Input.ButtonPressed += this.OnButtonPressed;
-            helper.Events.GameLoop.DayStarted += this.OnDayStarted;
-            helper.Events.Display.Rendered += this.Rendered;
-            helper.Events.Display.MenuChanged += this.OnMenuChanged;
-            helper.Events.Display.RenderedActiveMenu += this.OnRenderMenu;
+
+            helper.Events.Display.Rendered += Display_Rendered;
+            helper.Events.Display.RenderingWorld += Display_RenderingWorld;
+            helper.Events.Display.RenderedWorld += Display_RenderedWorld;
+            helper.Events.GameLoop.UpdateTicking += GameLoop_UpdateTicking;
+            helper.Events.Input.ButtonsChanged += Input_ButtonsChanged;
             helper.Events.Display.RenderedActiveMenu += GenericModConfigMenuIntegration;
-            helper.Events.Multiplayer.ModMessageReceived += this.OnModMessageReceived;
-            helper.Events.Player.Warped += this.OnWarped;
+            helper.Events.GameLoop.SaveLoaded += GameLoop_SaveLoaded;
+            helper.Events.Multiplayer.ModMessageReceived += OnModMessageReceived;
+            Helper.Events.Content.AssetRequested += OnAssetRequested;
+            //helper.Events.Player.Warped += OnWarped;
+
+            helper.ConsoleCommands.Add("startminigametest", "For testing the Start Minigame of the Fishing Minigames mod. If holding a fishing rod/net, its data will be used, otherwise uses a basic one.\n\n" +
+                "Usage: startminigametest <fish>\n- fish: ID or name (fuzzy search, single word only) of the fish to use. Random size (between min-max) is used.\n\n" +
+                "Usage: startminigametest <I:difficulty> <I:size> [S:boss]\n- difficulty: fish difficulty (int, vanilla = 15-110)\n" +
+                "- size: fishSize (int, vanilla = 1-73)\n- boss: true = bossFish, can be blank\nHighest vanilla combo = 110 51 true", this.StartMinigameTest);
+
+            var harmony = new Harmony(ModManifest.UniqueID);//this might summon Cthulhu
+            //harmony.PatchAll();
+            harmony.Patch(
+                original: AccessTools.Method(typeof(Tool), "getDescription"),
+                postfix: new HarmonyMethod(typeof(HarmonyPatches), "getDescription_Nets")
+            );
         }
 
 
@@ -40,25 +70,28 @@ namespace StardewMods
         {
             Helper.Events.Display.RenderedActiveMenu -= GenericModConfigMenuIntegration;
             if (Context.IsSplitScreen) return;
-            translate = Helper.Translation;
+            canStartEditingAssets = true;
+            Helper.GameContent.InvalidateCache("TileSheets/tools");
+            Helper.GameContent.InvalidateCache("Maps/springobjects");
+            Helper.GameContent.InvalidateCache("Strings/StringsFromCSFiles");
+            Helper.GameContent.InvalidateCache("Data/ObjectInformation");
+
             var GenericMC = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
             if (GenericMC != null)
             {
                 GenericMC.Register(ModManifest, () => config = new ModConfig(), () => Helper.WriteConfig(config));
-                GenericMC.AddSectionTitle(ModManifest, () => translate.Get("GenericMC.barLabel")); //All of these strings are stored in the traslation files.
-                GenericMC.AddParagraph(ModManifest, () => translate.Get("GenericMC.barDescription"));
-                GenericMC.AddParagraph(ModManifest, () => translate.Get("GenericMC.barDescription2"));
+                GenericMC.AddSectionTitle(ModManifest, () => translate.Get("GenericMC.MainLabel")); //All of these strings are stored in the traslation files.
+                GenericMC.AddParagraph(ModManifest, () => translate.Get("GenericMC.MainDesc"));
+                GenericMC.AddParagraph(ModManifest, () => translate.Get("GenericMC.MainDesc2"));
+                GenericMC.AddParagraph(ModManifest, () => translate.Get("GenericMC.MainDesc3"));
 
                 try
                 {
-                    GenericMC.AddTextOption(ModManifest, name: () => translate.Get("GenericMC.barSonarMode"), tooltip: () => translate.Get("GenericMC.barSonarModeDesc"),
-                        getValue: () => config.BarSonarMode.ToString(),
-                        setValue: value => config.BarSonarMode = int.Parse(value),
-                        allowedValues: new string[] { "0", "1", "2", "3" },
-                        formatAllowedValue: value => value == "3" ? translate.Get($"GenericMC.Disabled") : translate.Get($"GenericMC.barSonarMode{value}"));
+                    GenericMC.AddNumberOption(ModManifest, () => config.VoiceVolume, (int val) => config.VoiceVolume = val, () => translate.Get("GenericMC.Volume"), () => translate.Get("GenericMC.VolumeDesc"), 0, 100);
 
                     GenericMCPerScreen(GenericMC, 0);
-                    GenericMC.AddPageLink(ModManifest, "colors", () => translate.Get("GenericMC.barColors"), () => translate.Get("GenericMC.barColors"));
+                    GenericMC.AddPageLink(ModManifest, "colors", () => translate.Get("GenericMC.Colors"), () => translate.Get("GenericMC.Colors"));
+                    GenericMC.AddPageLink(ModManifest, "itemData", () => translate.Get("GenericMC.ItemData"), () => translate.Get("GenericMC.ItemData"));
 
                     GenericMC.AddPageLink(ModManifest, "s2", () => translate.Get("GenericMC.SplitScreen2"), () => translate.Get("GenericMC.SplitScreenDesc"));
                     GenericMC.AddPageLink(ModManifest, "s3", () => translate.Get("GenericMC.SplitScreen3"), () => translate.Get("GenericMC.SplitScreenDesc"));
@@ -67,22 +100,67 @@ namespace StardewMods
                     GenericMCPerScreen(GenericMC, 2);
                     GenericMCPerScreen(GenericMC, 3);
 
-                    GenericMC.AddPage(ModManifest, "colors", () => translate.Get("GenericMC.barColors"));
-                    GenericMC.AddSectionTitle(ModManifest, () => translate.Get("GenericMC.barBackgroundColor"));
-                    GenericMC.AddNumberOption(ModManifest, () => config.BarBackgroundColorRGBA[0], (int val) => config.BarBackgroundColorRGBA[0] = val, () => "R", null, 0, 255);
-                    GenericMC.AddNumberOption(ModManifest, () => config.BarBackgroundColorRGBA[1], (int val) => config.BarBackgroundColorRGBA[1] = val, () => "G", null, 0, 255);
-                    GenericMC.AddNumberOption(ModManifest, () => config.BarBackgroundColorRGBA[2], (int val) => config.BarBackgroundColorRGBA[2] = val, () => "B", null, 0, 255);
-                    GenericMC.AddNumberOption(ModManifest, () => config.BarBackgroundColorRGBA[3], (int val) => config.BarBackgroundColorRGBA[3] = val, () => "A", null, 0, 255);
-                    GenericMC.AddSectionTitle(ModManifest, () => translate.Get("GenericMC.barTextColor"));
-                    GenericMC.AddNumberOption(ModManifest, () => config.BarTextColorRGBA[0], (int val) => config.BarTextColorRGBA[0] = val, () => "R", null, 0, 255);
-                    GenericMC.AddNumberOption(ModManifest, () => config.BarTextColorRGBA[1], (int val) => config.BarTextColorRGBA[1] = val, () => "G", null, 0, 255);
-                    GenericMC.AddNumberOption(ModManifest, () => config.BarTextColorRGBA[2], (int val) => config.BarTextColorRGBA[2] = val, () => "B", null, 0, 255);
-                    GenericMC.AddNumberOption(ModManifest, () => config.BarTextColorRGBA[3], (int val) => config.BarTextColorRGBA[3] = val, () => "A", null, 0, 255);
+                    GenericMC.AddPage(ModManifest, "colors", () => translate.Get("GenericMC.Colors"));
+                    GenericMCColorPicker(GenericMC, ModManifest);
+                    GenericMC.AddBoolOption(ModManifest, () => config.BossTransparency, (bool val) => config.BossTransparency = val,
+                        () => translate.Get("GenericMC.BossTransparency"), () => translate.Get("GenericMC.BossTransparencyDesc"));
+
+                    GenericMC.AddPage(ModManifest, "itemData", () => translate.Get("GenericMC.ItemData"));
+                    GenericMC.AddParagraph(ModManifest, () => translate.Get("GenericMC.ItemDataDesc1"));
+                    GenericMC.AddParagraph(ModManifest, () => translate.Get("GenericMC.ItemDataDesc2"));
+                    GenericMC.AddParagraph(ModManifest, () => translate.Get("GenericMC.ItemDataDesc3"));
+                    GenericMC.AddParagraph(ModManifest, () => translate.Get("GenericMC.ItemDataDesc4"));
+
+                    foreach (var item in config.SeeInfoForBelowData)
+                    {
+                        Item o = (itemIDs.ContainsKey(item.Key)) ? new StardewValley.Object(itemIDs[item.Key], 1) : null;
+                        string space = "";
+                        if (o == null)
+                        {
+                            FishingRod rod = new FishingRod();
+                            while (rod.UpgradeLevel < 5)
+                            {
+                                if (rod.Name.Equals(item.Key))
+                                {
+                                    o = rod;
+                                    break;
+                                }
+                                rod.UpgradeLevel++;
+                            }
+                        }
+                        if (o != null)
+                        {
+                            for (int i = 0; i < 26 - (o.DisplayName.Length / 2); i++)
+                            {
+                                space += " ";
+                            }
+                            if (o is FishingRod) GenericMC.AddImage(ModManifest, () => Game1.toolSpriteSheet, Game1.getSourceRectForStandardTileSheet(Game1.toolSpriteSheet, (o as FishingRod).IndexOfMenuItemView, 16, 16), 4);
+                            else GenericMC.AddImage(ModManifest, () => Game1.objectSpriteSheet, Game1.getSourceRectForStandardTileSheet(Game1.objectSpriteSheet, o.ParentSheetIndex, 16, 16), 4);
+                            GenericMC.AddSectionTitle(ModManifest, () => space + o.DisplayName, () => item.Key);
+                        }
+                        else
+                        {
+                            for (int i = 0; i < 26 - (item.Key.Length / 2); i++)
+                            {
+                                space += " ";
+                            }
+                            GenericMC.AddSectionTitle(ModManifest, () => space + item.Key, () => item.Key);
+                        }
+
+                        foreach (var effect in item.Value)
+                        {
+                            if (effect.Key.StartsWith("EXTRA_", StringComparison.Ordinal)) GenericMC.AddNumberOption(ModManifest, () => config.SeeInfoForBelowData[item.Key][effect.Key],
+                                (int val) => config.SeeInfoForBelowData[item.Key][effect.Key] = val, () => effect.Key, () => translate.Get("Effects.EXTRA").Tokens(new { max = "MAX", chance = "CHANCE" }),
+                                0, effect.Key.Equals("EXTRA_MAX", StringComparison.Ordinal) ? 10 : 100);
+                            else GenericMC.AddNumberOption(ModManifest, () => config.SeeInfoForBelowData[item.Key][effect.Key], (int val) => config.SeeInfoForBelowData[item.Key][effect.Key] = val,
+                                () => effect.Key, () => translate.Get("Effects." + effect.Key).Tokens(new { val = "X" }),
+                                (effect.Key.Equals("QUALITY", StringComparison.Ordinal) ? -4 : effect.Key.Equals("LIFE", StringComparison.Ordinal) ? 0 : -100),
+                                (effect.Key.Equals("QUALITY", StringComparison.Ordinal) ? 4 : effect.Key.Equals("LIFE", StringComparison.Ordinal) ? 50 : 300));
+                        }
+                    }
 
                     //dummy value validation trigger - must be the last thing, so all values are saved before validation
-                    GenericMC.AddComplexOption(ModManifest, () => "", (SpriteBatch b, Vector2 pos) => { }, afterSave: () => UpdateConfig(true));
-
-                    //void AddComplexOption(IManifest mod, Func<string> name, Func<string> tooltip, Action<SpriteBatch, Vector2> draw, Action saveChanges, Func<int> height = null, string fieldId = null);
+                    GenericMC.AddComplexOption(ModManifest, () => "", () => "", (SpriteBatch b, Vector2 pos) => { }, () => UpdateConfig(true));
                 }
                 catch (Exception)
                 {
@@ -96,179 +174,506 @@ namespace StardewMods
             {
                 GenericMC.AddPage(ModManifest, "s" + (screen + 1), () => translate.Get("GenericMC.SplitScreen" + (screen + 1)));
             }
-            GenericMC.AddTextOption(ModManifest, name: () => translate.Get("GenericMC.barIconMode"), tooltip: () => translate.Get("GenericMC.barIconModeDesc"),
-                getValue: () => config.BarIconMode[screen].ToString(),
-                setValue: value => config.BarIconMode[screen] = int.Parse(value),
+            GenericMC.AddTextOption(ModManifest, () => config.VoiceType[screen], (string val) => config.VoiceType[screen] = val,
+                () => translate.Get("GenericMC.VoiceType"), () => translate.Get("GenericMC.VoiceTypeDesc"), new string[] { "Silent" }.Concat(Minigames.voices.Keys).ToArray());
+
+            GenericMC.AddNumberOption(ModManifest, () => config.VoicePitch[screen], (int val) => config.VoicePitch[screen] = val,
+                () => translate.Get("GenericMC.Pitch"), () => translate.Get("GenericMC.PitchDesc"), -100, 100);
+
+            GenericMC.AddTextOption(ModManifest, () => config.KeyBinds[screen], (string val) => config.KeyBinds[screen] = val,
+                () => translate.Get("GenericMC.KeyBinds"), () => translate.Get("GenericMC.KeyBindsDesc"));
+
+            GenericMC.AddBoolOption(ModManifest, () => config.FreeAim[screen], (bool val) => config.FreeAim[screen] = val,
+                () => translate.Get("GenericMC.FreeAim"), () => translate.Get("GenericMC.FreeAimDesc"));
+
+            GenericMC.AddTextOption(ModManifest, name: () => translate.Get("GenericMC.StartMinigameStyle"), tooltip: () => translate.Get("GenericMC.StartMinigameStyleDesc"),
+                getValue: () => config.StartMinigameStyle[screen].ToString(),
+                setValue: value => config.StartMinigameStyle[screen] = int.Parse(value),
+                allowedValues: new string[] { "0", "1" },
+                formatAllowedValue: value => value == "0" ? translate.Get($"GenericMC.Disabled") : translate.Get($"GenericMC.StartMinigameStyle{value}"));
+
+            GenericMC.AddTextOption(ModManifest, name: () => translate.Get("GenericMC.EndMinigameStyle"), tooltip: () => translate.Get("GenericMC.EndMinigameStyleDesc"),
+                getValue: () => config.EndMinigameStyle[screen].ToString(),
+                setValue: value => config.EndMinigameStyle[screen] = int.Parse(value),
                 allowedValues: new string[] { "0", "1", "2", "3" },
-                formatAllowedValue: value => value == "3" ? translate.Get($"GenericMC.Disabled") : translate.Get($"GenericMC.barIconMode{value}"));
+                formatAllowedValue: value => value == "0" ? translate.Get($"GenericMC.Disabled") : translate.Get($"GenericMC.EndMinigameStyle{value}"));
 
-            GenericMC.AddNumberOption(ModManifest, () => config.BarTopLeftLocationX[screen], (int val) => config.BarTopLeftLocationX[screen] = val,
-                () => translate.Get("GenericMC.barPosX"), () => translate.Get("GenericMC.barPosXDesc"), 0);
-            GenericMC.AddNumberOption(ModManifest, () => config.BarTopLeftLocationY[screen], (int val) => config.BarTopLeftLocationY[screen] = val,
-                () => translate.Get("GenericMC.barPosY"), () => translate.Get("GenericMC.barPosYDesc"), 0);
-            GenericMC.AddNumberOption(ModManifest, () => config.BarScale[screen], (float val) => config.BarScale[screen] = val,
-                () => translate.Get("GenericMC.barScale"), () => translate.Get("GenericMC.barScaleDesc"), 0.1f, 5f, 0.1f);
-            GenericMC.AddNumberOption(ModManifest, () => config.BarMaxIcons[screen], (int val) => config.BarMaxIcons[screen] = val,
-                () => translate.Get("GenericMC.barMaxIcons"), () => translate.Get("GenericMC.barMaxIconsDesc"), 4, 500);
-            GenericMC.AddNumberOption(ModManifest, () => config.BarMaxIconsPerRow[screen], (int val) => config.BarMaxIconsPerRow[screen] = val,
-                () => translate.Get("GenericMC.barMaxIconsPerRow"), () => translate.Get("GenericMC.barMaxIconsPerRowDesc"), 4, 500);
+            GenericMC.AddBoolOption(ModManifest, () => config.EndLoseTreasureIfFailed[screen], (bool val) => config.EndLoseTreasureIfFailed[screen] = val,
+                () => translate.Get("GenericMC.EndLoseTreasure"), () => translate.Get("GenericMC.EndLoseTreasureDesc"));
+            GenericMC.AddNumberOption(ModManifest, () => config.EndMinigameDamage[screen], (float val) => config.EndMinigameDamage[screen] = val,
+                () => translate.Get("GenericMC.EndDamage"), () => translate.Get("GenericMC.EndDamageDesc"), 0f, 2f, 0.05f);
+            GenericMC.AddNumberOption(ModManifest, () => config.MinigameDifficulty[screen], (float val) => config.MinigameDifficulty[screen] = val,
+                () => translate.Get("GenericMC.Difficulty"), () => translate.Get("GenericMC.DifficultyDesc"), 0.1f, 2f, 0.05f);
 
-            GenericMC.AddTextOption(ModManifest, name: () => translate.Get("GenericMC.barBackgroundMode"), tooltip: () => translate.Get("GenericMC.barBackgroundModeDesc"),
-                getValue: () => config.BarBackgroundMode[screen].ToString(),
-                setValue: value => config.BarBackgroundMode[screen] = int.Parse(value),
-                allowedValues: new string[] { "0", "1", "2" },
-                formatAllowedValue: value => value == "2" ? translate.Get($"GenericMC.Disabled") : translate.Get($"GenericMC.barBackgroundMode{value}"));
-
-            GenericMC.AddBoolOption(ModManifest, () => config.BarShowBaitAndTackleInfo[screen], (bool val) => config.BarShowBaitAndTackleInfo[screen] = val,
-                () => translate.Get("GenericMC.barShowBaitTackle"), () => translate.Get("GenericMC.barShowBaitTackleDesc"));
-            GenericMC.AddBoolOption(ModManifest, () => config.BarShowPercentages[screen], (bool val) => config.BarShowPercentages[screen] = val,
-                () => translate.Get("GenericMC.barShowPercentages"), () => translate.Get("GenericMC.barShowPercentagesDesc"));
-
-            GenericMC.AddTextOption(ModManifest, name: () => translate.Get("GenericMC.barSortMode"), tooltip: () => translate.Get("GenericMC.barSortModeDesc"),
-                getValue: () => config.BarSortMode[screen].ToString(),
-                setValue: value => config.BarSortMode[screen] = int.Parse(value),
-                allowedValues: new string[] { "0", "1", "2" },
-                formatAllowedValue: value => value == "2" ? translate.Get($"GenericMC.Disabled") : translate.Get($"GenericMC.barSortMode{value}"));
-
-            GenericMC.AddNumberOption(ModManifest, () => config.BarScanRadius[screen], (int val) => config.BarScanRadius[screen] = val,
-                () => translate.Get("GenericMC.barScanRadius"), () => translate.Get("GenericMC.barScanRadiusDesc"), 1, 60);
-            GenericMC.AddBoolOption(ModManifest, () => config.BarCrabPotEnabled[screen], (bool val) => config.BarCrabPotEnabled[screen] = val,
-                () => translate.Get("GenericMC.barCrabPotEnabled"), () => translate.Get("GenericMC.barCrabPotEnabledDesc"));
-            GenericMC.AddBoolOption(ModManifest, () => config.UncaughtFishAreDark[screen], (bool val) => config.UncaughtFishAreDark[screen] = val,
-                () => translate.Get("GenericMC.barUncaughtDarker"), () => translate.Get("GenericMC.barUncaughtDarkerDesc"));
-            GenericMC.AddBoolOption(ModManifest, () => config.OnlyFish[screen], (bool val) => config.OnlyFish[screen] = val,
-                () => translate.Get("GenericMC.barOnlyFish"), () => translate.Get("GenericMC.barOnlyFishDesc"));
+            GenericMC.AddBoolOption(ModManifest, () => config.TutorialSkip[screen], (bool val) => config.TutorialSkip[screen] = val,
+                () => translate.Get("GenericMC.TutorialSkip"), () => translate.Get("GenericMC.TutorialSkipDesc"));
 
             if (screen == 0)//only page 0
             {
-                GenericMC.AddNumberOption(ModManifest, () => config.BarExtraCheckFrequency, (int val) => config.BarExtraCheckFrequency = val,
-                    () => translate.Get("GenericMC.barExtraCheckFrequency"), () => translate.Get("GenericMC.barExtraCheckFrequencyDesc"), 0, 22);
+                GenericMC.AddNumberOption(ModManifest, () => config.StartMinigameScale, (float val) => config.StartMinigameScale = val,
+                    () => translate.Get("GenericMC.StartMinigameScale"), () => translate.Get("GenericMC.StartMinigameScale"), 0.5f, 5f, 0.05f);
 
-                GenericMC.AddSectionTitle(ModManifest, () => translate.Get("GenericMC.MinigameLabel"));
-                GenericMC.AddParagraph(ModManifest, () => translate.Get("GenericMC.MinigameDescription"));
-                GenericMC.AddParagraph(ModManifest, () => translate.Get("GenericMC.MinigameDescription2"));
+                GenericMC.AddBoolOption(ModManifest, () => config.RealisticSizes, (bool val) => config.RealisticSizes = val,
+                    () => translate.Get("GenericMC.RealisticSizes"), () => translate.Get("GenericMC.RealisticSizesDesc"));
+
+                if (LocalizedContentManager.CurrentLanguageCode == 0) GenericMC.AddBoolOption(ModManifest, () => config.ConvertToMetric, (bool val) => config.ConvertToMetric = val,
+                    () => translate.Get("GenericMC.ConvertToMetric"), () => translate.Get("GenericMC.ConvertToMetricDesc"));
+
+                GenericMC.AddBoolOption(ModManifest, () => config.FishTankHoldSprites, (bool val) => config.FishTankHoldSprites = val,
+                    () => translate.Get("GenericMC.FishTankHold"), () => translate.Get("GenericMC.FishTankHoldDesc"));
+
+                GenericMC.AddSectionTitle(ModManifest, () => translate.Get("GenericMC.FestivalLabel"));
+                GenericMC.AddParagraph(ModManifest, () => translate.Get("GenericMC.FestivalDesc"));
+                GenericMC.AddParagraph(ModManifest, () => translate.Get("GenericMC.FestivalDesc2"));
             }
-            GenericMC.AddTextOption(ModManifest, name: () => translate.Get("GenericMC.MinigameMode"), tooltip: () => translate.Get("GenericMC.MinigameModeDesc"),
-                getValue: () => config.MinigamePreviewMode[screen].ToString(),
-                setValue: value => config.MinigamePreviewMode[screen] = int.Parse(value),
+
+            GenericMC.AddTextOption(ModManifest, name: () => translate.Get("GenericMC.FestivalMode"), tooltip: () => translate.Get("GenericMC.FestivalModeDesc"),
+                getValue: () => config.FestivalMode[screen].ToString(),
+                setValue: value => config.FestivalMode[screen] = int.Parse(value),
                 allowedValues: new string[] { "0", "1", "2", "3" },
-                formatAllowedValue: value => value == "3" ? translate.Get($"GenericMC.Disabled") : translate.Get($"GenericMC.MinigameMode{value}"));
+                formatAllowedValue: value => translate.Get($"GenericMC.FestivalMode{value}"));
+        }
+        private void GenericMCColorPicker(IGenericModConfigMenuApi GenericMC, IManifest mod)
+        {
+            MinigameColor state = null;
+            void Draw(SpriteBatch b, Vector2 pos)
+            {
+                if (state == null) state = new MinigameColor() { color = config.MinigameColor, pos = pos, whichSlider = 0 };
+
+                KeybindList click = KeybindList.Parse("MouseLeft");
+                int width = Math.Min(Game1.uiViewport.Width / 4, 400);
+
+                byte mousePercentage = (byte)(int)((Utility.Clamp(Game1.getOldMouseX(), pos.X, pos.X + width) - pos.X) / width * 255);
+
+                Rectangle barR = new Rectangle((int)pos.X, (int)pos.Y, width, 24);
+                Rectangle barG = new Rectangle((int)pos.X, (int)pos.Y + 80, width, 24);
+                Rectangle barB = new Rectangle((int)pos.X, (int)pos.Y + 160, width, 24);
+
+                if ((barR.Contains(Game1.getMouseX(), Game1.getMouseY()) && click.JustPressed()) || (state.whichSlider == 1 && click.IsDown()))
+                {
+                    state.whichSlider = 1;
+                    state.color.R = mousePercentage;
+                }
+                else if ((barG.Contains(Game1.getMouseX(), Game1.getMouseY()) && click.JustPressed()) || (state.whichSlider == 2 && click.IsDown()))
+                {
+                    state.whichSlider = 2;
+                    state.color.G = mousePercentage;
+                }
+                else if ((barB.Contains(Game1.getMouseX(), Game1.getMouseY()) && click.JustPressed()) || (state.whichSlider == 3 && click.IsDown()))
+                {
+                    state.whichSlider = 3;
+                    state.color.B = mousePercentage;
+                }
+                else if (state.whichSlider != 0) state.whichSlider = 0;
+
+                float scale = width / 400f;
+
+                Rectangle posR = new Rectangle((int)(pos.X + (state.color.R / 255f) * (width - 40)), (int)pos.Y, 40, 24);
+                Rectangle posG = new Rectangle((int)(pos.X + (state.color.G / 255f) * (width - 40)), (int)pos.Y + 80, 40, 24);
+                Rectangle posB = new Rectangle((int)(pos.X + (state.color.B / 255f) * (width - 40)), (int)pos.Y + 160, 40, 24);
+
+                StardewValley.Menus.IClickableMenu.drawTextureBox(b, Game1.mouseCursors, new Rectangle(403, 383, 6, 6), barR.X, barR.Y, barR.Width, barR.Height, Color.White, Game1.pixelZoom, false);
+                StardewValley.Menus.IClickableMenu.drawTextureBox(b, Game1.mouseCursors, new Rectangle(403, 383, 6, 6), barG.X, barG.Y, barG.Width, barG.Height, Color.White, Game1.pixelZoom, false);
+                StardewValley.Menus.IClickableMenu.drawTextureBox(b, Game1.mouseCursors, new Rectangle(403, 383, 6, 6), barB.X, barB.Y, barB.Width, barB.Height, Color.White, Game1.pixelZoom, false);
+
+                b.Draw(Game1.mouseCursors, new Vector2(posR.X, posR.Y), new Rectangle(420, 441, 10, 6), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.9f);
+                b.Draw(Game1.mouseCursors, new Vector2(posG.X, posG.Y), new Rectangle(420, 441, 10, 6), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.9f);
+                b.Draw(Game1.mouseCursors, new Vector2(posB.X, posB.Y), new Rectangle(420, 441, 10, 6), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.9f);
+
+                b.DrawString(Game1.smallFont, "R:" + string.Format("{0,6}", state.color.R), new Vector2(barR.X + width + 20, barR.Y - 4), Color.Black);
+                b.DrawString(Game1.smallFont, "G:" + string.Format("{0,6}", state.color.G), new Vector2(barG.X + width + 20, barG.Y - 4), Color.Black);
+                b.DrawString(Game1.smallFont, "B:" + string.Format("{0,6}", state.color.B), new Vector2(barB.X + width + 20, barB.Y - 4), Color.Black);
+
+                Vector2 screenMid = new Vector2(pos.X - (width / 1.5f), pos.Y + 90);
+
+                b.Draw(Game1.mouseCursors, screenMid, new Rectangle(31, 1870, 73, 49), state.color, 0f, new Vector2(36.5f, 22.5f), 4f * scale, SpriteEffects.None, 0.2f);
+                b.Draw(MinigamesStart.minigameTextures[0], screenMid, null, state.color, 0f, new Vector2(69f, 37f), 2f * scale, SpriteEffects.None, 0.3f);
+                b.Draw(MinigamesStart.minigameTextures[1], screenMid + new Vector2(-50f, 0f), new Rectangle(355, 86, 26, 26), state.color, 0f, new Vector2(13f), 1f * scale, SpriteEffects.None, 0.4f);
+
+                b.Draw(MinigamesStart.minigameTextures[1], screenMid + new Vector2(50f, 0), new Rectangle(322, 82, 12, 12), state.color, 0f, new Vector2(6f), 2f * scale, SpriteEffects.None, 0.4f);
+                b.Draw(Game1.mouseCursors, screenMid, new Rectangle(301, 288, 15, 15), state.color * 0.95f, 0f, new Vector2(7.5f, 7.5f), 2f * scale, SpriteEffects.None, 0.5f);
+                b.DrawString(Game1.smallFont, "5", screenMid + new Vector2(0, 2f), state.color, 0f, Game1.smallFont.MeasureString("5") / 2f, 1f * scale, SpriteEffects.None, 0.51f);
+
+                b.Draw(Game1.mouseCursors, screenMid + new Vector2(width * -0.6f, -45), new Rectangle(395, 497, 3, 8), state.color, 0f, new Vector2(1.5f, 4f), 4f, SpriteEffects.None, 0.98f);
+                b.Draw(Game1.mouseCursors, screenMid + new Vector2(width * -0.6f, 0), new Rectangle(407, 1660, 10, 10), state.color, 0f, new Vector2(5f), 3.3f, SpriteEffects.None, 0.98f);
+                b.Draw(Game1.mouseCursors, screenMid + new Vector2(width * -0.6f, 45), new Rectangle(473, 36, 24, 24), state.color, 0f, new Vector2(12f), 2f, SpriteEffects.None, 0.98f);
+                b.DrawString(Game1.smallFont, "A", screenMid + new Vector2(width * -0.6f, 47) - (Game1.smallFont.MeasureString("A") / 2 * 1.2f), state.color, 0f, Vector2.Zero, 1.2f, SpriteEffects.None, 1f); //text
+            }
+            void Save()
+            {
+                if (state == null) return;
+                config.MinigameColor = state.color;
+            }
+
+            GenericMC.AddSectionTitle(mod, () => ".   " + translate.Get("GenericMC.MinigameColor"));
+            GenericMC.AddComplexOption(mod, () => "", () => "", Draw, Save, () => 300);
         }
 
-
-
-
-        private void OnButtonPressed(object sender, ButtonPressedEventArgs e)
+        private void GameLoop_SaveLoaded(object sender, SaveLoadedEventArgs e)
         {
-            if (!Context.IsWorldReady || !(e.Button == SButton.F5)) return; // ignore if player hasn't loaded a save yet
-            config = Helper.ReadConfig<ModConfig>();
-            translate = Helper.Translation;
             UpdateConfig(false);
         }
-
-
-        private void OnDayStarted(object sender, DayStartedEventArgs e)
-        {
-            UpdateConfig(false);
-        }
-
-        private void Rendered(object sender, RenderedEventArgs e)
-        {
-            if (overlay.Value == null) overlay.Value = new Overlay(this);
-            if (Context.IsWorldReady) overlay.Value.Rendered(sender, e);
-        }
-
-        private void OnMenuChanged(object sender, MenuChangedEventArgs e)   //Minigame data
-        {
-            if (overlay.Value == null) overlay.Value = new Overlay(this);
-            if (Context.IsWorldReady) overlay.Value.OnMenuChanged(sender, e);
-        }
-        private void OnRenderMenu(object sender, RenderedActiveMenuEventArgs e)
-        {
-            if (Context.IsWorldReady) overlay.Value?.OnRenderMenu(sender, e);
-        }
-
         private void OnModMessageReceived(object sender, ModMessageReceivedEventArgs e)
         {
-            if (Context.IsWorldReady) overlay?.Value?.OnModMessageReceived(sender, e);
+            minigame.Value.OnModMessageReceived(sender, e);
+        }
+        //private void OnWarped(object sender, WarpedEventArgs e)
+        //{
+        //    minigame.Value.OnWarped(sender, e);
+        //}
+        private void Input_ButtonsChanged(object sender, ButtonsChangedEventArgs e)  //this.Monitor.Log(locationName, LogLevel.Debug);
+        {
+            if (!Context.IsWorldReady) return;
+            if (e.Pressed.Contains(SButton.F5))
+            {
+                UpdateConfig(false);
+            }
+            if (Game1.player.IsLocalPlayer) minigame.Value.Input_ButtonsChanged(sender, e);
         }
 
-        private void OnWarped(object sender, WarpedEventArgs e)
+        private void GameLoop_UpdateTicking(object sender, UpdateTickingEventArgs e) //adds item to inv
         {
-            overlay.Value?.OnWarped(sender, e);
+            if (!Context.IsWorldReady || !Game1.player.IsLocalPlayer) return;
+
+            if (minigame.Value == null)
+            {
+                minigame.Value = new Minigames(this);
+            }
+
+            try
+            {
+                minigame.Value.GameLoop_UpdateTicking(sender, e);
+            }
+            catch (Exception ex)
+            {
+                Monitor.Log("Handled Exception in UpdateTicking. Festival: " + Game1.isFestival() + ", Message: " + ex.Message + " in: " + exception.Match(ex.StackTrace).Value, LogLevel.Trace);
+                minigame.Value.EmergencyCancel();
+            }
+        }
+
+        private void Display_Rendered(object sender, RenderedEventArgs e)//festival 1
+        {
+            if (!Context.IsWorldReady) return;
+            try
+            {
+                minigame.Value.Display_Rendered(e.SpriteBatch);
+            }
+            catch (Exception ex)
+            {
+                Monitor.Log("Handled Exception in Rendered. Festival: " + Game1.isFestival() + ", Message: " + ex.Message + " in: " + exception.Match(ex.StackTrace).Value, LogLevel.Trace);
+                minigame.Value.EmergencyCancel();
+            }
+        }
+        private void Display_RenderedWorld(object sender, RenderedWorldEventArgs e)//regular
+        {
+            if (!Context.IsWorldReady) return;
+            try
+            {
+                if (minigame.Value.fishingFestivalMinigame != 1) minigame.Value.Display_RenderedAll(e.SpriteBatch);
+            }
+            catch (Exception ex)
+            {
+                Monitor.Log("Handled Exception in RenderedWorld. Festival: " + Game1.isFestival() + ", Message: " + ex.Message + " in: " + exception.Match(ex.StackTrace).Value, LogLevel.Trace);
+                minigame.Value.EmergencyCancel();
+            }
+        }
+
+
+        private void Display_RenderingWorld(object sender, RenderingWorldEventArgs e)
+        {
+            if (!Context.IsWorldReady) return;
+            try
+            {
+                minigame.Value.Display_RenderingWorld(sender, e);
+            }
+            catch (Exception ex)
+            {
+                Monitor.Log("Handled Exception in RenderedWorld. Festival: " + Game1.isFestival() + ", Message: " + ex.Message + " in: " + exception.Match(ex.StackTrace).Value, LogLevel.Trace);
+                minigame.Value.EmergencyCancel();
+            }
+        }
+
+
+        private void OnAssetRequested(object sender, AssetRequestedEventArgs e)
+        {
+            if (canStartEditingAssets)
+            {
+                if (e.Name.IsEquivalentTo("Strings/StringsFromCSFiles"))
+                {
+                    translate = Helper.Translation;
+                    e.Edit(asset =>
+                    {
+                        var data = asset.AsDictionary<string, string>().Data;
+                        foreach (string itemID in data.Keys.ToArray())
+                        {
+                            try
+                            {
+                                switch (itemID)
+                                {
+                                    case "FishingRod.cs.14041":
+                                        data[itemID] = translate.Get("Rod.Fishing");
+                                        break;
+                                    case "FishingRod.cs.14042":
+                                        data[itemID] = translate.Get("Rod.FishingDesc");
+                                        break;
+                                    case "FishingRod.cs.trainingRodDescription":
+                                        data[itemID] = AddEffectDescriptions("Training Rod", translate.Get("Rod.TrainingDesc"));
+                                        break;
+                                    case "FishingRod.cs.14045":
+                                        data[itemID] = translate.Get("Bamboo Pole");
+                                        break;
+                                    case "FishingRod.cs.14046":
+                                        data[itemID] = translate.Get("Training Rod");
+                                        break;
+                                    case "FishingRod.cs.14047":
+                                        data[itemID] = translate.Get("Fiberglass Rod");
+                                        break;
+                                    case "FishingRod.cs.14048":
+                                        data[itemID] = translate.Get("Iridium Rod");
+                                        break;
+                                    case "SkillPage.cs.11598":
+                                        data[itemID] = translate.Get("Rod.Skill");
+                                        break;
+                                    case "FishingRod.cs.14083":
+                                        if (config.ConvertToMetric) data[itemID] = "{0} cm";
+                                        break;
+                                    default:
+                                        continue;
+                                }
+                            }
+                            catch (Exception)
+                            {
+                                Monitor.Log("Could not load string for Rod to Net change, line: " + data[itemID] + ". Are the translations missing? Ignore if you removed them intentionally.", LogLevel.Warn);
+                            }
+                        }
+                    });
+                }
+                else if (e.Name.IsEquivalentTo("Data/ObjectInformation"))
+                {
+                    translate = Helper.Translation;
+                    e.Edit(asset =>
+                    {
+                        var data = asset.AsDictionary<string, string>().Data;
+                        foreach (string itemID in data.Keys.ToArray())
+                        {
+                            try
+                            {
+                                string[] itemData = data[itemID].Split('/');
+                                switch (itemID)
+                                {
+                                    //bait
+                                    case "(O)685"://bait
+                                    case "(O)774"://wild bait
+                                        itemData[5] = AddEffectDescriptions(itemData[0]);
+                                        break;
+                                    case "(O)703"://magnet
+                                    case "(O)908"://magic bait
+                                        itemData[5] = AddEffectDescriptions(itemData[0], itemData[5]);
+                                        break;
+                                    //tackle
+                                    case "(O)686"://spinner
+                                    case "(O)687"://dressed
+                                    case "(O)694"://trap
+                                    case "(O)695"://cork
+                                    case "(O)692"://lead
+                                    case "(O)693"://treasure
+                                    case "(O)691"://barbed
+                                    case "(O)877"://quality
+                                        itemData[4] = translate.Get(itemData[0]);
+                                        itemData[5] = AddEffectDescriptions(itemData[0]);
+                                        break;
+                                    case "(O)856"://curiosity
+                                        itemData[4] = translate.Get(itemData[0]);
+                                        itemData[5] = AddEffectDescriptions(itemData[0], itemData[5]);
+                                        break;
+                                    default:
+                                        continue;
+                                }
+                                data[itemID] = string.Join("/", itemData);
+                                itemIDs[itemData[0]] = itemID;
+                            }
+                            catch (Exception)
+                            {
+                                Monitor.LogOnce("Could not load string for Rod to Net change, line: " + data[itemID] + ". Are the translations missing? Ignore if you removed them intentionally.", LogLevel.Warn);
+                            }
+                        }
+                    });
+                }
+                else
+                {
+                    try
+                    {
+                        if (e.Name.IsEquivalentTo("Maps/springobjects"))
+                        {
+                            e.Edit(asset =>
+                            {
+                                Texture2D sourceImage;
+                                var editor = asset.AsImage();
+                                sourceImage = Helper.ModContent.Load<Texture2D>("assets/bait_magnet.png");
+                                editor.PatchImage(sourceImage, targetArea: new Rectangle(112, 464, 16, 16));
+                                sourceImage = Helper.ModContent.Load<Texture2D>("assets/tackle_basic.png");
+                                editor.PatchImage(sourceImage, targetArea: new Rectangle(304, 448, 80, 16));
+                                sourceImage = Helper.ModContent.Load<Texture2D>("assets/tackle_curiosity.png");
+                                editor.PatchImage(sourceImage, targetArea: new Rectangle(256, 560, 16, 16));
+                                sourceImage = Helper.ModContent.Load<Texture2D>("assets/tackle_quality.png");
+                                editor.PatchImage(sourceImage, targetArea: new Rectangle(208, 576, 16, 16));
+                                sourceImage = Helper.ModContent.Load<Texture2D>("assets/tackle_spinners.png");
+                                editor.PatchImage(sourceImage, targetArea: new Rectangle(224, 448, 32, 16));
+                                sourceImage.Dispose();
+                            });
+                        }
+                        else if (e.Name.IsEquivalentTo("TileSheets/tools"))
+                        {
+                            e.Edit(asset =>
+                            {
+                                Texture2D sourceImage;
+                                var editor = asset.AsImage();
+                                sourceImage = Helper.ModContent.Load<Texture2D>("assets/rod_sprites.png");
+                                editor.PatchImage(sourceImage, targetArea: new Rectangle(128, 0, 64, 16));
+                                sourceImage = Helper.ModContent.Load<Texture2D>("assets/rod_farmer.png");
+                                editor.PatchImage(sourceImage, targetArea: new Rectangle(0, 289, 295, 95));
+                                sourceImage.Dispose();
+                            });
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        Monitor.Log("Could not load images for the " + ((e.Name.IsEquivalentTo("Maps/springobjects")) ? "bait/tackles" : "fishing nets") + "! Are the assets missing? Ignore if you removed them intentionally.", LogLevel.Warn);
+                    }
+                }
+            }
+        }
+
+        public static string AddEffectDescriptions(string itemName, string initialText = null)
+        {
+            foreach (var effect in config.SeeInfoForBelowData[itemName])
+            {
+                if (effect.Value == 0) continue;
+                if (!effect.Key.StartsWith("EXTRA_", StringComparison.Ordinal))
+                {
+                    if (initialText != null) initialText += "\n";
+                    initialText += translate.Get("Effects." + effect.Key).Tokens(new { val = effect.Value });
+                }
+            }
+            if (config.SeeInfoForBelowData[itemName].TryGetValue("EXTRA_MAX", out int max) && config.SeeInfoForBelowData[itemName].TryGetValue("EXTRA_CHANCE", out int chance) && max != 0 && chance != 0)
+            {
+                if (initialText != null) initialText += "\n";
+                initialText += translate.Get("Effects.EXTRA").Tokens(new { max, chance });
+            }
+            return initialText;
+        }
+
+
+        private void StartMinigameTest(string commandname, string[] args)
+        {
+            minigame.Value.DebugConsoleStartMinigameTest(args);
         }
 
         private void UpdateConfig(bool GMCM)
         {
-            for (int i = 0; i < 4; i++)
+            if (!GMCM) config = Helper.ReadConfig<ModConfig>();
+
+            int fix = 0;
+            foreach (var item in config.SeeInfoForBelowData.ToArray())//updates old configs to new format
             {
-                Overlay.barPosition[i] = new Vector2(config.BarTopLeftLocationX[i] + 2, config.BarTopLeftLocationY[i] + 2); //config: Position of bar
-            }
-
-            Overlay.backgroundMode = config.BarBackgroundMode;                                                              //config: 0=Circles (dynamic), 1=Rectangle (single), 2=Off
-            Overlay.barCrabEnabled = config.BarCrabPotEnabled;                                                              //config: If bait/tackle/bait preview is enabled when holding a fishing rod
-            Overlay.barScale = config.BarScale;                                                                             //config: Custom scale for the location bar.
-            Overlay.sonarMode = config.BarSonarMode;                                                                        //config: Sonar requirement: 0=everything, 1=minigame, 2=shift scan, 3=not needed
-            Overlay.iconMode = config.BarIconMode;                                                                          //config: 0=Horizontal Icons, 1=Vertical Icons, 2=Vertical Icons + Text, 3=Off
-            Overlay.maxIcons = config.BarMaxIcons;                                                                          //config: ^Max amount of tackle + trash + fish icons
-            Overlay.maxIconsPerRow = config.BarMaxIconsPerRow;                                                              //config: ^How many per row/column.
-            Overlay.onlyFish = config.OnlyFish;                                                                             //config: Whether to hide things like furniture.
-            Overlay.miniMode = config.MinigamePreviewMode;                                                                  //config: Fish preview in minigame: 0=Full, 1=Simple, 2=BarOnly, 3=Off
-            Overlay.scanRadius = config.BarScanRadius;                                                                      //config: 0: Only checks if can fish, 1-50: also checks if there's water within X tiles around player.
-            Overlay.showPercentages = config.BarShowPercentages;                                                            //config: Whether it should show catch percentages.
-            Overlay.showTackles = config.BarShowBaitAndTackleInfo;                                                          //config: Whether it should show Bait and Tackle info.
-            Overlay.sortMode = config.BarSortMode;                                                                          //config: 0= By Name (text mode only), 1= By Percentage, 2=Off
-            Overlay.uncaughtDark = config.UncaughtFishAreDark;                                                              //config: Whether uncaught fish are displayed as ??? and use dark icons
-
-            if (config.BarExtraCheckFrequency > 22) config.BarExtraCheckFrequency /= 10;
-            Overlay.extraCheckFrequency = config.BarExtraCheckFrequency;                                                    //config: 20-220: Bad performance dynamic check to see if there's modded/hardcoded fish
-
-            Overlay.colorBg = new Color(config.BarBackgroundColorRGBA[0], config.BarBackgroundColorRGBA[1], config.BarBackgroundColorRGBA[2], config.BarBackgroundColorRGBA[3]);
-            Overlay.colorText = new Color(config.BarTextColorRGBA[0], config.BarTextColorRGBA[1], config.BarTextColorRGBA[2], config.BarTextColorRGBA[3]);
-
-            if (!GMCM)
-            {
-                Overlay.locationData = DataLoader.Locations(Game1.content);       //gets location data (which fish are here)
-                Overlay.fishData = DataLoader.Fish(Game1.content);                   //gets fish data
-                Overlay.background[0] = WhiteCircle(17, 30);
-                Overlay.background[1] = WhitePixel();
-            }
-
-            overlay.ResetAllScreens();
-        }
-
-
-        private Texture2D WhitePixel() //returns a single pixel texture that can be recoloured and resized to make up a background
-        {
-            Texture2D whitePixel = new Texture2D(Game1.graphics.GraphicsDevice, 1, 1);
-            whitePixel.SetData(new[] { Color.White });
-            return whitePixel;
-        }
-        private Texture2D WhiteCircle(int width, int thickness) //returns a circle texture that can be recoloured and resized to make up a background. Width works better with Odd Numbers.
-        {
-            Texture2D whitePixel = new Texture2D(Game1.graphics.GraphicsDevice, width, width);
-
-            Color[] data = new Color[width * width];
-
-            float radiusSquared = (width / 2) * (width / 2);
-
-            for (int x = 0; x < width; x++)
-            {
-                for (int y = 0; y < width; y++)
+                foreach (var effect in item.Value.ToArray())
                 {
-                    float dx = x - (width / 2);
-                    float dy = y - (width / 2);
-                    float distanceSquared = dx * dx + dy * dy;
-
-                    if (distanceSquared <= radiusSquared + thickness)
+                    if (effect.Key.Equals("DOUBLE", StringComparison.Ordinal))
                     {
-                        data[(x + y * width)] = Color.White;
+                        config.SeeInfoForBelowData[item.Key].Remove(effect.Key);
+                        if (item.Key.Equals("Wild Bait", StringComparison.Ordinal))
+                        {
+                            config.SeeInfoForBelowData[item.Key]["EXTRA_MAX"] = 2;
+                            config.SeeInfoForBelowData[item.Key]["EXTRA_CHANCE"] = 20;
+                        }
+                        else
+                        {
+                            config.SeeInfoForBelowData[item.Key]["EXTRA_MAX"] = 0;
+                            config.SeeInfoForBelowData[item.Key]["EXTRA_CHANCE"] = 0;
+                        }
+                        fix++;
                     }
                 }
             }
+            if (fix > 0) Helper.WriteConfig(config);
 
-            whitePixel.SetData(data);
-            return whitePixel;
+            Minigames.itemData = config.SeeInfoForBelowData;
+
+            if (Minigames.voices == null)
+            {
+                Minigames.voices = new Dictionary<string, SoundEffect>();
+                try
+                {
+                    DirectoryInfo dir = new DirectoryInfo(Path.Combine(Helper.DirectoryPath, "assets/audio"));
+
+                    if (!dir.Exists) throw new DirectoryNotFoundException();
+
+                    FileInfo[] files = dir.GetFiles("*.wav");
+
+                    foreach (FileInfo file in files)
+                    {
+                        Minigames.voices[Path.GetFileNameWithoutExtension(file.Name)] = SoundEffect.FromStream(file.Open(FileMode.Open));
+                    }
+                    //Minigames.fishySound["Mute"] = SoundEffect.FromStream(new FileStream(Path.Combine(Helper.DirectoryPath, "assets/audio", "Mute.wav"), FileMode.Open));
+                }
+                catch (Exception ex)
+                {
+                    Monitor.Log($"error loading audio: {ex}", LogLevel.Error);
+                }
+            }
+
+            for (int i = 0; i < 4; i++)
+            {
+                if (!config.Voice_Test_Ignore_Me[i].Equals(config.VoiceVolume + "/" + config.VoiceType[i] + "/" + config.VoicePitch[i], StringComparison.Ordinal)) //play voice and save it if changed
+                {
+                    config.Voice_Test_Ignore_Me[i] = config.VoiceVolume + "/" + config.VoiceType[i] + "/" + config.VoicePitch[i];
+                    if (Minigames.voices.TryGetValue(config.VoiceType[i], out SoundEffect sfx)) sfx.Play(config.VoiceVolume / 100f * 0.98f, config.VoicePitch[i] / 100f, 0f);
+                    Helper.WriteConfig(config);
+                }
+
+                try //keybinds
+                {
+                    if (config.KeyBinds.Equals("") || config.KeyBinds.Equals(" ")) throw new FormatException("String can't be empty.");
+                    Minigames.keyBinds[i] = KeybindList.Parse(config.KeyBinds[i]);
+                }
+                catch (Exception e)
+                {
+                    string def = "MouseLeft, C, ControllerX";
+                    Minigames.keyBinds[i] = KeybindList.Parse(def);
+                    config.KeyBinds[i] = def;
+                    Helper.WriteConfig(config);
+                    Monitor.Log(e.Message + " Resetting KeyBinds for screen " + (i + 1) + " to default. For key names, see: https://stardewcommunitywiki.com/Modding:Player_Guide/Key_Bindings", LogLevel.Error);
+                }
+
+                Minigames.voicePitch[i] = config.VoicePitch[i] / 100f;
+            }
+            if (Context.IsWorldReady)
+            {
+                Minigames.voiceVolume = config.VoiceVolume / 100f;
+                Minigames.voiceType = config.VoiceType;
+                Minigames.freeAim = config.FreeAim;
+                Minigames.startMinigameStyle = config.StartMinigameStyle;
+                Minigames.endMinigameStyle = config.EndMinigameStyle;
+                Minigames.endCanLoseTreasure = config.EndLoseTreasureIfFailed;
+                Minigames.minigameDamage = config.EndMinigameDamage;
+                Minigames.minigameDifficulty = config.MinigameDifficulty;
+                Minigames.festivalMode = config.FestivalMode;
+                Minigames.realisticSizes = config.RealisticSizes;
+                Minigames.fishTankSprites = config.FishTankHoldSprites;
+                Minigames.minigameColor = config.MinigameColor;
+                MinigamesStart.minigameStyle = config.StartMinigameStyle;
+                MinigamesStart.minigameColor = config.MinigameColor;
+                MinigamesStart.minigameDifficulty = config.MinigameDifficulty;
+                MinigamesStart.startMinigameScale = config.StartMinigameScale;
+                MinigamesStart.tutorialSkip = config.TutorialSkip;
+                MinigamesStart.bossTransparency = config.BossTransparency;
+                if (LocalizedContentManager.CurrentLanguageCode == 0 && Minigames.metricSizes != config.ConvertToMetric)
+                {
+                    Minigames.metricSizes = config.ConvertToMetric;
+                    Helper.GameContent.InvalidateCache("Strings/StringsFromCSFiles");
+                }
+                Helper.GameContent.InvalidateCache("Data/ObjectInformation");
+            }
         }
     }
 }
