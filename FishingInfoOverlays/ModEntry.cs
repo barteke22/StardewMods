@@ -190,7 +190,7 @@ namespace StardewMods
 
         private void OnModMessageReceived(object sender, ModMessageReceivedEventArgs e)
         {
-            if (Context.IsWorldReady) overlay.Value.OnModMessageReceived(sender, e);
+            if (Context.IsWorldReady) overlay?.Value?.OnModMessageReceived(sender, e);
         }
 
         private void OnWarped(object sender, WarpedEventArgs e)
