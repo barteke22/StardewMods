@@ -515,7 +515,7 @@ namespace StardewMods
             Point playerTile = player.TilePoint;
             if (itemQueryContext == null)
             {
-                itemQueryContext = new ItemQueryContext(location, null, Game1.random);
+                itemQueryContext = new ItemQueryContext(location, null, Game1.random, "");
             }
             IEnumerable<SpawnFishData> possibleFish = dictionary["Default"].Fish;
             if (locationData != null && locationData.Fish?.Count > 0)
@@ -772,7 +772,7 @@ namespace StardewMods
                     who.luckLevel.Value = Game1.player.LuckLevel;
                     foreach (var item in Game1.player.fishCaught) who.fishCaught.Add(item);
                     foreach (var m in Game1.player.secretNotesSeen) who.secretNotesSeen.Add(m);
-                    who.stats.Values = new(Game1.player.stats.Values);
+                    who.stats.Values = new();
                 }
                 if (oldGeneric == null)
                 {
