@@ -1,4 +1,6 @@
 {
+	"GenericMC.translation": "翻訳: trytobetheonlyone",
+
 	"GenericMC.barLabel": "プレビューバー （場所）",
 	"GenericMC.barDescription": "釣りざお（エサ・釣り具・ゴミ・魚）、カニかご（ゴミ・エビなど）を持っている時に位置情報を示すバーです",
 	"GenericMC.barDescription2": "変数名にカーソルを合わせると、詳細が示されます.釣ざおを持ちながらセーブすると、このメニューに結果が更新されます.",

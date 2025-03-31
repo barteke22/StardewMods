@@ -1,4 +1,6 @@
 {
+	"GenericMC.translation": "Traduction: CaranudLapin",
+
 	"GenericMC.barLabel": "Barre d’aperçu (lieu)",
 	"GenericMC.barDescription": "Une barre qui montre les informations du lieu lorsque vous tenez une canne à pêche (appât/leurre/déchets/poisson ici) ou un casier à crabes (déchets/crustacés ici).",
 	"GenericMC.barDescription2": "Vous pouvez survoler le nom de la variable pour plus d’information. Si vous tenez une canne à pêche et sauvegardez, vous pouvez voir les résultats se mettre à jour dans ce menu.",

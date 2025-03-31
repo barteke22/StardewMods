@@ -1,4 +1,6 @@
 {
+	"GenericMC.translation": "Translation: barteke22",
+
 	"GenericMC.barLabel": "Preview Bar (Location)",
 	"GenericMC.barDescription": "The bar that shows location info when holding a Fishing Rod (bait/tackle/trash/fish here), or Crab Pot (trash/crustaceans here).",
 	"GenericMC.barDescription2": "You can hover over the variable names for more info. If you're holding a fishing rod and save, you can see the results update while in this menu.",

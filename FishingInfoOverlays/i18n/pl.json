@@ -1,4 +1,6 @@
 ﻿{
+	"GenericMC.translation": "Tłumaczenie: barteke22",
+
 	"GenericMC.barLabel": "Pasek Info (miejsce)",
 	"GenericMC.barDescription": "Pasek pokazujący informacje o miejscu przy trzymaniu wędki (przynęta/spławik/śmieci/ryby tutaj) lub pułapki na kraby (śmieci/skorupiaki tutaj).",
 	"GenericMC.barDescription2": "Możesz najechać kursorem na nazwę pozycji, aby uzyskać więcej informacji o niej. Jeśli trzymasz teraz wędkę i zapiszesz, możesz zobaczyć rezultat w tym menu.",

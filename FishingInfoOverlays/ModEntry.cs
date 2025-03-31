@@ -46,6 +46,7 @@ namespace StardewMods
             {
                 GenericMC.Register(ModManifest, () => config = new ModConfig(), () => Helper.WriteConfig(config));
                 GenericMC.AddSectionTitle(ModManifest, () => translate.Get("GenericMC.barLabel")); //All of these strings are stored in the traslation files.
+                GenericMC.AddParagraph(ModManifest, () => "Translation: barteke22".Equals(translate.Get("GenericMC.translation"), StringComparison.Ordinal) ? "" : translate.Get("GenericMC.translation"));
                 GenericMC.AddParagraph(ModManifest, () => translate.Get("GenericMC.barDescription"));
                 GenericMC.AddParagraph(ModManifest, () => translate.Get("GenericMC.barDescription2"));
 
