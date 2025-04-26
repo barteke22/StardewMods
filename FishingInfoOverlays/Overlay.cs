@@ -390,7 +390,7 @@ namespace StardewMods
             // Checks if the "fish" is caught or its an "other" item that has been shipped/found.
             return (!uncaughtDark[screen] 
                 || who.fishCaught.ContainsKey(data.QualifiedItemId) 
-                || (data.Category != Object.FishCategory && (who.archaeologyFound.ContainsKey(data.ItemId) || who.basicShipped.ContainsKey(data.ItemId))));
+                || (data.Category != Object.FishCategory));
         }
 
         public void OnMenuChanged(object sender, MenuChangedEventArgs e)   //Minigame data
