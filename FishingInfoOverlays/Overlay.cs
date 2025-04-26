@@ -327,7 +327,7 @@ namespace StardewMods
                         if (iconCount < maxIcons[screen] && percent > 0)
                         {
                             var data = ItemRegistry.GetDataOrErrorItem(fish);
-                            bool caught = GetCaught(data);
+                            bool caught = !uncaughtDark[screen] || who.fishCaught.ContainsKey(data.QualifiedItemId) || (data.Category != Object.FishCategory);
                             if (fish == "(O)168") caught = true;
 
                             iconCount++;
@@ -383,14 +383,6 @@ namespace StardewMods
 
             batch.End();
             batch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise);
-        }
-
-        private bool GetCaught(StardewValley.ItemTypeDefinitions.ParsedItemData data)
-        {
-            // Checks if the "fish" is caught or its an "other" item that has been shipped/found.
-            return (!uncaughtDark[screen] 
-                || who.fishCaught.ContainsKey(data.QualifiedItemId) 
-                || (data.Category != Object.FishCategory));
         }
 
         public void OnMenuChanged(object sender, MenuChangedEventArgs e)   //Minigame data
