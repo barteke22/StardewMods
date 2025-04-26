@@ -385,6 +385,7 @@ namespace StardewMods
             batch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise);
         }
 
+
         public void OnMenuChanged(object sender, MenuChangedEventArgs e)   //Minigame data
         {
             if (e.NewMenu is BobberBar)
