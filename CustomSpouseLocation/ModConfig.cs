@@ -15,13 +15,11 @@ namespace StardewMods
         public string SpouseRoom_Auto_FurnitureChairs_UpOnly_Blacklist { get; set; } = "";
         public Dictionary<string, Vector2> SpouseRoom_Auto_Facing_TileOffset { get; set; } = new Dictionary<string, Vector2>()
         {
-            { "Default", new Vector2(-1.1f, 0f) },
-            { "sebastianFrog", new Vector2(0.5f, 1.5f) }
+            { "Default", new Vector2(-1.1f, 0f) }
         };
         public Dictionary<string, List<KeyValuePair<string, Vector2>>> SpouseRoom_Manual_TileOffsets { get; set; } = new Dictionary<string, List<KeyValuePair<string, Vector2>>>()
         {
-            { "Default", new List<KeyValuePair<string, Vector2>>() { new KeyValuePair<string, Vector2>("Up", new Vector2(-999f)) } },
-            { "sebastianFrog", new List<KeyValuePair<string, Vector2>>() { new KeyValuePair<string, Vector2>("Down", new Vector2(-999f)) } }
+            { "Default", new List<KeyValuePair<string, Vector2>>() { new KeyValuePair<string, Vector2>("Up", new Vector2(-999f)) } }
         };
 
         //spouse kitchen

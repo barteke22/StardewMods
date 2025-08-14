@@ -19,7 +19,6 @@
 
     "GenericMC.SpouseRoomTile": "Auto: Facing Tile",
     "GenericMC.SpouseRoomTileDesc": "This is the 'interesting' tile used by Automation to\n determine where the spouse will be looking towards upon spawning, when not sitting.\n By default it's a 1.1 tile left of their spawn point.",
-    "GenericMC.SpouseRoomTileDesc2": "The sebastianFrog profile is a special hardcoded case, as Sebastian's\n spawn point changes a bit after a certain event - \nthe interesting tile in his room is then around the middle.",
 
     "GenericMC.Manual": "Manual Mode",
     "GenericMC.Hover": "Hover for info", //: Instructions //: Kitchen etc.
@@ -30,7 +29,6 @@
 
     "GenericMC.SpouseRoomManual": "Spouse Room",
     "GenericMC.SpouseRoomManualDesc": "This is triggered when the spouse spawns on the standard spouse room tile.\n Manual tile offsets are not limited to their room, and allow you to\n offset the location to anywhere in the house.",
-    "GenericMC.SpouseRoomManualDesc2": "The sebastianFrog profile is a special hardcoded case,\n as Sebastian's spawn point changes a bit after a certain event.",
     "GenericMC.Kitchen": "Kitchen",
     "GenericMC.KitchenDesc": "This is triggered when the spouse spawns on the standard tile in the kitchen.\n Manual tile offsets are not limited to the kitchen, and allow you to\n offset the location to anywhere in the house.",
     "GenericMC.Patio": "Patio",

@@ -18,6 +18,10 @@
         {
             "UniqueID": "aedenthorn.MultipleSpouses",
             "IsRequired": false
+        },
+        {
+            "UniqueID": "ApryllForever.PolyamorySweetLove",
+            "IsRequired": false
         }
     ],
     "UpdateKeys": [ "Nexus:9676" ]

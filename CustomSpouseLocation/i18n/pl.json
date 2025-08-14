@@ -19,8 +19,7 @@
 
     "GenericMC.SpouseRoomTile": "Auto: Kafelka Zwrotu",
     "GenericMC.SpouseRoomTileDesc": "'Interesujący' kafelek używany przez Automatykę do określenia,\n gdzie małżonek będzie spoglądał kiedy nie siedzi.\n Domyślnie jest to kafelek 1.1 na lewo od spawn-pointu.",
-    "GenericMC.SpouseRoomTileDesc2": "Profil sebastianFrog jest specjalnym przypadkiem,\n ponieważ spawn-point Sebastiana zmienia się nieco po pewnym zdarzeniu\n - 'interesujący' kafelek w jego pokoju znajduje się wtedy pośrodku.",
-
+    
     "GenericMC.Manual": "Tryb Ręczny",
     "GenericMC.Hover": "Najedź dla info", //: Instrukcje //: Kuchnia itp.
     "GenericMC.Instructions": "Instrukcje",
@@ -30,7 +29,6 @@
 
     "GenericMC.SpouseRoomManual": "Pokój Małżonka",
     "GenericMC.SpouseRoomManualDesc": "Gdy małżonek pojawia się na standardowym kafelku pokoju małżonka.\n Ręczne przesunięcie kafelka nie ogranicza go do ich pokoju i\n umożliwia przesunięcie lokalizacji w dowolne miejsce w domu.",
-    "GenericMC.SpouseRoomManualDesc2": "Profil sebastianFrog jest specjalnym przypadkiem, ponieważ spawn-point\n Sebastiana zmienia się nieco po pewnym zdarzeniu.",
     "GenericMC.Kitchen": "Kuchnia",
     "GenericMC.KitchenDesc": "Gdy małżonek pojawia się na standardowym kafelku w kuchni.\n Ręczne przesunięcie kafelka nie ogranicza go do kuchni i pozwala na przesunięcie lokalizacji w dowolne miejsce w domu.",
     "GenericMC.Patio": "Patio",
