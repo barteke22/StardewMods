@@ -1,0 +1,86 @@
+{
+	"GenericMC.translation": "Traducción: Zer0-sama",
+
+	"GenericMC.barLabel": "Barra de vista previa (ubicación)",
+	"GenericMC.barDescription": "La barra que muestra información de ubicación cuando se sostiene una caña de pescar (cebo/aparejos/basura/pez aquí) o una trampa para cangrejos (basura/crustáceos aquí).",
+	"GenericMC.barDescription2": "Puedes pasar el cursor sobre los nombres de las variables para obtener más información. Si guardas la información mientras sostienes una caña de pescar, podrás ver cómo se actualizan los resultados en este menú.",
+
+	"GenericMC.barSonarMode": "Requiere equipo de sonar",
+	"GenericMC.barSonarModeDesc": "Hace que el aparejo de sonar sea un requisito para ciertas funciones del mod:\nTodo el mod: desactiva toda la funcionalidad del mod si no hay sonar.\nMini + Escaneo: desactiva la vista previa del minijuego y el escaneo con Shift si no hay sonar.\nEscaneo con Shift: desactiva el apuntado con el ratón cuando se mantiene presionada la tecla Shift si no hay sonar.",
+	"GenericMC.barSonarMode0": "Todo el mod",
+	"GenericMC.barSonarMode1": "Mini + Escaneo",
+	"GenericMC.barSonarMode2": "Escaneo con Shift",
+
+	"GenericMC.barIconMode": "Estilo de Iconos",
+	"GenericMC.barIconModeDesc": "La dirección en la que se moverán los iconos de cebo/aparejo/basura/peces antes de dividirse en filas/columnas.",
+	"GenericMC.barIconMode0": "Iconos Horizontales",
+	"GenericMC.barIconMode1": "Iconos Verticales",
+	"GenericMC.barIconMode2": "Iconos Verticales + Texto",
+
+	"GenericMC.Disabled": "Desactivado",
+
+	"GenericMC.barPosX": "Posición Horizontal (X)",
+	"GenericMC.barPosXDesc": "Coordenada horizontal (X) de la esquina superior izquierda de la barra. Valores en píxeles desde 0 hasta el tamaño de tu pantalla.",
+	"GenericMC.barPosY": "Posición Vertical (Y)",
+	"GenericMC.barPosYDesc": "Coordenada vertical (Y) de la esquina superior izquierda de la barra. Valores en píxeles desde 0 hasta el tamaño de tu pantalla.",
+
+	"GenericMC.barScale": "Escala",
+	"GenericMC.barScaleDesc": "La barra escala junto con la escala de la interfaz, y esta variable permite ajustes más precisos. Valores de 0.1 a 10.",
+
+	"GenericMC.barMaxIcons": "Máximo de Iconos (en total)",
+	"GenericMC.barMaxIconsDesc": "Cantidad total de iconos que la barra puede mostrar. Valores de 4 a 500. Demasiados pueden causar retrasos.",
+	"GenericMC.barMaxIconsPerRow": "Máximo de Iconos (columna/fila)",
+	"GenericMC.barMaxIconsPerRowDesc": "Cantidad de iconos que se pueden mostrar antes de cambiar de columna (modo horizontal) o fila (modo vertical). Valores de 4 a 500. Preferiblemente, un número que sea divisor del total.",
+
+	"GenericMC.barBackgroundMode": "Estilo de Fondo",
+	"GenericMC.barBackgroundModeDesc": "El fondo oscuro detrás de los iconos, útil especialmente en modo de icono con texto. Los círculos se dibujan detrás de cada icono; el rectángulo se dibuja detrás de todo (mejor rendimiento).",
+	"GenericMC.barBackgroundMode0": "Círculos",
+	"GenericMC.barBackgroundMode1": "Rectángulo",
+
+	"GenericMC.barShowBaitTackle": "Mostrar Iconos de Cebo y Aparejo",
+	"GenericMC.barShowBaitTackleDesc": "Activa los iconos que muestran cuánta durabilidad de cebo y aparejo tiene tu caña de pescar actual (si tiene).",
+
+	"GenericMC.barShowPercentages": "Mostrar Porcentajes",
+	"GenericMC.barShowPercentagesDesc": "Muestra el porcentaje simulado de probabilidad de captura de cada pez debajo de su icono. Depende mucho de la Frecuencia de Revisión Extra: cuanto más alta, mejor.",
+
+	"GenericMC.barSortMode": "Estilo de Ordenamiento",
+	"GenericMC.barSortModeDesc": "Ordenar por nombre organiza los iconos alfabéticamente.\nOrdenar por probabilidad de captura (%) depende mucho de la Frecuencia de Revisión Extra: cuanto más alta, mejor.\nSin ordenamiento, el orden es: basura, por ID y extras.",
+	"GenericMC.barSortMode0": "Nombre",
+	"GenericMC.barSortMode1": "Probabilidad de Captura",
+
+	"GenericMC.barExtraCheckFrequency": "Frecuencia Dinámica",
+	"GenericMC.barExtraCheckFrequencyDesc": "Si es 0, no se simula la pesca y los porcentajes son menos precisos. Valores mayores simulan más intentos, mejorando la precisión pero afectando el rendimiento. En pantalla dividida, se ajusta según el número de jugadores para ayudar al rendimiento.",
+
+	"GenericMC.barScanRadius": "Radio de Escaneo",
+	"GenericMC.barScanRadiusDesc": "La superposición escaneará un área de X casillas alrededor del jugador en busca de agua y solo mostrará información de pesca del azulejo de agua más cercano (si hay).",
+
+	"GenericMC.barCrabPotEnabled": "Vista Previa Trampas para Cangrejos Activa",
+	"GenericMC.barCrabPotEnabledDesc": "Extiende la vista previa para que también funcione con las trampas para cangrejos.",
+
+	"GenericMC.barUncaughtDarker": "Peces Faltantes Aparecen Oscuros",
+	"GenericMC.barUncaughtDarkerDesc": "Hace que los iconos de peces no capturados aparezcan oscuros como en la pestaña de colecciones (también se aplica al minijuego). El modo de icono con texto los mostrará como \"???\".",
+
+	"GenericMC.barOnlyFish": "Solo Peces",
+	"GenericMC.barOnlyFishDesc": "La barra solo mostrará peces oficiales y basura, ignorando otros objetos como muebles o notas. Estos aún cuentan para los porcentajes. Algunos mods podrían no incluir sus peces en la lista oficial.",
+
+	"GenericMC.MinigameLabel": "Vista Previa (Minijuego)",
+	"GenericMC.MinigameDescription": "Si está activado, el minijuego de pesca mostrará una vista previa del pez que estás pescando en lugar del icono genérico.",
+	"GenericMC.MinigameDescription2": "Mientras el mod sobrescriba la variable de posición de la barra de corcho, debería funcionar. De lo contrario, puedes probar otro modo o desactivar la vista previa aquí.",
+
+	"GenericMC.MinigameMode": "Estilo de Minijuego",
+	"GenericMC.MinigameModeDesc": "Completo: Copia varias capas para lucir mejor.\nSimple: Solo superpone el pescado, se ve peor, pero puede funcionar/mejora el rendimiento.\nSolo Barra (incluido en los dos anteriores): Delinea el pez en la barra de ubicación regular (si está activada).",
+	"GenericMC.MinigameMode0": "Completo",
+	"GenericMC.MinigameMode1": "Simple",
+	"GenericMC.MinigameMode2": "Solo Barra",
+
+	"GenericMC.SplitScreenDesc": "Configuraciones específicas para Pantalla Dividida, solo importantes para jugadores en pantalla dividida. Solo el jugador principal debería cambiarlas.",
+	"GenericMC.SplitScreen2": "Pantalla Dividida 2: (Arriba) Derecha",
+	"GenericMC.SplitScreen3": "Pantalla Dividida 3: Abajo Izquierda",
+	"GenericMC.SplitScreen4": "Pantalla Dividida 4: Abajo Derecha",
+
+	"GenericMC.barColors": "Personalización de Colores",
+	"GenericMC.barBackgroundColor": "Color de Fondo",
+	"GenericMC.barTextColor": "Color del Texto",
+
+	"Bar.CrabMineWarning": "Mala idea: las trampas para cangrejos colocadas en las minas se perderán al salir."
+}
