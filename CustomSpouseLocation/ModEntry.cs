@@ -26,7 +26,6 @@ namespace StardewMods
         private List<NPC> spouses;
         private Dictionary<string, Vector2> patioPoints;
         private FarmHouse houseCache;
-        private int mode;//0= 1.5.4, 2= 1.5.5+
         private Vector2 defaultTile;//only used to room size in auto
 
         //editor stuff
@@ -52,9 +51,6 @@ namespace StardewMods
 
         public override void Entry(IModHelper helper)
         {
-            if (Constants.ApiVersion.IsOlderThan("3.13.0-beta")) mode = 0;
-            else mode = 2;
-
             config = helper.ReadConfig<ModConfig>();
             translate = helper.Translation;
 
@@ -143,7 +139,7 @@ namespace StardewMods
 
 
                     //dummy value validation trigger - must be the last thing, so all values are saved before validation
-                    GenericMC.AddComplexOption(ModManifest, () => "", () => "", (SpriteBatch b, Vector2 pos) => { }, () => UpdateConfig(true));
+                    GenericMC.AddComplexOption(ModManifest, () => "", tooltip: () => "", draw: (SpriteBatch b, Vector2 pos) => { }, beforeSave: () => UpdateConfig(true));
                 }
                 catch (Exception)
                 {
@@ -215,6 +211,7 @@ namespace StardewMods
         public void GenericMCDictionaryEditor(IGenericModConfigMenuApi GenericMC, IManifest mod, string name, int which)//GMCM Widget
         {
             DictionaryEditor state = null;
+
             void Draw(SpriteBatch b, Vector2 pos)
             {
                 if (state == null)
@@ -543,11 +540,16 @@ namespace StardewMods
                 }
             }
 
+            void Reset()
+            {
+                state = null;
+            }
+
             if (which == 0) GenericMC.AddSectionTitle(mod, () => translate.Get("GenericMC.Hover") + ": " + translate.Get("GenericMC.SpouseRoomTile"), () => translate.Get("GenericMC.SpouseRoomTileDesc"));
             else if (which == 1) GenericMC.AddSectionTitle(mod, () => translate.Get("GenericMC.Hover") + ": " + translate.Get("GenericMC.SpouseRoomManual"), () => translate.Get("GenericMC.SpouseRoomManualDesc") + "\n\n" + translate.Get("GenericMC.SharedManualDesc"));
             else GenericMC.AddSectionTitle(mod, () => translate.Get("GenericMC.Hover") + ": " + translate.Get("GenericMC." + name), () => translate.Get("GenericMC." + name + "Desc") + "\n\n" + translate.Get("GenericMC.SharedManualDesc"));
             GenericMC.AddSectionTitle(mod, () => translate.Get("GenericMC.Hover") + ":  " + translate.Get("GenericMC.Instructions"), () => (which == 0 ? translate.Get("GenericMC.InstructionsTile") : translate.Get("GenericMC.InstructionsDesc")));
-            GenericMC.AddComplexOption(mod, () => "", () => "", Draw, Save, () => 300);
+            GenericMC.AddComplexOption(mod, () => "", tooltip: () => "", beforeMenuClosed: Reset, draw: Draw, beforeSave: Save, height: () => 300);
         }
 
         private int TryGetSprite(string input)
@@ -637,9 +639,7 @@ namespace StardewMods
         private void OnSaveLoaded(object sender, SaveLoadedEventArgs e)
         {
             houseCache = Game1.getLocationFromName(Game1.player.homeLocation.Value) as FarmHouse;
-
-            if (mode < 2) defaultTile = Utility.PointToVector2(houseCache.GetSpouseRoomSpot());//1.5.4
-            else defaultTile = Utility.PointToVector2(houseCache.GetSpouseRoomCorner()) + new Vector2(3f, 4f);//1.5.5
+            defaultTile = Utility.PointToVector2(houseCache.GetSpouseRoomCorner()) + new Vector2(3f, 4f);
 
             foreach (var item in Game1.characterData.OrderBy(val => val.Value.CanBeRomanced ? 0 : 1).ThenBy(val => val.Key))
             {
@@ -799,6 +799,7 @@ namespace StardewMods
                         break;
                 }
             }
+            spouse.scheduleDelaySeconds = 60;
         }
         private bool RandomTile(NPC spouse, bool changed, GameLocation loc, Vector2 tile, ref KeyValuePair<string, Vector2> newTile)
         {
@@ -1008,47 +1009,6 @@ namespace StardewMods
                                 if (npc != null)
                                 {
                                     Vector2 spouseDefault = npc.GetSpousePatioPosition();
-                                    if (mode < 2)
-                                    {
-                                        switch (npc.Name)
-                                        {
-                                            case "Emily":
-                                                spouseDefault.X += -1f;
-                                                break;
-                                            case "Shane":
-                                                spouseDefault.X += -2f;
-                                                break;
-                                            case "Sam":
-                                                spouseDefault.Y += -1f;
-                                                break;
-                                            case "Elliott":
-                                                spouseDefault.Y += -1f;
-                                                break;
-                                            case "Harvey":
-                                                spouseDefault.Y += -1f;
-                                                break;
-                                            case "Alex":
-                                                spouseDefault.Y += -1f;
-                                                break;
-                                            case "Maru":
-                                                spouseDefault.X += -1f;
-                                                spouseDefault.Y += -1f;
-                                                break;
-                                            case "Penny":
-                                                spouseDefault.Y += -1f;
-                                                break;
-                                            case "Haley":
-                                                spouseDefault.Y += -1f;
-                                                spouseDefault.X += -1f;
-                                                break;
-                                            case "Abigail":
-                                                spouseDefault.Y += -1f;
-                                                break;
-                                            case "Leah":
-                                                spouseDefault.Y += -1f;
-                                                break;
-                                        }
-                                    }
                                     foreach (var entry in list)
                                     {
                                         int spriteIndex = TryGetSprite(entry.Key);
