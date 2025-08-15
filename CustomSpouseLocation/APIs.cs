@@ -39,13 +39,6 @@ namespace GenericModConfigMenu
         /// <param name="text">The paragraph text to display.</param>
         void AddParagraph(IManifest mod, Func<string> text);
 
-        /// <summary>Add an image at the current position in the form.</summary>
-        /// <param name="mod">The mod's manifest.</param>
-        /// <param name="texture">The image texture to display.</param>
-        /// <param name="texturePixelArea">The pixel area within the texture to display, or <c>null</c> to show the entire image.</param>
-        /// <param name="scale">The zoom factor to apply to the image.</param>
-        void AddImage(IManifest mod, Func<Texture2D> texture, Rectangle? texturePixelArea = null, int scale = Game1.pixelZoom);
-
         /// <summary>Add a boolean option at the current position in the form.</summary>
         /// <param name="mod">The mod's manifest.</param>
         /// <param name="getValue">Get the current value from the mod config.</param>
@@ -54,18 +47,6 @@ namespace GenericModConfigMenu
         /// <param name="tooltip">The tooltip text shown when the cursor hovers on the field, or <c>null</c> to disable the tooltip.</param>
         /// <param name="fieldId">The unique field ID for use with <see cref="OnFieldChanged"/>, or <c>null</c> to auto-generate a randomized ID.</param>
         void AddBoolOption(IManifest mod, Func<bool> getValue, Action<bool> setValue, Func<string> name, Func<string> tooltip = null, string fieldId = null);
-
-        /// <summary>Add an integer option at the current position in the form.</summary>
-        /// <param name="mod">The mod's manifest.</param>
-        /// <param name="getValue">Get the current value from the mod config.</param>
-        /// <param name="setValue">Set a new value in the mod config.</param>
-        /// <param name="name">The label text to show in the form.</param>
-        /// <param name="tooltip">The tooltip text shown when the cursor hovers on the field, or <c>null</c> to disable the tooltip.</param>
-        /// <param name="min">The minimum allowed value, or <c>null</c> to allow any.</param>
-        /// <param name="max">The maximum allowed value, or <c>null</c> to allow any.</param>
-        /// <param name="interval">The interval of values that can be selected.</param>
-        /// <param name="fieldId">The unique field ID for use with <see cref="OnFieldChanged"/>, or <c>null</c> to auto-generate a randomized ID.</param>
-        void AddNumberOption(IManifest mod, Func<int> getValue, Action<int> setValue, Func<string> name, Func<string> tooltip = null, int? min = null, int? max = null, int? interval = null, string fieldId = null);
 
         /// <summary>Add a float option at the current position in the form.</summary>
         /// <param name="mod">The mod's manifest.</param>
@@ -76,8 +57,9 @@ namespace GenericModConfigMenu
         /// <param name="min">The minimum allowed value, or <c>null</c> to allow any.</param>
         /// <param name="max">The maximum allowed value, or <c>null</c> to allow any.</param>
         /// <param name="interval">The interval of values that can be selected.</param>
+        /// <param name="formatValue">Get the display text to show for a value, or <c>null</c> to show the number as-is.</param>
         /// <param name="fieldId">The unique field ID for use with <see cref="OnFieldChanged"/>, or <c>null</c> to auto-generate a randomized ID.</param>
-        void AddNumberOption(IManifest mod, Func<float> getValue, Action<float> setValue, Func<string> name, Func<string> tooltip = null, float? min = null, float? max = null, float? interval = null, string fieldId = null);
+        void AddNumberOption(IManifest mod, Func<float> getValue, Action<float> setValue, Func<string> name, Func<string> tooltip = null, float? min = null, float? max = null, float? interval = null, Func<float, string> formatValue = null, string fieldId = null);
 
         /// <summary>Add a string option at the current position in the form.</summary>
         /// <param name="mod">The mod's manifest.</param>
@@ -128,7 +110,11 @@ namespace GenericModConfigMenu
         /// <remarks>The custom logic represented by the callback parameters is responsible for managing its own state if needed. For example, you can store state in a static field or use closures to use a state variable.</remarks>
         void AddComplexOption(IManifest mod, Func<string> name, Action<SpriteBatch, Vector2> draw, Func<string> tooltip = null, Action beforeMenuOpened = null, Action beforeSave = null, Action afterSave = null, Action beforeReset = null, Action afterReset = null, Action beforeMenuClosed = null, Func<int> height = null, string fieldId = null);
 
-
+        /// <summary>Register a method to notify when any option registered by this mod is edited through the config UI.</summary>
+        /// <param name="mod">The mod's manifest.</param>
+        /// <param name="onChange">The method to call with the option's unique field ID and new value.</param>
+        /// <remarks>Options use a randomized ID by default; you'll likely want to specify the <c>fieldId</c> argument when adding options if you use this.</remarks>
+        void OnFieldChanged(IManifest mod, Action<string, object> onChange);
 
         /// <summary>Remove a mod from the config UI and delete all its options and pages.</summary>
         /// <param name="mod">The mod's manifest.</param>

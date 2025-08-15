@@ -68,18 +68,7 @@ namespace StardewMods
 
             lineSpacing = Game1.smallFont.LineSpacing * 1.5f;
             translate = Helper.Translation;
-
-            allNPCs = new Dictionary<string, NPC>();
-            foreach (var item in Game1.characterData.Where(f => f.Value.SocialTab != StardewValley.GameData.Characters.SocialTabBehavior.HiddenAlways)
-                .OrderBy(val => val.Value.CanBeRomanced ? 0 : 1).ThenBy(val => val.Key))
-            {
-                NPC test = new NPC();
-                test.datable.Value = item.Value.CanBeRomanced;
-                test.Sprite = new AnimatedSprite("Characters\\" + (item.Value.TextureName ?? item.Key), 0, item.Value.Size.X, item.Value.Size.Y);
-                test.displayName = item.Key;
-                allNPCs.Add(item.Key, test);
-            }
-
+            UpdateNPCDict(true);
 
             var GenericMC = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
             if (GenericMC != null)
@@ -98,7 +87,7 @@ namespace StardewMods
                     GenericMC.AddTextOption(ModManifest, () => config.SpouseRoom_Auto_Blacklist, (string val) => config.SpouseRoom_Auto_Blacklist = val,
                         () => translate.Get("GenericMC.AutoBlacklist"), () => translate.Get("GenericMC.AutoBlacklistDesc"));
                     GenericMC.AddNumberOption(ModManifest, () => config.SpouseRoom_Auto_Chance, (float val) => config.SpouseRoom_Auto_Chance = (int)val,
-                        () => translate.Get("GenericMC.AutoChance"), () => translate.Get("GenericMC.AutoChanceDesc"), 0f, 100f);
+                        () => translate.Get("GenericMC.AutoChance"), () => translate.Get("GenericMC.AutoChanceDesc"), 0f, 100f, 1f);
                     GenericMC.AddBoolOption(ModManifest, () => config.SpouseRoom_Auto_PerformanceMode, (bool val) => config.SpouseRoom_Auto_PerformanceMode = val,
                         () => translate.Get("GenericMC.AutoPerfomance"), () => translate.Get("GenericMC.AutoPerformanceDesc"));
                     GenericMC.AddTextOption(ModManifest, () => config.SpouseRoom_Auto_FurnitureChairs_UpOnly_Blacklist, (string val) => config.SpouseRoom_Auto_FurnitureChairs_UpOnly_Blacklist = val,
@@ -399,7 +388,7 @@ namespace StardewMods
                     else
                     {
                         state.hoverNames[entry.Key] = nameR;
-                        if (current != null) b.Draw(current.Sprite.Texture, state.scrollBar + leftMargin, new Rectangle(1, 2, 14, 16), Color.White, 0f, new Vector2(16f, 1f), 2f, SpriteEffects.None, 1f);
+                        if (current?.Sprite?.Texture != null) b.Draw(current.Sprite.Texture, state.scrollBar + leftMargin, new Rectangle(1, 2, 14, 16), Color.White, 0f, new Vector2(16f, 1f), 2f, SpriteEffects.None, 1f);
                         b.DrawString(Game1.smallFont, entry.Key + (current == null || current.displayName.Equals(entry.Key, StringComparison.Ordinal) ? "" : " (" + current.displayName + ")"), state.scrollBar + leftMargin, (nameR.Contains(Game1.getMouseX(), Game1.getMouseY())) ? Color.DarkSlateGray : Color.ForestGreen, 0f, Vector2.Zero, fontScale, SpriteEffects.None, 1f);
                         leftMargin.Y += lineSpacing;
                     }
@@ -433,7 +422,7 @@ namespace StardewMods
                                 int spriteIndex = TryGetSprite(text.Value);
                                 if (spriteIndex != -9999)
                                 {
-                                    if (which != 0 && current != null)
+                                    if (which != 0 && current?.Sprite?.Texture != null)
                                     {
                                         b.Draw(current.Sprite.Texture, new Vector2(20f + nameR.X, nameR.Y), Game1.getSquareSourceRectForNonStandardTileSheet(current.Sprite.Texture, current.Sprite.SpriteWidth, current.Sprite.SpriteHeight, Math.Abs(spriteIndex)),
                                             Color.White, 0f, new Vector2(18f, 6f), 1.4f, (spriteIndex < 0) ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 1f);
@@ -457,7 +446,8 @@ namespace StardewMods
                         }
                     }
                 }
-                foreach (var npc in allNPCs)//.OrderBy(val => val.Value?.datable ? 0 : 1).ThenBy(val => val.Key))//technically Dictionary isn't ordered, but it works for now//other datable npcs
+
+                foreach (var npc in allNPCs.OrderBy(f => f.Value.Birthday_Day).ThenBy(f => f.Key))
                 {
                     if (!state.enabledNPCs.ContainsKey(npc.Key))
                     {
@@ -469,15 +459,20 @@ namespace StardewMods
                         Rectangle nameR = new Rectangle((int)(state.scrollBar + leftMargin).X, (int)(state.scrollBar + leftMargin).Y, state.boundsTopBottom.Width, (int)lineSpacing);
                         state.hoverNames[npc.Key] = nameR;
 
-                        Color c = (nameR.Contains(Game1.getMouseX(), Game1.getMouseY())) ? Color.Black : Color.Gray;
-
-                        if (npc.Value?.datable.Value == true)
+                        Color c = Color.Gray;
+                        if (nameR.Contains(Game1.getMouseX(), Game1.getMouseY()))
                         {
-                            if (c == Color.Gray) c = Color.DeepPink;
-                            else c = Color.HotPink;
+                            if (npc.Value.Birthday_Day == 0) c = Color.MediumVioletRed;
+                            else if (npc.Value.Birthday_Day == 1) c = Color.RoyalBlue;
+                            else c = Color.DarkSlateGray;
+                        }
+                        else
+                        {
+                            if (npc.Value.Birthday_Day == 0) c = Color.DeepPink;
+                            else if (npc.Value.Birthday_Day == 1) c = Color.DeepSkyBlue;
                         }
 
-                        if (npc.Value != null) b.Draw(npc.Value.Sprite.Texture, state.scrollBar + leftMargin, new Rectangle(1, 2, 14, 16), Color.Gray, 0f, new Vector2(16f, 1f), 2f, SpriteEffects.None, 1f);
+                        if (npc.Value?.Sprite?.Texture != null) b.Draw(npc.Value.Sprite.Texture, state.scrollBar + leftMargin, new Rectangle(1, 2, 14, 16), Color.Gray, 0f, new Vector2(16f, 1f), 2f, SpriteEffects.None, 1f);
                         b.DrawString(Game1.smallFont, npc.Key + (npc.Value == null || npc.Value.displayName.Equals(npc.Key, StringComparison.Ordinal) ? "" : " (" + npc.Value.displayName + ")"), state.scrollBar + leftMargin, c, 0f, Vector2.Zero, fontScale, SpriteEffects.None, 1f);
                         leftMargin.Y += lineSpacing;
                     }
@@ -628,7 +623,39 @@ namespace StardewMods
             return new Vector2(-9999f);
         }
 
+        private void UpdateNPCDict(bool init = false)
+        {
+            allNPCs = [];
 
+            if (init)
+            {
+                foreach (var item in Game1.characterData.Where(f => f.Value.SocialTab != StardewValley.GameData.Characters.SocialTabBehavior.HiddenAlways))
+                {
+                    allNPCs[item.Key] = new()
+                    {
+                        Birthday_Day = item.Value.CanBeRomanced ? 1 : 2,
+                        Sprite = new AnimatedSprite("Characters\\" + (item.Value.TextureName ?? item.Key), 0, item.Value.Size.X, item.Value.Size.Y),
+                        displayName = item.Key
+                    };
+                }
+            }
+            else
+            {
+                Utility.ForEachCharacter((npc) =>
+                {
+                    if (npc.IsVillager && Game1.characterData.TryGetValue(npc.Name, out var data) && data.SocialTab != StardewValley.GameData.Characters.SocialTabBehavior.HiddenAlways)
+                    {
+                        allNPCs[npc.Name] = new()
+                        {
+                            Birthday_Day = npc.isMarriedOrEngaged() ? 0 : data.CanBeRomanced ? 1 : 2,
+                            Sprite = new AnimatedSprite("Characters\\" + npc.getTextureName(), 0, npc.Sprite.SpriteWidth, npc.Sprite.SpriteHeight),
+                            displayName = npc.displayName
+                        };
+                    }
+                    return true;
+                }, false);
+            }
+        }
 
 
         private void OnButtonPressed(object sender, ButtonPressedEventArgs e)
@@ -650,6 +677,8 @@ namespace StardewMods
         private void OnDayStarted(object sender, DayStartedEventArgs e)//MAIN METHOD
         {
             if (!Context.IsMainPlayer) return;//host settings decide - since others don't join at day start
+
+            UpdateNPCDict();
 
             patioPoints = new Dictionary<string, Vector2>();//custom patio compatibility
             var CustomPatioAPI = Helper.ModRegistry.GetApi<ICustomSpousePatioApi>("aedenthorn.CustomSpousePatio");
@@ -701,7 +730,6 @@ namespace StardewMods
                     KeyValuePair<string, Vector2> newTile = new KeyValuePair<string, Vector2>();
                     GameLocation loc = spouse.currentLocation;
                     bool changed = false;
-                    var d = (loc as FarmHouse).GetSpouseRoomSpot();
 
                     if (loc is FarmHouse || loc is Cabin)
                     {
