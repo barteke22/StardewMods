@@ -24,7 +24,7 @@ namespace StardewMods
 
         private int dayStartedDelay = -1;
         private List<NPC> spouses;
-        private Dictionary<string, Vector2> patioPoints;
+        private List<Vector2> patioPoints;
         private FarmHouse houseCache;
         private Vector2 defaultTile;//only used to room size in auto
 
@@ -626,6 +626,8 @@ namespace StardewMods
         private void UpdateNPCDict(bool init = false)
         {
             allNPCs = [];
+            spouses = [];
+            patioPoints = [];
 
             if (init)
             {
@@ -643,14 +645,25 @@ namespace StardewMods
             {
                 Utility.ForEachCharacter((npc) =>
                 {
-                    if (npc.IsVillager && Game1.characterData.TryGetValue(npc.Name, out var data) && data.SocialTab != StardewValley.GameData.Characters.SocialTabBehavior.HiddenAlways)
+                    if (npc.IsVillager)
                     {
-                        allNPCs[npc.Name] = new()
+                        bool marriedOrRoommie = npc.isMarried() || npc.isRoommate();
+                        if (Game1.characterData.TryGetValue(npc.Name, out var data) && data.SocialTab != StardewValley.GameData.Characters.SocialTabBehavior.HiddenAlways)
                         {
-                            Birthday_Day = npc.isMarriedOrEngaged() ? 0 : data.CanBeRomanced ? 1 : 2,
-                            Sprite = new AnimatedSprite("Characters\\" + npc.getTextureName(), 0, npc.Sprite.SpriteWidth, npc.Sprite.SpriteHeight),
-                            displayName = npc.displayName
-                        };
+                            allNPCs[npc.Name] = new()
+                            {
+                                Birthday_Day = marriedOrRoommie ? 0 : data.CanBeRomanced ? 1 : 2,
+                                Sprite = new AnimatedSprite("Characters\\" + npc.getTextureName(), 0, npc.Sprite.SpriteWidth, npc.Sprite.SpriteHeight),
+                                displayName = npc.displayName
+                            };
+                        }
+
+                        if (marriedOrRoommie)
+                        {
+                            var patio = npc.GetSpousePatioPosition();
+                            if (!patioPoints.Contains(patio)) patioPoints.Add(patio);
+                            spouses.Add(npc);
+                        }
                     }
                     return true;
                 }, false);
@@ -660,7 +673,7 @@ namespace StardewMods
 
         private void OnButtonPressed(object sender, ButtonPressedEventArgs e)
         {
-            if (Context.IsWorldReady && e.Button == SButton.F5) UpdateConfig(false); // ignore if player hasn't loaded a save yet
+            if (Context.IsWorldReady && e.Button == SButton.F5) UpdateConfig(); // ignore if player hasn't loaded a save yet
         }
 
         private void OnSaveLoaded(object sender, SaveLoadedEventArgs e)
@@ -677,45 +690,8 @@ namespace StardewMods
         private void OnDayStarted(object sender, DayStartedEventArgs e)//MAIN METHOD
         {
             if (!Context.IsMainPlayer) return;//host settings decide - since others don't join at day start
-
             UpdateNPCDict();
-
-            patioPoints = new Dictionary<string, Vector2>();//custom patio compatibility
-            var CustomPatioAPI = Helper.ModRegistry.GetApi<ICustomSpousePatioApi>("aedenthorn.CustomSpousePatio");
-            if (CustomPatioAPI != null)
-            {
-                foreach (var pair in CustomPatioAPI.GetCurrentSpouseAreas())
-                {
-                    if ((bool)allNPCs[pair.Key]?.isMarried() || (bool)allNPCs[pair.Key]?.isRoommate())
-                    {
-                        patioPoints[pair.Key] = Utility.PointToVector2(Helper.Reflection.GetField<Point>(pair.Value, "location").GetValue()) + Utility.PointToVector2(CustomPatioAPI.GetDefaultSpouseOffsets()[pair.Key]);
-                    }
-                }
-            }
-
-            UpdateConfig(false);
-
-            spouses = new List<NPC>();
-
-            foreach (var farmer in Game1.getAllFarmers())
-            {
-                foreach (string name in farmer.friendshipData.Pairs.Where(f => f.Value.IsMarried() || f.Value.IsRoommate()).Select(f => f.Key))
-                {
-                    if (allNPCs.ContainsKey(name)) spouses.Add(allNPCs[name]);
-                }
-            }
-            //foreach (GameLocation loc in Game1.locations)
-            //{
-            //    if (ReferenceEquals(loc.GetType(), typeof(FarmHouse)) || loc is Farm)
-            //    {
-            //        foreach (NPC npc in (loc as FarmHouse).getCharacters())
-            //        {
-            //            if (npc.isMarried()) spouses.Add(npc);
-            //        }
-            //    }
-            //}
-            //    spouse.setTileLocation(new Vector2(38, 14));
-
+            UpdateConfig();
             dayStartedDelay = 150;
         }
 
@@ -768,15 +744,13 @@ namespace StardewMods
                 if (spouse?.IsVillager == true)
                 {
                     Vector2 tile = spouse.Tile;
-                    KeyValuePair<string, Vector2> newTile = new KeyValuePair<string, Vector2>();
+                    KeyValuePair<string, Vector2> newTile = new();
                     GameLocation loc = spouse.currentLocation;
                     bool changed = false;
 
-
                     if (loc is Farm)
                     {
-                        FarmHouse home = spouse.getHome() as FarmHouse;
-                        if (home != null && tile == Utility.PointToVector2(home.getPorchStandingSpot())) //porch
+                        if (spouse.getHome() is FarmHouse home && tile == Utility.PointToVector2(home.getPorchStandingSpot())) //porch
                         {
                             List<KeyValuePair<string, Vector2>> tiles = config.Porch_Manual_TileOffsets[(config.Porch_Manual_TileOffsets.ContainsKey(spouse.Name) ? spouse.Name : "Default")].FindAll(val => val.Value != new Vector2(-999f));
 
@@ -784,13 +758,15 @@ namespace StardewMods
                         }
                         else //patio - spouse area
                         {
-                            Vector2 patio = (patioPoints.ContainsKey(spouse.Name) ? patioPoints[spouse.Name] : spouse.GetSpousePatioPosition());
-                            Rectangle area = new Rectangle((int)patio.X - 2, (int)patio.Y - 2, (int)patio.X + 2, (int)patio.Y + 2);
-                            if (area.Contains((int)tile.X, (int)tile.Y))
+                            foreach (var patio in patioPoints)
                             {
-                                List<KeyValuePair<string, Vector2>> tiles = config.Patio_Manual_TileOffsets[(config.Patio_Manual_TileOffsets.ContainsKey(spouse.Name) ? spouse.Name : "Default")].FindAll(val => val.Value != new Vector2(-999f));
+                                Rectangle area = new((int)patio.X - 2, (int)patio.Y - 2, (int)patio.X + 2, (int)patio.Y + 2);
+                                if (area.Contains((int)tile.X, (int)tile.Y))
+                                {
+                                    List<KeyValuePair<string, Vector2>> tiles = config.Patio_Manual_TileOffsets[(config.Patio_Manual_TileOffsets.ContainsKey(spouse.Name) ? spouse.Name : "Default")].FindAll(val => val.Value != new Vector2(-999f));
 
-                                if (changed = tiles.Count > 0) newTile = tiles[Game1.random.Next(0, tiles.Count)];
+                                    if (changed = tiles.Count > 0) newTile = tiles[Game1.random.Next(0, tiles.Count)];
+                                }
                             }
                         }
                     }
@@ -944,6 +920,9 @@ namespace StardewMods
             Farmer who = Game1.player;
             if (!config.SpritePreviewName.Equals("", StringComparison.Ordinal) && (who.currentLocation is Cabin || (Context.IsMainPlayer && (who.currentLocation is FarmHouse || who.currentLocation is Farm))))
             {
+                if (Game1.player.getSpouse() is not NPC mainSpouse) allNPCs.TryGetValue("Emily", out mainSpouse);
+                Vector2 patioDefault = mainSpouse?.GetSpousePatioPosition() ?? new();
+
                 foreach (var name in config.SpouseRoom_Auto_Facing_TileOffset.Keys
                               .Union(config.SpouseRoom_Manual_TileOffsets.Keys)
                               .Union(config.Kitchen_Manual_TileOffsets.Keys)
@@ -958,11 +937,7 @@ namespace StardewMods
                             {
                                 Vector2 kitchenDefault = Utility.PointToVector2((who.currentLocation as FarmHouse).getKitchenStandingSpot());
 
-                                if (!allNPCs.TryGetValue(name, out NPC npc))
-                                {
-                                    if (Game1.player.getSpouse()?.IsVillager == true) npc = Game1.player.getSpouse();
-                                    else allNPCs.TryGetValue("Emily", out npc);
-                                }
+                                if (!allNPCs.TryGetValue(name, out NPC npc)) npc = mainSpouse;
                                 if (npc != null)
                                 {
                                     foreach (var entry in list)
@@ -984,11 +959,7 @@ namespace StardewMods
                             {
                                 if (config.SpouseRoom_Manual_TileOffsets.TryGetValue(name, out list))//spouse room
                                 {
-                                    if (!allNPCs.TryGetValue(name, out NPC npc))
-                                    {
-                                        if (Game1.player.getSpouse()?.IsVillager == true) npc = Game1.player.getSpouse();
-                                        else allNPCs.TryGetValue("Emily", out npc);
-                                    }
+                                    if (!allNPCs.TryGetValue(name, out NPC npc)) npc = mainSpouse;
                                     if (npc != null)
                                     {
                                         foreach (var entry in list)
@@ -1005,11 +976,7 @@ namespace StardewMods
                                 }
                                 if (config.SpouseRoom_Auto_Facing_TileOffset.TryGetValue(name, out Vector2 tile))//face tiles (spouse room)
                                 {
-                                    if (!allNPCs.TryGetValue(name, out NPC current))
-                                    {
-                                        if (Game1.player.getSpouse()?.IsVillager == true) current = Game1.player.getSpouse();
-                                        else allNPCs.TryGetValue("Emily", out current);
-                                    }
+                                    if (!allNPCs.TryGetValue(name, out NPC current)) current = mainSpouse;
                                     if (current != null) e.SpriteBatch.Draw(current.Sprite.Texture, Game1.GlobalToLocal((spouseDefault + tile) * 64f),
                                         new Rectangle(0, 2, 16, 16), Color.Gray * 0.8f, 0f, new Vector2(8f), 2f, SpriteEffects.None, 1f);
                                 }
@@ -1027,22 +994,17 @@ namespace StardewMods
                         }
                         else if (who.currentLocation is Farm)
                         {
-                            if (patioPoints.Count < 1 && config.Patio_Manual_TileOffsets.TryGetValue(name, out List<KeyValuePair<string, Vector2>> list))//patio
+                            if (config.Patio_Manual_TileOffsets.TryGetValue(name, out List<KeyValuePair<string, Vector2>> list))//patio
                             {
-                                if (!allNPCs.TryGetValue(name, out NPC npc))
-                                {
-                                    if (Game1.player.getSpouse()?.IsVillager == true) npc = Game1.player.getSpouse();
-                                    else allNPCs.TryGetValue("Emily", out npc);
-                                }
+                                if (!allNPCs.TryGetValue(name, out NPC npc)) npc = mainSpouse;
                                 if (npc != null)
                                 {
-                                    Vector2 spouseDefault = npc.GetSpousePatioPosition();
                                     foreach (var entry in list)
                                     {
                                         int spriteIndex = TryGetSprite(entry.Key);
                                         if (spriteIndex != -9999)
                                         {
-                                            if (npc != null) e.SpriteBatch.Draw(npc.Sprite.Texture, Game1.GlobalToLocal((spouseDefault + entry.Value) * 64f),
+                                            if (npc != null) e.SpriteBatch.Draw(npc.Sprite.Texture, Game1.GlobalToLocal((patioDefault + entry.Value) * 64f),
                                                 Game1.getSquareSourceRectForNonStandardTileSheet(npc.Sprite.Texture, npc.Sprite.SpriteWidth, npc.Sprite.SpriteHeight, Math.Abs(spriteIndex)), Color.Gray * 0.8f, 0f,
                                                 new Vector2(0f, 20f), 4f, (spriteIndex < 0) ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 1f);
                                         }
@@ -1053,11 +1015,7 @@ namespace StardewMods
                             {
                                 Vector2 spouseDefault = Utility.PointToVector2(houseCache.getPorchStandingSpot());
 
-                                if (!allNPCs.TryGetValue(name, out NPC npc))
-                                {
-                                    if (Game1.player.getSpouse()?.IsVillager == true) npc = Game1.player.getSpouse();
-                                    else allNPCs.TryGetValue("Emily", out npc);
-                                }
+                                if (!allNPCs.TryGetValue(name, out NPC npc)) npc = mainSpouse;
                                 if (npc != null)
                                 {
                                     foreach (var entry in list)
@@ -1070,25 +1028,6 @@ namespace StardewMods
                                                 new Vector2(0f, 20f), 4f, (spriteIndex < 0) ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 1f);
                                         }
                                     }
-                                }
-                            }
-                        }
-                    }
-                }
-                if (patioPoints.Count > 1 && who.currentLocation is Farm)//custom patio
-                {
-                    foreach (var patio in patioPoints.Where(val => !val.Key.Equals("All", StringComparison.Ordinal)))
-                    {
-                        if (allNPCs.TryGetValue(patio.Key, out NPC npc))
-                        {
-                            foreach (var entry in (config.Patio_Manual_TileOffsets.ContainsKey(patio.Key) ? config.Patio_Manual_TileOffsets[patio.Key] : config.Patio_Manual_TileOffsets["Default"]))
-                            {
-                                int spriteIndex = TryGetSprite(entry.Key);
-                                if (spriteIndex != -9999)
-                                {
-                                    if (npc != null) e.SpriteBatch.Draw(npc.Sprite.Texture, Game1.GlobalToLocal((patio.Value + entry.Value) * 64f),
-                                        Game1.getSquareSourceRectForNonStandardTileSheet(npc.Sprite.Texture, npc.Sprite.SpriteWidth, npc.Sprite.SpriteHeight, Math.Abs(spriteIndex)), Color.Gray * 0.8f, 0f,
-                                        new Vector2(0f, 20f), 4f, (spriteIndex < 0) ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 1f);
                                 }
                             }
                         }
@@ -1103,7 +1042,7 @@ namespace StardewMods
         }
 
 
-        private void UpdateConfig(bool GMCM)
+        private void UpdateConfig(bool GMCM = false)
         {
             if (!GMCM) config = Helper.ReadConfig<ModConfig>();
         }

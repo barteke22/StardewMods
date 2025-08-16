@@ -121,9 +121,3 @@ namespace GenericModConfigMenu
         void Unregister(IManifest mod);
     }
 }
-
-public interface ICustomSpousePatioApi
-{
-    Dictionary<string, object> GetCurrentSpouseAreas();
-    Dictionary<string, Point> GetDefaultSpouseOffsets();
-}
