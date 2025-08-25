@@ -81,6 +81,7 @@
 	"GenericMC.barColors": "Color Customization",
 	"GenericMC.barBackgroundColor": "Background Color",
 	"GenericMC.barTextColor": "Text Color",
+	"GenericMC.barTextColorDesc": "RGB controls text color. Alpha controls black outline strength.",
 
 	"Bar.CrabMineWarning": "Bad Idea: Crab Pots placed in mines will be lost upon exiting."
 }

@@ -81,6 +81,7 @@
     "GenericMC.barColors": "Настройка цвета",
     "GenericMC.barBackgroundColor": "Цвет фона",
     "GenericMC.barTextColor": "Цвет текста",
+    "GenericMC.barTextColorDesc": "«RGB» управляет цветом текста. «A» управляет насыщенностью чёрного контура.",
 
     "Bar.CrabMineWarning": "Плохая идея: крабовые ловушки, размещенные в шахтах, будут потеряны при выходе."
 }

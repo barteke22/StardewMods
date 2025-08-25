@@ -367,4 +367,10 @@ FodyWeavers.xsd
 /FishingInfoOverlays/Overlay - Copy.txt
 /RenderExterior
 /FishingMinigames/assets/*.xcf
-/GMCMSearch
+/GenericModConfigMenu
+/Common
+/Common.Patching
+/SpaceShared
+/SpaceShared.Common
+/SpaceSharedPatching
+/common.targets

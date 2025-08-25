@@ -81,6 +81,7 @@
 	"GenericMC.barColors": "Personnalisation des couleurs",
 	"GenericMC.barBackgroundColor": "Couleur de l’arrière-plan",
 	"GenericMC.barTextColor": "Couleur du texte",
+	"GenericMC.barTextColorDesc": "«RGB» contrôle la couleur du texte. «A» contrôle l'intensité du contour noir.",
 
 	"Bar.CrabMineWarning": "Mauvaise idée : les casiers à crabes placés dans les mines seront perdus au moment de la sortie."
 }

@@ -81,6 +81,7 @@
 	"GenericMC.barColors": "カラーカスタマイズ",
 	"GenericMC.barBackgroundColor": "背景色",
 	"GenericMC.barTextColor": "文字色",
+	"GenericMC.barTextColorDesc": "「RGB」はテキストの色を制御します.「A」は黒のアウトラインの強度を制御します.",
 
 	"Bar.CrabMineWarning": "バッドアイディア 鉱山に置かれたカニ鍋は、鉱山を出たときに失われます."
 }

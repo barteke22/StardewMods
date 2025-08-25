@@ -81,6 +81,7 @@
 	"GenericMC.barColors": "Ustawienia Kolorów",
 	"GenericMC.barBackgroundColor": "Kolor Tła",
 	"GenericMC.barTextColor": "Kolor Tekstu",
+	"GenericMC.barTextColorDesc": "\"RGB\" kontroluje kolor tekstu. \"A\" kontroluje intensywność czarnego konturu.",
 
 	"Bar.CrabMineWarning": "Zły pomysł: Pułapki na kraby umieszczone w kopalniach, zostaną utracone po wyjściu."
 }

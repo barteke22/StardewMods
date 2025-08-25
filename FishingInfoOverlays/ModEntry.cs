@@ -1,22 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
-using GenericModConfigMenu;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
+using StardewMods;
 using StardewValley;
-using StardewValley.GameData.Locations;
 
-namespace StardewMods
+namespace FishingInfoOverlays
 {
     /// <summary>The mod entry point.</summary>
     public class ModEntry : Mod
     {
         ITranslationHelper translate;
         private ModConfig config;
-        private readonly PerScreen<Overlay> overlay = new PerScreen<Overlay>();
+        private readonly PerScreen<Overlay> overlay = new();
 
 
 
@@ -25,14 +23,14 @@ namespace StardewMods
             config = helper.ReadConfig<ModConfig>();
             translate = helper.Translation;
 
-            helper.Events.Input.ButtonPressed += this.OnButtonPressed;
-            helper.Events.GameLoop.DayStarted += this.OnDayStarted;
-            helper.Events.Display.Rendered += this.Rendered;
-            helper.Events.Display.MenuChanged += this.OnMenuChanged;
-            helper.Events.Display.RenderedActiveMenu += this.OnRenderMenu;
+            helper.Events.Input.ButtonPressed += OnButtonPressed;
+            helper.Events.GameLoop.DayStarted += OnDayStarted;
+            helper.Events.Display.Rendered += Rendered;
+            helper.Events.Display.MenuChanged += OnMenuChanged;
+            helper.Events.Display.RenderedActiveMenu += OnRenderMenu;
             helper.Events.Display.RenderedActiveMenu += GenericModConfigMenuIntegration;
-            helper.Events.Multiplayer.ModMessageReceived += this.OnModMessageReceived;
-            helper.Events.Player.Warped += this.OnWarped;
+            helper.Events.Multiplayer.ModMessageReceived += OnModMessageReceived;
+            helper.Events.Player.Warped += OnWarped;
         }
 
 
@@ -44,6 +42,8 @@ namespace StardewMods
             var GenericMC = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
             if (GenericMC != null)
             {
+                var GenericExtraOptions = Helper.ModRegistry.GetApi<IGMCMOptionsAPI>("jltaylor-us.GMCMOptions");
+
                 GenericMC.Register(ModManifest, () => config = new ModConfig(), () => Helper.WriteConfig(config));
                 GenericMC.AddSectionTitle(ModManifest, () => translate.Get("GenericMC.barLabel")); //All of these strings are stored in the traslation files.
                 GenericMC.AddParagraph(ModManifest, () => "Translation: barteke22".Equals(translate.Get("GenericMC.translation"), StringComparison.Ordinal) ? "" : translate.Get("GenericMC.translation"));
@@ -55,7 +55,7 @@ namespace StardewMods
                     GenericMC.AddTextOption(ModManifest, name: () => translate.Get("GenericMC.barSonarMode"), tooltip: () => translate.Get("GenericMC.barSonarModeDesc"),
                         getValue: () => config.BarSonarMode.ToString(),
                         setValue: value => config.BarSonarMode = int.Parse(value),
-                        allowedValues: new string[] { "0", "1", "2", "3" },
+                        allowedValues: ["0", "1", "2", "3"],
                         formatAllowedValue: value => value == "3" ? translate.Get($"GenericMC.Disabled") : translate.Get($"GenericMC.barSonarMode{value}"));
 
                     GenericMCPerScreen(GenericMC, 0);
@@ -69,25 +69,39 @@ namespace StardewMods
                     GenericMCPerScreen(GenericMC, 3);
 
                     GenericMC.AddPage(ModManifest, "colors", () => translate.Get("GenericMC.barColors"));
-                    GenericMC.AddSectionTitle(ModManifest, () => translate.Get("GenericMC.barBackgroundColor"));
-                    GenericMC.AddNumberOption(ModManifest, () => config.BarBackgroundColorRGBA[0], (int val) => config.BarBackgroundColorRGBA[0] = val, () => "R", null, 0, 255);
-                    GenericMC.AddNumberOption(ModManifest, () => config.BarBackgroundColorRGBA[1], (int val) => config.BarBackgroundColorRGBA[1] = val, () => "G", null, 0, 255);
-                    GenericMC.AddNumberOption(ModManifest, () => config.BarBackgroundColorRGBA[2], (int val) => config.BarBackgroundColorRGBA[2] = val, () => "B", null, 0, 255);
-                    GenericMC.AddNumberOption(ModManifest, () => config.BarBackgroundColorRGBA[3], (int val) => config.BarBackgroundColorRGBA[3] = val, () => "A", null, 0, 255);
-                    GenericMC.AddSectionTitle(ModManifest, () => translate.Get("GenericMC.barTextColor"));
-                    GenericMC.AddNumberOption(ModManifest, () => config.BarTextColorRGBA[0], (int val) => config.BarTextColorRGBA[0] = val, () => "R", null, 0, 255);
-                    GenericMC.AddNumberOption(ModManifest, () => config.BarTextColorRGBA[1], (int val) => config.BarTextColorRGBA[1] = val, () => "G", null, 0, 255);
-                    GenericMC.AddNumberOption(ModManifest, () => config.BarTextColorRGBA[2], (int val) => config.BarTextColorRGBA[2] = val, () => "B", null, 0, 255);
-                    GenericMC.AddNumberOption(ModManifest, () => config.BarTextColorRGBA[3], (int val) => config.BarTextColorRGBA[3] = val, () => "A", null, 0, 255);
+                    if (GenericExtraOptions != null)//new pickers
+                    {
+                        GenericExtraOptions.AddColorOption(ModManifest,
+                            () => new(config.BarBackgroundColorRGBA[0], config.BarBackgroundColorRGBA[1], config.BarBackgroundColorRGBA[2], config.BarBackgroundColorRGBA[3]),
+                            (col) => { config.BarBackgroundColorRGBA[0] = col.R; config.BarBackgroundColorRGBA[1] = col.G; config.BarBackgroundColorRGBA[2] = col.B; config.BarBackgroundColorRGBA[3] = col.A; },
+                            () => translate.Get("GenericMC.barBackgroundColor"), colorPickerStyle: (uint)IGMCMOptionsAPI.ColorPickerStyle.RGBSliders);
+                        GenericExtraOptions.AddColorOption(ModManifest,
+                            () => new(config.BarTextColorRGBA[0], config.BarTextColorRGBA[1], config.BarTextColorRGBA[2], config.BarTextColorRGBA[3]),
+                            (col) => { config.BarTextColorRGBA[0] = col.R; config.BarTextColorRGBA[1] = col.G; config.BarTextColorRGBA[2] = col.B; config.BarTextColorRGBA[3] = col.A; },
+                            () => translate.Get("GenericMC.barTextColor"), () => translate.Get("GenericMC.barTextColorDesc"), colorPickerStyle: (uint)IGMCMOptionsAPI.ColorPickerStyle.RGBSliders);
+                    }
+                    else//old pickers
+                    {
+                        GenericMC.AddSectionTitle(ModManifest, () => translate.Get("GenericMC.barBackgroundColor"));
+                        GenericMC.AddNumberOption(ModManifest, () => config.BarBackgroundColorRGBA[0], (val) => config.BarBackgroundColorRGBA[0] = val, () => "R", null, 0, 255);
+                        GenericMC.AddNumberOption(ModManifest, () => config.BarBackgroundColorRGBA[1], (val) => config.BarBackgroundColorRGBA[1] = val, () => "G", null, 0, 255);
+                        GenericMC.AddNumberOption(ModManifest, () => config.BarBackgroundColorRGBA[2], (val) => config.BarBackgroundColorRGBA[2] = val, () => "B", null, 0, 255);
+                        GenericMC.AddNumberOption(ModManifest, () => config.BarBackgroundColorRGBA[3], (val) => config.BarBackgroundColorRGBA[3] = val, () => "A", null, 0, 255);
+                        GenericMC.AddSectionTitle(ModManifest, () => translate.Get("GenericMC.barTextColor"));
+                        GenericMC.AddNumberOption(ModManifest, () => config.BarTextColorRGBA[0], (val) => config.BarTextColorRGBA[0] = val, () => "R", () => translate.Get("GenericMC.barTextColorDesc"), 0, 255);
+                        GenericMC.AddNumberOption(ModManifest, () => config.BarTextColorRGBA[1], (val) => config.BarTextColorRGBA[1] = val, () => "G", () => translate.Get("GenericMC.barTextColorDesc"), 0, 255);
+                        GenericMC.AddNumberOption(ModManifest, () => config.BarTextColorRGBA[2], (val) => config.BarTextColorRGBA[2] = val, () => "B", () => translate.Get("GenericMC.barTextColorDesc"), 0, 255);
+                        GenericMC.AddNumberOption(ModManifest, () => config.BarTextColorRGBA[3], (val) => config.BarTextColorRGBA[3] = val, () => "A", () => translate.Get("GenericMC.barTextColorDesc"), 0, 255);
+                    }
 
                     //dummy value validation trigger - must be the last thing, so all values are saved before validation
-                    GenericMC.AddComplexOption(ModManifest, () => "", (SpriteBatch b, Vector2 pos) => { }, afterSave: () => UpdateConfig(true));
+                    GenericMC.AddComplexOption(ModManifest, () => "", (b, pos) => { }, afterSave: () => UpdateConfig(true));
 
                     //void AddComplexOption(IManifest mod, Func<string> name, Func<string> tooltip, Action<SpriteBatch, Vector2> draw, Action saveChanges, Func<int> height = null, string fieldId = null);
                 }
                 catch (Exception)
                 {
-                    this.Monitor.Log("Error parsing config data. Please either fix your config.json, or delete it to generate a new one.", LogLevel.Error);
+                    Monitor.Log("Error parsing config data. Please either fix your config.json, or delete it to generate a new one.", LogLevel.Error);
                 }
             }
         }
@@ -100,49 +114,49 @@ namespace StardewMods
             GenericMC.AddTextOption(ModManifest, name: () => translate.Get("GenericMC.barIconMode"), tooltip: () => translate.Get("GenericMC.barIconModeDesc"),
                 getValue: () => config.BarIconMode[screen].ToString(),
                 setValue: value => config.BarIconMode[screen] = int.Parse(value),
-                allowedValues: new string[] { "0", "1", "2", "3" },
+                allowedValues: ["0", "1", "2", "3"],
                 formatAllowedValue: value => value == "3" ? translate.Get($"GenericMC.Disabled") : translate.Get($"GenericMC.barIconMode{value}"));
 
-            GenericMC.AddNumberOption(ModManifest, () => config.BarTopLeftLocationX[screen], (int val) => config.BarTopLeftLocationX[screen] = val,
+            GenericMC.AddNumberOption(ModManifest, () => config.BarTopLeftLocationX[screen], (val) => config.BarTopLeftLocationX[screen] = val,
                 () => translate.Get("GenericMC.barPosX"), () => translate.Get("GenericMC.barPosXDesc"), 0);
-            GenericMC.AddNumberOption(ModManifest, () => config.BarTopLeftLocationY[screen], (int val) => config.BarTopLeftLocationY[screen] = val,
+            GenericMC.AddNumberOption(ModManifest, () => config.BarTopLeftLocationY[screen], (val) => config.BarTopLeftLocationY[screen] = val,
                 () => translate.Get("GenericMC.barPosY"), () => translate.Get("GenericMC.barPosYDesc"), 0);
-            GenericMC.AddNumberOption(ModManifest, () => config.BarScale[screen], (float val) => config.BarScale[screen] = val,
+            GenericMC.AddNumberOption(ModManifest, () => config.BarScale[screen], (val) => config.BarScale[screen] = val,
                 () => translate.Get("GenericMC.barScale"), () => translate.Get("GenericMC.barScaleDesc"), 0.1f, 5f, 0.1f);
-            GenericMC.AddNumberOption(ModManifest, () => config.BarMaxIcons[screen], (int val) => config.BarMaxIcons[screen] = val,
+            GenericMC.AddNumberOption(ModManifest, () => config.BarMaxIcons[screen], (val) => config.BarMaxIcons[screen] = val,
                 () => translate.Get("GenericMC.barMaxIcons"), () => translate.Get("GenericMC.barMaxIconsDesc"), 4, 500);
-            GenericMC.AddNumberOption(ModManifest, () => config.BarMaxIconsPerRow[screen], (int val) => config.BarMaxIconsPerRow[screen] = val,
+            GenericMC.AddNumberOption(ModManifest, () => config.BarMaxIconsPerRow[screen], (val) => config.BarMaxIconsPerRow[screen] = val,
                 () => translate.Get("GenericMC.barMaxIconsPerRow"), () => translate.Get("GenericMC.barMaxIconsPerRowDesc"), 4, 500);
 
             GenericMC.AddTextOption(ModManifest, name: () => translate.Get("GenericMC.barBackgroundMode"), tooltip: () => translate.Get("GenericMC.barBackgroundModeDesc"),
                 getValue: () => config.BarBackgroundMode[screen].ToString(),
                 setValue: value => config.BarBackgroundMode[screen] = int.Parse(value),
-                allowedValues: new string[] { "0", "1", "2" },
+                allowedValues: ["0", "1", "2"],
                 formatAllowedValue: value => value == "2" ? translate.Get($"GenericMC.Disabled") : translate.Get($"GenericMC.barBackgroundMode{value}"));
 
-            GenericMC.AddBoolOption(ModManifest, () => config.BarShowBaitAndTackleInfo[screen], (bool val) => config.BarShowBaitAndTackleInfo[screen] = val,
+            GenericMC.AddBoolOption(ModManifest, () => config.BarShowBaitAndTackleInfo[screen], (val) => config.BarShowBaitAndTackleInfo[screen] = val,
                 () => translate.Get("GenericMC.barShowBaitTackle"), () => translate.Get("GenericMC.barShowBaitTackleDesc"));
-            GenericMC.AddBoolOption(ModManifest, () => config.BarShowPercentages[screen], (bool val) => config.BarShowPercentages[screen] = val,
+            GenericMC.AddBoolOption(ModManifest, () => config.BarShowPercentages[screen], (val) => config.BarShowPercentages[screen] = val,
                 () => translate.Get("GenericMC.barShowPercentages"), () => translate.Get("GenericMC.barShowPercentagesDesc"));
 
             GenericMC.AddTextOption(ModManifest, name: () => translate.Get("GenericMC.barSortMode"), tooltip: () => translate.Get("GenericMC.barSortModeDesc"),
                 getValue: () => config.BarSortMode[screen].ToString(),
                 setValue: value => config.BarSortMode[screen] = int.Parse(value),
-                allowedValues: new string[] { "0", "1", "2" },
+                allowedValues: ["0", "1", "2"],
                 formatAllowedValue: value => value == "2" ? translate.Get($"GenericMC.Disabled") : translate.Get($"GenericMC.barSortMode{value}"));
 
-            GenericMC.AddNumberOption(ModManifest, () => config.BarScanRadius[screen], (int val) => config.BarScanRadius[screen] = val,
+            GenericMC.AddNumberOption(ModManifest, () => config.BarScanRadius[screen], (val) => config.BarScanRadius[screen] = val,
                 () => translate.Get("GenericMC.barScanRadius"), () => translate.Get("GenericMC.barScanRadiusDesc"), 1, 60);
-            GenericMC.AddBoolOption(ModManifest, () => config.BarCrabPotEnabled[screen], (bool val) => config.BarCrabPotEnabled[screen] = val,
+            GenericMC.AddBoolOption(ModManifest, () => config.BarCrabPotEnabled[screen], (val) => config.BarCrabPotEnabled[screen] = val,
                 () => translate.Get("GenericMC.barCrabPotEnabled"), () => translate.Get("GenericMC.barCrabPotEnabledDesc"));
-            GenericMC.AddBoolOption(ModManifest, () => config.UncaughtFishAreDark[screen], (bool val) => config.UncaughtFishAreDark[screen] = val,
+            GenericMC.AddBoolOption(ModManifest, () => config.UncaughtFishAreDark[screen], (val) => config.UncaughtFishAreDark[screen] = val,
                 () => translate.Get("GenericMC.barUncaughtDarker"), () => translate.Get("GenericMC.barUncaughtDarkerDesc"));
-            GenericMC.AddBoolOption(ModManifest, () => config.OnlyFish[screen], (bool val) => config.OnlyFish[screen] = val,
+            GenericMC.AddBoolOption(ModManifest, () => config.OnlyFish[screen], (val) => config.OnlyFish[screen] = val,
                 () => translate.Get("GenericMC.barOnlyFish"), () => translate.Get("GenericMC.barOnlyFishDesc"));
 
             if (screen == 0)//only page 0
             {
-                GenericMC.AddNumberOption(ModManifest, () => config.BarExtraCheckFrequency, (int val) => config.BarExtraCheckFrequency = val,
+                GenericMC.AddNumberOption(ModManifest, () => config.BarExtraCheckFrequency, (val) => config.BarExtraCheckFrequency = val,
                     () => translate.Get("GenericMC.barExtraCheckFrequency"), () => translate.Get("GenericMC.barExtraCheckFrequencyDesc"), 0, 22);
 
                 GenericMC.AddSectionTitle(ModManifest, () => translate.Get("GenericMC.MinigameLabel"));
@@ -152,7 +166,7 @@ namespace StardewMods
             GenericMC.AddTextOption(ModManifest, name: () => translate.Get("GenericMC.MinigameMode"), tooltip: () => translate.Get("GenericMC.MinigameModeDesc"),
                 getValue: () => config.MinigamePreviewMode[screen].ToString(),
                 setValue: value => config.MinigamePreviewMode[screen] = int.Parse(value),
-                allowedValues: new string[] { "0", "1", "2", "3" },
+                allowedValues: ["0", "1", "2", "3"],
                 formatAllowedValue: value => value == "3" ? translate.Get($"GenericMC.Disabled") : translate.Get($"GenericMC.MinigameMode{value}"));
         }
 
@@ -251,19 +265,19 @@ namespace StardewMods
 
             Color[] data = new Color[width * width];
 
-            float radiusSquared = (width / 2) * (width / 2);
+            float radiusSquared = width / 2 * (width / 2);
 
             for (int x = 0; x < width; x++)
             {
                 for (int y = 0; y < width; y++)
                 {
-                    float dx = x - (width / 2);
-                    float dy = y - (width / 2);
+                    float dx = x - width / 2;
+                    float dy = y - width / 2;
                     float distanceSquared = dx * dx + dy * dy;
 
                     if (distanceSquared <= radiusSquared + thickness)
                     {
-                        data[(x + y * width)] = Color.White;
+                        data[x + y * width] = Color.White;
                     }
                 }
             }

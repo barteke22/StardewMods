@@ -81,6 +81,7 @@
 	"GenericMC.barColors": "Personalización de Colores",
 	"GenericMC.barBackgroundColor": "Color de Fondo",
 	"GenericMC.barTextColor": "Color del Texto",
+	"GenericMC.barTextColorDesc": "\"RGB\" controla el color del texto. \"A\" controla la intensidad del contorno negro.",
 
 	"Bar.CrabMineWarning": "Mala idea: las trampas para cangrejos colocadas en las minas se perderán al salir."
 }
