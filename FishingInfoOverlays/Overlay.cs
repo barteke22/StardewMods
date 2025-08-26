@@ -316,7 +316,7 @@ namespace FishingInfoOverlays
                         if (iconCount < maxIcons[screen] && percent > 0)
                         {
                             var data = ItemRegistry.GetDataOrErrorItem(fish);
-                            bool caught = !uncaughtDark[screen] || who.fishCaught.ContainsKey(data.QualifiedItemId);
+                            bool caught = !uncaughtDark[screen] || who.fishCaught.ContainsKey(data.QualifiedItemId) || (data.Category != Object.FishCategory);
                             if (fish == "(O)168") caught = true;
 
                             iconCount++;
