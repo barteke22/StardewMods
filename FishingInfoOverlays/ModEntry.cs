@@ -4,7 +4,6 @@ using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
-using StardewMods;
 using StardewValley;
 
 namespace FishingInfoOverlays
@@ -189,13 +188,13 @@ namespace FishingInfoOverlays
 
         private void Rendered(object sender, RenderedEventArgs e)
         {
-            if (overlay.Value == null) overlay.Value = new Overlay(this);
+            overlay.Value ??= new Overlay(this);
             if (Context.IsWorldReady) overlay.Value.Rendered(sender, e);
         }
 
         private void OnMenuChanged(object sender, MenuChangedEventArgs e)   //Minigame data
         {
-            if (overlay.Value == null) overlay.Value = new Overlay(this);
+            overlay.Value ??= new Overlay(this);
             if (Context.IsWorldReady) overlay.Value.OnMenuChanged(sender, e);
         }
         private void OnRenderMenu(object sender, RenderedActiveMenuEventArgs e)
@@ -253,15 +252,15 @@ namespace FishingInfoOverlays
         }
 
 
-        private Texture2D WhitePixel() //returns a single pixel texture that can be recoloured and resized to make up a background
+        private static Texture2D WhitePixel() //returns a single pixel texture that can be recoloured and resized to make up a background
         {
-            Texture2D whitePixel = new Texture2D(Game1.graphics.GraphicsDevice, 1, 1);
-            whitePixel.SetData(new[] { Color.White });
+            Texture2D whitePixel = new(Game1.graphics.GraphicsDevice, 1, 1);
+            whitePixel.SetData([Color.White]);
             return whitePixel;
         }
-        private Texture2D WhiteCircle(int width, int thickness) //returns a circle texture that can be recoloured and resized to make up a background. Width works better with Odd Numbers.
+        private static Texture2D WhiteCircle(int width, int thickness) //returns a circle texture that can be recoloured and resized to make up a background. Width works better with Odd Numbers.
         {
-            Texture2D whitePixel = new Texture2D(Game1.graphics.GraphicsDevice, width, width);
+            Texture2D whitePixel = new(Game1.graphics.GraphicsDevice, width, width);
 
             Color[] data = new Color[width * width];
 

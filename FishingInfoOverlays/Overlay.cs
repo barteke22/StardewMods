@@ -222,7 +222,7 @@ namespace FishingInfoOverlays
 
                 bool foundWater = false;
                 bool showTile = false;
-                Vector2 nearestWaterTile = new Vector2(99999f, 99999f);      //any water nearby + nearest water tile check
+                Vector2 nearestWaterTile = new(99999f, 99999f);      //any water nearby + nearest water tile check
                 if (who.currentLocation.canFishHere())
                 {
                     if (rod != null)
@@ -277,7 +277,7 @@ namespace FishingInfoOverlays
                             {
                                 if (who.currentLocation.isTileFishable(x, y) && !who.currentLocation.isTileBuildingFishable(x, y))
                                 {
-                                    Vector2 tile = new Vector2(x, y);
+                                    Vector2 tile = new(x, y);
                                     float distance = Vector2.DistanceSquared(who.Tile, tile);
                                     float distanceNearest = Vector2.DistanceSquared(who.Tile, nearestWaterTile);
                                     if (distance < distanceNearest || distance == distanceNearest && Game1.player.GetGrabTile() == tile) nearestWaterTile = tile;
@@ -411,8 +411,8 @@ namespace FishingInfoOverlays
         {
             if (Game1.ticks % (isMinigame ? 600 : 30) == 0 || oldGeneric == null)
             {
-                oldGeneric = new();
-                fishHere = new() { "(O)168" };
+                oldGeneric = [];
+                fishHere = ["(O)168"];
                 fishChancesSlow = new() { { "-1", 100 }, { "(O)168", 0 } };//-1 represents the total
 
                 var hard = AddHardcoded(bobberTile, false);
@@ -466,14 +466,11 @@ namespace FishingInfoOverlays
         /// <summary>
         /// MODIFIED COPY OF GameLocation.GetFishFromLocationData();
         /// </summary>
-        internal Dictionary<string, float> GetFishFromLocationData(string locationName, Vector2 bobberTile, int waterDepth, Farmer player, bool isTutorialCatch, bool isInherited, GameLocation location, ItemQueryContext itemQueryContext)
+        internal static Dictionary<string, float> GetFishFromLocationData(string locationName, Vector2 bobberTile, int waterDepth, Farmer player, bool isTutorialCatch, bool isInherited, GameLocation location, ItemQueryContext itemQueryContext)
         {
             Dictionary<string, float> passed = [];
 
-            if (location == null)
-            {
-                location = Game1.getLocationFromName(locationName);
-            }
+            location ??= Game1.getLocationFromName(locationName);
             Dictionary<string, LocationData> dictionary = DataLoader.Locations(Game1.content);
             LocationData locationData = location != null ? location.GetData() : GameLocation.GetData(locationName);
             Dictionary<string, string> allFishData = DataLoader.Fish(Game1.content);
@@ -485,27 +482,22 @@ namespace FishingInfoOverlays
             bool usingMagicBait = false;
             bool hasCuriosityLure = false;
             string baitTargetFish = null;
-            bool usingGoodBait = false;
-            FishingRod rod = player?.CurrentTool as FishingRod;
-            if (rod != null)
+            //bool usingGoodBait = false;//not important
+            if (player?.CurrentTool is FishingRod rod)
             {
-                usingMagicBait = rod.HasMagicBait();
                 hasCuriosityLure = rod.HasCuriosityLure();
-                Object bait = rod.GetBait();
-                if (bait?.QualifiedItemId == "(O)SpecificBait" && bait.preservedParentSheetIndex.Value != null)
+                if (rod.GetBait() is Object bait)
                 {
-                    baitTargetFish = "(O)" + bait.preservedParentSheetIndex.Value;
-                }
-                if (bait?.QualifiedItemId != "(O)685")
-                {
-                    usingGoodBait = true;
+                    if (bait.QualifiedItemId == "(O)SpecificBait" && bait.preservedParentSheetIndex.Value != null)
+                    {
+                        baitTargetFish = "(O)" + bait.preservedParentSheetIndex.Value;
+                    }
+                    else if (rod.HasMagicBait()) usingMagicBait = true;
+                    //else if (bait?.QualifiedItemId != "(O)685") usingGoodBait = true;
                 }
             }
             Point playerTile = player.TilePoint;
-            if (itemQueryContext == null)
-            {
-                itemQueryContext = new ItemQueryContext(location, null, Game1.random, "");
-            }
+            itemQueryContext ??= new ItemQueryContext(location, null, Game1.random, "");
             IEnumerable<SpawnFishData> possibleFish = dictionary["Default"].Fish;
             if (locationData != null && locationData.Fish?.Count > 0)
             {
@@ -546,7 +538,7 @@ namespace FishingInfoOverlays
                     continue;
                 }
 
-                List<string> queries = new();
+                List<string> queries = [];
                 if (spawn.RandomItemId != null && spawn.RandomItemId.Count != 0)
                 {
                     queries = spawn.RandomItemId;
@@ -563,7 +555,7 @@ namespace FishingInfoOverlays
                         query = q.Replace("BOBBER_X", ((int)bobberTile.X).ToString()).Replace("BOBBER_Y", ((int)bobberTile.Y).ToString()).Replace("WATER_DEPTH", waterDepth.ToString());
                     }
 
-                    List<Item> items = new();
+                    List<Item> items = [];
                     for (int i = 0; i < max; i++)
                     {
                         var item = ItemQueryResolver.TryResolve(query, itemQueryContext, ItemQuerySearchMode.FirstOfTypeItem, spawn.PerItemCondition, spawn.MaxItems, true);
@@ -589,10 +581,7 @@ namespace FishingInfoOverlays
                                 {
                                     passed[fish.QualifiedItemId] = chance * c;
                                 }
-                                if (firstNonTargetFish == null)
-                                {
-                                    firstNonTargetFish = fish;
-                                }
+                                firstNonTargetFish ??= fish;
                                 targetedBaitTries++;
                             }
                         }
@@ -612,7 +601,7 @@ namespace FishingInfoOverlays
         /// <summary>
         /// MODIFIED COPY OF GameLocation.CheckGenericFishRequirements();
         /// </summary>
-        internal float CheckGenericFishRequirements(Item fish, Dictionary<string, string> allFishData, GameLocation location, Farmer player, SpawnFishData spawn, int waterDepth, bool usingMagicBait, bool hasCuriosityLure, bool usingTargetBait, bool isTutorialCatch)
+        internal static float CheckGenericFishRequirements(Item fish, Dictionary<string, string> allFishData, GameLocation location, Farmer player, SpawnFishData spawn, int waterDepth, bool usingMagicBait, bool hasCuriosityLure, bool usingTargetBait, bool isTutorialCatch)
         {
             if (!fish.HasTypeObject() || !allFishData.TryGetValue(fish.ItemId, out var rawSpecificFishData))
             {
@@ -626,6 +615,7 @@ namespace FishingInfoOverlays
             bool isTrainingRod = player?.CurrentTool?.QualifiedItemId == "(T)TrainingRod";
             if (isTrainingRod)
             {
+#pragma warning disable IDE0059 // Unnecessary assignment of a value
                 if (!ArgUtility.TryGetInt(specificFishData, 1, out var difficulty, out var error7))
                 {
                     return 0;
@@ -739,6 +729,7 @@ namespace FishingInfoOverlays
                 }
                 return chance;
             }
+#pragma warning restore IDE0059 // Unnecessary assignment of a value
             return 1;
         }
 
@@ -769,15 +760,15 @@ namespace FishingInfoOverlays
                     who.luckLevel.Value = Game1.player.LuckLevel;
                     foreach (var item in Game1.player.fishCaught) who.fishCaught.Add(item);
                     foreach (var m in Game1.player.secretNotesSeen) who.secretNotesSeen.Add(m);
-                    who.stats.Values = new();
+                    who.stats.Values = [];
 
                     if (oldGeneric == null)
                     {
-                        oldGeneric = new();
-                        fishFailed = new();
-                        fishHere = new() { "(O)168" };
+                        oldGeneric = [];
+                        fishFailed = [];
+                        fishHere = ["(O)168"];
                         fishChances = new() { { "-1", 0 }, { "(O)168", 0 } };
-                        fishChancesSlow = new();
+                        fishChancesSlow = [];
                         fishChancesModulo = 1;
                     }
                     int freq = isMinigame || isMinigameOther ? 6 / totalPlayersOnThisPC : extraCheckFrequency * 10 / totalPlayersOnThisPC; //minigame lowers frequency
@@ -844,7 +835,7 @@ namespace FishingInfoOverlays
                                 {
                                     fishChances = new() { { "-1", 0 } };//reset % on new fish added
                                     foreach (var f in fishHere) fishChances.Add(f, 1);
-                                    fishChancesSlow = new();
+                                    fishChancesSlow = [];
                                     fishChancesModulo = 1;
 
                                     if (sortMode[screen] == 0) SortItemIntoListByDisplayName(fish); //sort by name
@@ -904,12 +895,12 @@ namespace FishingInfoOverlays
                 {
                     if (!(who.currentLocation as IslandSouthEast).fishedWalnut.Value)
                     {
-                        fishHere = new() { "(O)73" };
+                        fishHere = ["(O)73"];
                         fishChancesSlow = new() { { "-1", 1 }, { "(O)73", 1 }, { "(O)168", 0 } };
                     }
                     else
                     {
-                        fishHere = new() { "(O)168" };
+                        fishHere = ["(O)168"];
                         fishChancesSlow = new() { { "-1", 1 }, { "(O)168", 1 } };
                     }
                     oldGeneric = null;
@@ -991,11 +982,11 @@ namespace FishingInfoOverlays
 
         private void AddCrabPotFish()
         {
-            fishHere = new();
+            fishHere = [];
 
             bool isMariner = who.professions.Contains(10);
             if (!isMariner) fishHere.Add("(O)168");//trash
-            fishChancesSlow = new();
+            fishChancesSlow = [];
 
             double fishChance = 1f;
             if (!isMariner && who.currentLocation.TryGetFishAreaForTile(who.Tile, out var _, out var data))
@@ -1083,9 +1074,9 @@ namespace FishingInfoOverlays
 
 
         /// <summary>Makes text a tiny bit bolder and adds a border behind it. The border uses text colour's alpha for its aplha value. 6 DrawString operations, so 6x less efficient.</summary>
-        private void DrawStringWithBorder(SpriteBatch batch, SpriteFont font, string text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects effects, float layerDepth, Color? borderColor = null)
+        private static void DrawStringWithBorder(SpriteBatch batch, SpriteFont font, string text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects effects, float layerDepth, Color? borderColor = null)
         {
-            Color border = borderColor.HasValue ? borderColor.Value : Color.Black;
+            Color border = borderColor ?? Color.Black;
             border.A = color.A;
             batch.DrawString(font, text, position + new Vector2(-1.2f * scale, -1.2f * scale), border, rotation, origin, scale, effects, layerDepth - 0.00001f);
             batch.DrawString(font, text, position + new Vector2(1.2f * scale, -1.2f * scale), border, rotation, origin, scale, effects, layerDepth - 0.00001f);
