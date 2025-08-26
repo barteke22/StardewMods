@@ -615,8 +615,7 @@ namespace FishingInfoOverlays
             bool isTrainingRod = player?.CurrentTool?.QualifiedItemId == "(T)TrainingRod";
             if (isTrainingRod)
             {
-#pragma warning disable IDE0059 // Unnecessary assignment of a value
-                if (!ArgUtility.TryGetInt(specificFishData, 1, out var difficulty, out var error7))
+                if (!ArgUtility.TryGetInt(specificFishData, 1, out var difficulty, out _))
                 {
                     return 0;
                 }
@@ -627,7 +626,7 @@ namespace FishingInfoOverlays
             }
             if (isTutorialCatch)
             {
-                if (!ArgUtility.TryGetOptionalBool(specificFishData, 13, out var isTutorialFish, out var error6))
+                if (!ArgUtility.TryGetOptionalBool(specificFishData, 13, out var isTutorialFish, out _))
                 {
                     return 0;
                 }
@@ -640,7 +639,7 @@ namespace FishingInfoOverlays
             {
                 if (!usingMagicBait)
                 {
-                    if (!ArgUtility.TryGet(specificFishData, 5, out var rawTimeSpans, out var error5))
+                    if (!ArgUtility.TryGet(specificFishData, 5, out var rawTimeSpans, out _))
                     {
                         return 0;
                     }
@@ -648,7 +647,7 @@ namespace FishingInfoOverlays
                     bool found = false;
                     for (int i = 0; i < timeSpans.Length; i += 2)
                     {
-                        if (!ArgUtility.TryGetInt(timeSpans, i, out var startTime, out error5) || !ArgUtility.TryGetInt(timeSpans, i + 1, out var endTime, out error5))
+                        if (!ArgUtility.TryGetInt(timeSpans, i, out var startTime, out _) || !ArgUtility.TryGetInt(timeSpans, i + 1, out var endTime, out _))
                         {
                             return 0;
                         }
@@ -665,7 +664,7 @@ namespace FishingInfoOverlays
                 }
                 if (!usingMagicBait)
                 {
-                    if (!ArgUtility.TryGet(specificFishData, 7, out var weather, out var error4))
+                    if (!ArgUtility.TryGet(specificFishData, 7, out var weather, out _))
                     {
                         return 0;
                     }
@@ -681,7 +680,7 @@ namespace FishingInfoOverlays
                         return 0;
                     }
                 }
-                if (!ArgUtility.TryGetInt(specificFishData, 12, out var minFishingLevel, out var error3))
+                if (!ArgUtility.TryGetInt(specificFishData, 12, out var minFishingLevel, out _))
                 {
                     return 0;
                 }
@@ -689,7 +688,7 @@ namespace FishingInfoOverlays
                 {
                     return 0;
                 }
-                if (!ArgUtility.TryGetInt(specificFishData, 9, out var maxDepth, out var error2) || !ArgUtility.TryGetFloat(specificFishData, 10, out var chance, out error2) || !ArgUtility.TryGetFloat(specificFishData, 11, out var depthMultiplier, out error2))
+                if (!ArgUtility.TryGetInt(specificFishData, 9, out var maxDepth, out _) || !ArgUtility.TryGetFloat(specificFishData, 10, out var chance, out _) || !ArgUtility.TryGetFloat(specificFishData, 11, out var depthMultiplier, out _))
                 {
                     return 0;
                 }
@@ -729,7 +728,6 @@ namespace FishingInfoOverlays
                 }
                 return chance;
             }
-#pragma warning restore IDE0059 // Unnecessary assignment of a value
             return 1;
         }
 
