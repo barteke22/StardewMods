@@ -64,8 +64,8 @@
 	"GenericMC.barOnlyFishDesc": "Pasek pokaże tylko rzeczy z oficjalnej listy ryb (i śmieci), pomijając rzeczy takie jak meble bądź notatki. Nadal będą przyczyniać się do obliczeń procentowych. Opcja dodana głównie ze względu na spójność, ponieważ niektóre z tych przedmiotów są już na czarnej liście (ukryte). Ostrzegam: Jest minimalna szansa, że jakiś mod nie dodał swoich ryb to tej listy, lecz nie liczyłyby się w tym przypadku jako ryby.",
 
 	"GenericMC.MinigameLabel": "Podgląd (minigra)",
-	"GenericMC.MinigameDescription": "Jeśli ta opcja jest włączona, minigra wędkarska pokaże podgląd ryby, którą właśnie łapiesz zamiast ikony standardowej.",
-	"GenericMC.MinigameDescription2": "Dopóki inny mod prawidłowo zmienia pozycje BobberBar, powinno to z nim działać. W przeciwnym razie możesz wypróbować inny tryb, lub wyłączyć podgląd tutaj.",
+	"GenericMC.MinigameDescription": "Jeśli ta opcja jest włączona, minigra wędkarska pokaże podgląd ryby, którą właśnie łapiesz, zamiast ikony standardowej i na Pasku Info.",
+	"GenericMC.MinigameDescription2": "Inne mody: Dopóki prawidłowo zmieniają pozycje BobberBar, powinno to z nimi działać. W przeciwnym razie możesz wypróbować inny tryb, lub wyłączyć podgląd tutaj.",
 
 	"GenericMC.MinigameMode": "Tryb minigry",
 	"GenericMC.MinigameModeDesc": "Pełny: Kopiuje wiele warstw minigry, aby wyglądać lepiej.\nProsty: Kopiuje tylko rybę. Wygląda gorzej, ale może działać lepiej.\nTylko pasek (również zawarty w powyższych dwóch trybach): Wyróżnia rybę w Pasky Info (jeśli jest włączony).",

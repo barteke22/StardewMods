@@ -64,8 +64,8 @@
 	"GenericMC.barOnlyFishDesc": "The bar will only show things from the official fish list (and trash), skipping things like furniture or notes. They will still contribute to percentage calculations. This is mainly for consistency's sake, since some of these items are already blacklisted (hidden). Keep in mind that there's a tiny chance that some mod didn't add its fish to this list, though those wouldn't really count as fish.",
 
 	"GenericMC.MinigameLabel": "Preview (Minigame)",
-	"GenericMC.MinigameDescription": "If enabled, the fishing minigame will show a preview of the fish you're catching in place of the generic icon.",
-	"GenericMC.MinigameDescription2": "So long as the mod overrides the BobberBar position variable it should work, otherwise you can try another mode, or disable the preview here.",
+	"GenericMC.MinigameDescription": "If enabled, the fishing minigame will show a preview of the fish you're catching in place of the generic icon and highlights the Preview Bar icon.",
+	"GenericMC.MinigameDescription2": "Compatibility: So long as the other mod overrides the BobberBar position variable it should work, otherwise you can try another mode, or disable the preview here.",
 
 	"GenericMC.MinigameMode": "Minigame Mode",
 	"GenericMC.MinigameModeDesc": "Full: Copies multiple layers to look better.\nSimple: Only overlays the fish, looks worse, but might perform/work better.\nBar Only (included in the above two): Outlines the fish in the regular location bar (if it's enabled).",
