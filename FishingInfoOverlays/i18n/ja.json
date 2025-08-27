@@ -43,6 +43,12 @@
 	"GenericMC.barShowPercentages": "確率を示す",
 	"GenericMC.barShowPercentagesDesc": "各魚のアイコンの下に、釣れる確率のシミュレーションが示されます.エクストラチェックの頻度に大きく依存し、高ければ高いほど良い.",
 
+	"GenericMC.barShowExtraIcons": "追加アイコンを表示",
+	"GenericMC.barShowExtraIconsDesc": "魚の横に追加アイコンを表示するかどうか（常に表示、または少なくとも1匹釣った後）:\n - スター：まだ最大サイズの魚を釣っていない。\n - バンドル：コミュニティセンターバンドルに必要な魚（バンドルはロック解除されている必要があります）.",
+	"GenericMC.barShowExtraIconsDesc2": "\n - フグ：まだStardew水族館に魚を寄付していない (Stardew Aquarium).",
+	"GenericMC.barShowExtraIcons1": "常に表示",
+	"GenericMC.barShowExtraIcons2": "一度釣った後",
+
 	"GenericMC.barSortMode": "ソートモード",
 	"GenericMC.barSortModeDesc": "名前順にすると、アイコンがアルファベット順に並びます.\n捕獲率(%)でソートすると、エクストラチェック頻度が高い方から並びます.\nソートしない場合は、以下の順序になります.ごみ、ID、おまけの順です.",
 	"GenericMC.barSortMode0": "名前",

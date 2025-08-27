@@ -43,6 +43,12 @@
 	"GenericMC.barShowPercentages": "Pokaż Procenty",
 	"GenericMC.barShowPercentagesDesc": "Pokazuje symulowaną szansę złapania danej ryby pod jej ikoną. Dokładność bardzo zależy od Częstotliwości Ekstra Testów, im większa, tym lepiej.",
 
+	"GenericMC.barShowExtraIcons": "Pokaż Dodatkowe Ikony",
+	"GenericMC.barShowExtraIconsDesc": "Czy wyświetlać dodatkowe ikony obok ryby (Zawsze lub Po złowieniu co najmniej jednej):\n - Gwiazdka: Nie złapano jeszcze maksymalnego wielkości.\n - Kolekcja: Ryba potrzebna do kolekcji Centrum Społeczności (kolekcja musi być odblokowana).",
+	"GenericMC.barShowExtraIconsDesc2": "\n - Rozdymka: Ryba nie została jeszcze przekazana do Stardew Aquarium (akwarium).",
+	"GenericMC.barShowExtraIcons1": "Zawsze",
+	"GenericMC.barShowExtraIcons2": "Po złowieniu",
+
 	"GenericMC.barSortMode": "Tryb Sortowania",
 	"GenericMC.barSortModeDesc": "Sortowanie według Nazwy aranżuje ikony alfabetycznie.\nSortowanie według Szansy Złapania bardzo zależy od Częstotliwości Ekstra Testów, im większa, tym lepiej.\nBez sortowania ikony mają daną kolejność: Śmieci, według ID, i ekstra.",
 	"GenericMC.barSortMode0": "Nazwa",

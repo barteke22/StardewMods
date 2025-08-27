@@ -43,6 +43,12 @@
 	"GenericMC.barShowPercentages": "Mostrar Porcentajes",
 	"GenericMC.barShowPercentagesDesc": "Muestra el porcentaje simulado de probabilidad de captura de cada pez debajo de su icono. Depende mucho de la Frecuencia de Revisión Extra: cuanto más alta, mejor.",
 
+	"GenericMC.barShowExtraIcons": "Mostrar Iconos Adicionales",
+	"GenericMC.barShowExtraIconsDesc": "Mostrar iconos adicionales junto al pez (Siempre o Una vez capturado):\n - Estrella: Aún no se ha capturado el tamaño máximo.\n - Lote: Se necesita un pez para el lote del Centro Comunitario (el lote debe estar desbloqueado).",
+	"GenericMC.barShowExtraIconsDesc2": "\n - Pez globo: El pez aún no se ha donado al Acuario de Stardew (Stardew Aquarium).",
+	"GenericMC.barShowExtraIcons1": "Siempre",
+	"GenericMC.barShowExtraIcons2": "Una vez capturado",
+
 	"GenericMC.barSortMode": "Estilo de Ordenamiento",
 	"GenericMC.barSortModeDesc": "Ordenar por nombre organiza los iconos alfabéticamente.\nOrdenar por probabilidad de captura (%) depende mucho de la Frecuencia de Revisión Extra: cuanto más alta, mejor.\nSin ordenamiento, el orden es: basura, por ID y extras.",
 	"GenericMC.barSortMode0": "Nombre",

@@ -43,6 +43,12 @@
 	"GenericMC.barShowPercentages": "Show Percentages",
 	"GenericMC.barShowPercentagesDesc": "Shows simulated percentage chance of catching each fish under its icon. Relies heavily on Extra Check Frequency, the higher, the better.",
 
+	"GenericMC.barShowExtraIcons": "Show Extra Icons",
+	"GenericMC.barShowExtraIconsDesc": "Whether to show extra icons next to the fish (always or once you've caught at least one):\n - Star: Haven't caught max size yet.\n - Bundle: Fish needed for Community Center bundle (bundle must be unlocked).",
+	"GenericMC.barShowExtraIconsDesc2": "\n - Pufferfish: Fish hasn't been donated to Stardew Aquarium yet.",
+	"GenericMC.barShowExtraIcons1": "Always",
+	"GenericMC.barShowExtraIcons2": "Once Caught",
+
 	"GenericMC.barSortMode": "Sorting Mode",
 	"GenericMC.barSortModeDesc": "Sorting by Name arranges icons alphabetically.\nSorting by Catch Chance (%) relies heavily on Extra Check Frequency, the higher, the better.\nWithout sorting, the order is: Trash, by ID, and extras.",
 	"GenericMC.barSortMode0": "Name",

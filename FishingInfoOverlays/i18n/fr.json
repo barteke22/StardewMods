@@ -43,6 +43,12 @@
 	"GenericMC.barShowPercentages": "Montrer les pourcentages",
 	"GenericMC.barShowPercentagesDesc": "Montre un pourcentage de chance simulé d’attraper chaque poisson sous son icône.\ns’appuie beaucoup sur la fréquence de vérification : plus il y en, mieux c’est.",
 
+	"GenericMC.barShowExtraIcons": "Afficher les icônes supplémentaires",
+	"GenericMC.barShowExtraIconsDesc": "Afficher les icônes supplémentaires à côté du poisson (Toujours ou Une fois que vous en avez attrapé au moins un):\n - Étoile : Taille maximale non encore attrapée.\n - Lot : Poisson requis pour le lot du Centre communautaire (le lot doit être débloqué).",
+	"GenericMC.barShowExtraIconsDesc2": "\n - Poisson-globe : Le poisson n'a pas encore été donné à l'aquarium Stardew (Stardew Aquarium).",
+	"GenericMC.barShowExtraIcons1": "Toujours",
+	"GenericMC.barShowExtraIcons2": "Une fois attrapé",
+
 	"GenericMC.barSortMode": "Mode de tri",
 	"GenericMC.barSortModeDesc": "Trier par nom arrange les icônes de façon alphabétique.\nTrier par probabilité (%) s’appuie sur la fréquence de vérification : plus il y en, mieux c’est.\nSans tri, l’ordre est : Déchets ; par ID ; extras.",
 	"GenericMC.barSortMode0": "Nom",

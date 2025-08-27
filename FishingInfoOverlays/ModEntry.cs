@@ -139,6 +139,13 @@ namespace FishingInfoOverlays
             GenericMC.AddBoolOption(ModManifest, () => config.BarShowPercentages[screen], (val) => config.BarShowPercentages[screen] = val,
                 () => translate.Get("GenericMC.barShowPercentages"), () => translate.Get("GenericMC.barShowPercentagesDesc"));
 
+            GenericMC.AddTextOption(ModManifest, name: () => translate.Get("GenericMC.barShowExtraIcons"), 
+                tooltip: () => translate.Get("GenericMC.barShowExtraIconsDesc") + (Overlay.modAquarium ? translate.Get("GenericMC.barShowExtraIconsDesc2") : ""),
+                getValue: () => config.BarShowExtraIcons[screen].ToString(),
+                setValue: value => config.BarShowExtraIcons[screen] = int.Parse(value),
+                allowedValues: ["0", "1", "2"],
+                formatAllowedValue: value => value == "0" ? translate.Get($"GenericMC.Disabled") : translate.Get($"GenericMC.barShowExtraIcons{value}"));
+
             GenericMC.AddTextOption(ModManifest, name: () => translate.Get("GenericMC.barSortMode"), tooltip: () => translate.Get("GenericMC.barSortModeDesc"),
                 getValue: () => config.BarSortMode[screen].ToString(),
                 setValue: value => config.BarSortMode[screen] = int.Parse(value),
@@ -232,6 +239,7 @@ namespace FishingInfoOverlays
             Overlay.scanRadius = config.BarScanRadius;                                                                      //config: 0: Only checks if can fish, 1-50: also checks if there's water within X tiles around player.
             Overlay.showPercentages = config.BarShowPercentages;                                                            //config: Whether it should show catch percentages.
             Overlay.showTackles = config.BarShowBaitAndTackleInfo;                                                          //config: Whether it should show Bait and Tackle info.
+            Overlay.showExtraIcons = config.BarShowExtraIcons;                                                              //config: 0= Off, 1 = Always, 2 = Once caught
             Overlay.sortMode = config.BarSortMode;                                                                          //config: 0= By Name (text mode only), 1= By Percentage, 2=Off
             Overlay.uncaughtDark = config.UncaughtFishAreDark;                                                              //config: Whether uncaught fish are displayed as ??? and use dark icons
 
