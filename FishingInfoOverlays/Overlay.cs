@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
@@ -10,6 +11,7 @@ using StardewValley;
 using StardewValley.Extensions;
 using StardewValley.GameData;
 using StardewValley.GameData.Locations;
+using StardewValley.GameData.Objects;
 using StardewValley.Internal;
 using StardewValley.Locations;
 using StardewValley.Menus;
@@ -51,6 +53,7 @@ namespace FishingInfoOverlays
         public static Texture2D[] background = new Texture2D[2];
         public static Color colorBg;
         public static Color colorText;
+        public static bool modAquarium = false;
 
 
         public static int[] miniMode = new int[4];   //config values
@@ -146,6 +149,8 @@ namespace FishingInfoOverlays
             {
                 fixedZooom = (Game1.options.zoomLevel == 1f ? 0.75f : Game1.options.zoomLevel) * 0.8f;
                 float iconScale = Game1.pixelZoom / 2f * barScale[screen] / fixedZooom;
+                int iconScale16 = (int)(16f * iconScale);
+                float fixScale10 = FixIconScale(10f);
                 int iconCount = 0;
                 float boxWidth = 0;
                 float boxHeight = 0;
@@ -164,6 +169,8 @@ namespace FishingInfoOverlays
                 }
 
 
+                bool showPercent = showPercentages[screen];
+                bool showExtraIcons = false;
                 if (rod != null && showTackles[screen])    //BAIT AND TACKLE (BOBBERS) PREVIEW
                 {
                     Object bait = rod.GetBait();
@@ -171,18 +178,18 @@ namespace FishingInfoOverlays
                     {
                         var data = ItemRegistry.GetData(bait.QualifiedItemId);
                         source = data.GetSourceRect();
-                        if (backgroundMode[screen] == 0) AddBackground(batch, boxTopLeft, boxBottomLeft, iconCount, source, iconScale, boxWidth, boxHeight);
+                        if (backgroundMode[screen] == 0) AddBackground(batch, boxTopLeft, boxBottomLeft, iconCount, source, iconScale, boxWidth, boxHeight, showPercent, showExtraIcons);
 
                         int baitCount = bait.Stack;
                         batch.Draw(data.GetTexture(), boxBottomLeft, source, Color.White, 0f, Vector2.Zero, FixIconScale(1.9f), SpriteEffects.None, 0.9f);
 
-                        if (bait.Quality == 4) batch.Draw(Game1.mouseCursors, boxBottomLeft + new Vector2(FixIconScale(13f), FixIconScale(showPercentages[screen] ? 24 : 16)),
+                        if (bait.Quality == 4) batch.Draw(Game1.mouseCursors, boxBottomLeft + new Vector2(FixIconScale(13f), FixIconScale(showPercent ? 24 : 16)),
                             new Rectangle(346, 392, 8, 8), Color.White, 0f, Vector2.Zero, FixIconScale(1.9f), SpriteEffects.None, 1f);
                         else Utility.drawTinyDigits(baitCount, batch, boxBottomLeft + new Vector2(source.Width * iconScale - Utility.getWidthOfTinyDigitString(baitCount, FixIconScale(2f)),
-                            FixIconScale(showPercentages[screen] ? 26 : 19)), FixIconScale(2f), 1f, colorText);
+                            FixIconScale(showPercent ? 26 : 19)), FixIconScale(2f), 1f, colorText);
 
-                        if (iconMode[screen] == 1) boxBottomLeft += new Vector2(0, source.Width * iconScale + (showPercentages[screen] ? FixIconScale(10) : 0));
-                        else boxBottomLeft += new Vector2(source.Width * iconScale, 0);
+                        if (iconMode[screen] == 1) boxBottomLeft += new Vector2(0, source.Width * iconScale + (showPercent ? fixScale10 : 0));
+                        else boxBottomLeft += new Vector2(source.Width * iconScale + (showExtraIcons ? fixScale10 : 0), 0);
                         iconCount++;
                     }
                     var tackles = rod.GetTackle();
@@ -193,28 +200,28 @@ namespace FishingInfoOverlays
                         {
                             var data = ItemRegistry.GetDataOrErrorItem(tackle?.QualifiedItemId);
                             source = data.GetSourceRect();
-                            if (backgroundMode[screen] == 0) AddBackground(batch, boxTopLeft, boxBottomLeft, iconCount, source, iconScale, boxWidth, boxHeight);
+                            if (backgroundMode[screen] == 0) AddBackground(batch, boxTopLeft, boxBottomLeft, iconCount, source, iconScale, boxWidth, boxHeight, showPercent, showExtraIcons);
 
                             int tackleCount = FishingRod.maxTackleUses - tackle.uses.Value;
                             batch.Draw(data.GetTexture(), boxBottomLeft, source, Color.White, 0f, Vector2.Zero, FixIconScale(1.9f), SpriteEffects.None, 0.9f);
 
-                            if (tackle.Quality == 4) batch.Draw(Game1.mouseCursors, boxBottomLeft + new Vector2(FixIconScale(13f), FixIconScale(showPercentages[screen] ? 24 : 16)),
+                            if (tackle.Quality == 4) batch.Draw(Game1.mouseCursors, boxBottomLeft + new Vector2(FixIconScale(13f), FixIconScale(showPercent ? 24 : 16)),
                                 new Rectangle(346, 392, 8, 8), Color.White, 0f, Vector2.Zero, FixIconScale(1.9f), SpriteEffects.None, 1f);
                             else Utility.drawTinyDigits(tackleCount, batch, boxBottomLeft + new Vector2(source.Width * iconScale - Utility.getWidthOfTinyDigitString(tackleCount, FixIconScale(2f)),
-                                FixIconScale(showPercentages[screen] ? 26 : 19)), FixIconScale(2f), 1f, colorText);
+                                FixIconScale(showPercent ? 26 : 19)), FixIconScale(2f), 1f, colorText);
 
-                            if (iconMode[screen] == 1) boxBottomLeft += new Vector2(0, source.Width * iconScale + (showPercentages[screen] ? FixIconScale(10) : 0));
-                            else boxBottomLeft += new Vector2(source.Width * iconScale, 0);
+                            if (iconMode[screen] == 1) boxBottomLeft += new Vector2(0, source.Width * iconScale + (showPercent ? fixScale10 : 0));
+                            else boxBottomLeft += new Vector2(source.Width * iconScale + (showExtraIcons ? fixScale10 : 0), 0);
                             anyTackle = true;
                         }
                         if (anyTackle) iconCount++;
                     }
                     if (iconMode[screen] == 2 && (bait != null || anyTackle))
                     {
-                        boxBottomLeft = boxTopLeft + new Vector2(0, source.Width * iconScale + (showPercentages[screen] ? FixIconScale(10) : 0));
+                        boxBottomLeft = boxTopLeft + new Vector2(0, source.Width * iconScale + (showPercent ? fixScale10 : 0));
                         boxWidth = iconCount * source.Width * iconScale + boxTopLeft.X;
-                        boxHeight += source.Width * iconScale + (showPercentages[screen] ? FixIconScale(10) : 0);
-                        if (bait != null && anyTackle) iconCount--;
+                        boxHeight += source.Width * iconScale + (showPercent ? fixScale10 : 0);
+                        iconCount = 1;
                     }
                 }
 
@@ -309,65 +316,106 @@ namespace FishingInfoOverlays
 
                     foreach (var fish in fishHere)
                     {
-                        if (onlyFish[screen] && fish != "(O)168" && !fishData.ContainsKey(fish.Replace("(O)", ""))) continue;//skip if not fish, except trash
+                        string unqualifiedId = fish.Replace("(O)", "", StringComparison.Ordinal);
+                        if (onlyFish[screen] && unqualifiedId != "168" && !fishData.ContainsKey(unqualifiedId)) continue;//skip if not fish, except trash
 
                         int percent = fishChancesSlow.ContainsKey(fish) ? (int)Math.Round((float)fishChancesSlow[fish] / fishChancesSlow["-1"] * 100f) : 0; //chance of this fish
 
                         if (iconCount < maxIcons[screen] && percent > 0)
                         {
+                            iconCount++;                   //BACKUP MAX SIZES instead of loading this each tick
+                            bool caught;
+                            //bool maxSize = false;
+                            //bool fishShipped = false;
+                            //bool fishAquarium = false;
+                            //bool fishBundle = false;
                             var data = ItemRegistry.GetDataOrErrorItem(fish);
-                            bool caught = !uncaughtDark[screen] || who.fishCaught.ContainsKey(data.QualifiedItemId) || (data.Category != Object.FishCategory);
-                            if (fish == "(O)168") caught = true;
-
-                            iconCount++;
+                            if (who.fishCaught.TryGetValue(data.QualifiedItemId, out var fishCaughtData))
+                            {
+                                caught = true;
+                                //if (showExtraIcons)
+                                //{
+                                //    maxSize = DataLoader.Fish(Game1.content).TryGetValue(unqualifiedId, out var array) && fishCaughtData[1] > Convert.ToInt32(array.Split('/')[4]);
+                                //    fishShipped = data.RawData is ObjectData objectData && !objectData.ExcludeFromShippingCollection && Game1.player.basicShipped.TryGetValue(data.QualifiedItemId, out int total) && total > 0;
+                                //    fishAquarium = Game1.MasterPlayer.hasOrWillReceiveMail("AquariumDonated:" + data.InternalName.Replace(" ", string.Empty, StringComparison.Ordinal));
+                                //    //foreach (KeyValuePair<string, string> bundleData in Game1.netWorldState.Value.BundleData)
+                                //    //{
+                                //    //    try
+                                //    //    {
+                                //    //        var bundleItems = bundleData.Value.Split('/')[2].Split(' ');
+                                //    //        for (int i = 0; i < bundleItems.Length; i += 3)
+                                //    //        {
+                                //    //            if (bundleItems[i] == unqualifiedId)
+                                //    //            {
+                                //    //                fishBundle = true;
+                                //    //                break;
+                                //    //                CommunityCenter
+                                //    //            }
+                                //    //        }
+                                //    //    }
+                                //    //    catch { }
+                                //    //    if (fishBundle) break;
+                                //    //}
+                                //    try
+                                //    {
+                                //        FieldInfo bundlesIngredientsInfoField = typeof(CommunityCenter).GetField("bundlesIngredientsInfo", BindingFlags.NonPublic | BindingFlags.Instance);
+                                //        var bundlesIngredientsInfo = (Dictionary<string, List<List<int>>>)bundlesIngredientsInfoField.GetValue(Game1.RequireLocation<CommunityCenter>("CommunityCenter"));
+                                //        fishBundle = bundlesIngredientsInfo.ContainsKey(fish) || bundlesIngredientsInfo.ContainsKey(data.Category.ToString());
+                                //    }
+                                //    catch { }
+                                //}
+                            }
+                            else caught = !uncaughtDark[screen] || (data.Category != Object.FishCategory);
                             string fishNameLocalized = caught ? data.DisplayName : "???";
                             Texture2D txt2d = data.GetTexture();
                             source = data.GetSourceRect();
 
-                            if (fishNameLocalized.StartsWith("Error Item")) continue;
+                            if (data.IsErrorItem) continue;
 
-                            if (fish == "(O)168") batch.Draw(txt2d, boxBottomLeft + new Vector2(FixIconScale(2), FixIconScale(-5)), source, caught ? Color.White : Color.DarkSlateGray,
+                            if (fish == "(O)168") batch.Draw(txt2d, boxBottomLeft + new Vector2(FixIconScale(2), FixIconScale(-5)), source, Color.White,
                                 0f, Vector2.Zero, FixRectScale(source, FixIconScale(1.9f)), SpriteEffects.None, 0.98f);//icon trash
-                            else batch.Draw(txt2d, FixSourceOffset(source, boxBottomLeft), source, caught ? Color.White : Color.DarkSlateGray, 0f, Vector2.Zero, FixIconScale(FixRectScale(source, 1.9f)), SpriteEffects.None, 0.98f);//icon
+                            else batch.Draw(txt2d, FixSourceOffset(source, boxBottomLeft), source,
+                                caught ? Color.White : Color.DarkSlateGray, 0f, Vector2.Zero, FixIconScale(FixRectScale(source, 1.9f)), SpriteEffects.None, 0.98f);//icon
 
-                            if (showPercentages[screen])
+                            if (showPercent) //percent text
                             {
-                                DrawStringWithBorder(batch, font, percent + "%", boxBottomLeft + new Vector2(8 * iconScale, FixIconScale(27f)),
-                                    caught ? colorText : colorText * 0.8f, 0f, new Vector2(font.MeasureString(percent + "%").X / 2f, 0f), FixIconScale(0.58f), SpriteEffects.None, 1f, colorBg);//%
+                                DrawStringWithBorder(batch, font, percent + "%", boxBottomLeft + new Vector2(8f * iconScale, FixIconScale(27f)),
+                                    caught ? colorText : colorText * 0.8f, 0f, new Vector2(font.MeasureString(percent + "%").X / 2f, 0f), FixIconScale(0.58f), SpriteEffects.None, 1f, colorBg);
                             }
 
-                            if (fish.Replace("(O)", "") == miniFish && miniMode[screen] < 3) batch.Draw(background[screen], new Rectangle((int)boxBottomLeft.X - 1, (int)boxBottomLeft.Y - 1, (int)(16 * iconScale) + 1, (int)(16 * iconScale + (showPercentages[screen] ? FixIconScale(10) : 0) + 1)),
-                                null, Color.GreenYellow, 0f, Vector2.Zero, SpriteEffects.None, 0.9f);//green minigame outline on bar
+                            if (unqualifiedId == miniFish && miniMode[screen] < 3) //green minigame outline on bar
+                            {
+                                batch.Draw(background[screen], new Rectangle((int)boxBottomLeft.X, (int)boxBottomLeft.Y, iconScale16, iconScale16), null, Color.GreenYellow, 0f, Vector2.Zero, SpriteEffects.None, 0.9f);
+                            }
 
-                            if (backgroundMode[screen] == 0) AddBackground(batch, boxTopLeft, boxBottomLeft, iconCount, defaultSource, iconScale, boxWidth, boxHeight);
-
+                            if (backgroundMode[screen] == 0) AddBackground(batch, boxTopLeft, boxBottomLeft, iconCount, defaultSource, iconScale, boxWidth, boxHeight, showPercent, showExtraIcons);//circles
 
                             if (iconMode[screen] == 0)      //Horizontal Preview
                             {
-                                if (iconCount % maxIconsPerRow[screen] == 0) boxBottomLeft = new Vector2(boxTopLeft.X, boxBottomLeft.Y + 16 * iconScale + (showPercentages[screen] ? FixIconScale(10) : 0)); //row switch
-                                else boxBottomLeft += new Vector2(16 * iconScale, 0);
+                                if (iconCount % maxIconsPerRow[screen] == 0) boxBottomLeft = new Vector2(boxTopLeft.X, boxBottomLeft.Y + iconScale16 + (showPercent ? fixScale10 : 0)); //row switch
+                                else boxBottomLeft += new Vector2(iconScale16 + (showExtraIcons ? fixScale10 : 0), 0);
                             }
                             else                    //Vertical Preview
                             {
                                 if (iconMode[screen] == 2 && !hideText)  // + text
                                 {
-                                    DrawStringWithBorder(batch, font, fishNameLocalized, boxBottomLeft + new Vector2(FixIconScale(35), 0), caught ? colorText : colorText * 0.8f, 0f, new Vector2(0, -3), FixIconScale(1f), SpriteEffects.None, 0.98f, colorBg); //text
-                                    boxWidth = Math.Max(boxWidth, boxBottomLeft.X + FixIconScale(font.MeasureString(fishNameLocalized).X) + 16 * iconScale);
+                                    DrawStringWithBorder(batch, font, fishNameLocalized, boxBottomLeft + new Vector2(FixIconScale(35) + (showExtraIcons ? fixScale10 : 0), 0 + (showPercent ? FixIconScale(5) : 0)),
+                                        caught ? colorText : colorText * 0.8f, 0f, new Vector2(0, -3), FixIconScale(1f), SpriteEffects.None, 0.98f, colorBg); //text
+                                    boxWidth = Math.Max(boxWidth + (showExtraIcons ? fixScale10 : 0), boxBottomLeft.X + FixIconScale(font.MeasureString(fishNameLocalized).X) + iconScale16);
                                 }
 
                                 if (iconCount % maxIconsPerRow[screen] == 0) //row switch
                                 {
-                                    if (iconMode[screen] == 2) boxBottomLeft = new Vector2(boxWidth + FixIconScale(20), boxTopLeft.Y);
-                                    else boxBottomLeft = new Vector2(boxBottomLeft.X + 16 * iconScale, boxTopLeft.Y);
+                                    if (iconMode[screen] == 2) boxBottomLeft = new Vector2(boxWidth + FixIconScale(showExtraIcons ? 30 : 20), boxTopLeft.Y);
+                                    else boxBottomLeft = new Vector2(boxBottomLeft.X + iconScale16 + (showExtraIcons ? fixScale10 : 0), boxTopLeft.Y);
                                 }
-                                else boxBottomLeft += new Vector2(0, 16 * iconScale + (showPercentages[screen] ? FixIconScale(10) : 0));
-                                if (iconMode[screen] == 2 && iconCount <= maxIconsPerRow[screen]) boxHeight += 16 * iconScale + (showPercentages[screen] ? FixIconScale(10) : 0);
+                                else boxBottomLeft += new Vector2(0, iconScale16 + (showPercent ? fixScale10 : 0));
+                                if (iconMode[screen] == 2 && iconCount <= maxIconsPerRow[screen]) boxHeight += iconScale16 + (showPercent ? fixScale10 : 0);
                             }
                         }
                     }
-                    if (backgroundMode[screen] == 1) AddBackground(batch, boxTopLeft, boxBottomLeft, iconCount, defaultSource, iconScale, boxWidth, boxHeight);
                 }
-                else if (backgroundMode[screen] == 1) AddBackground(batch, boxTopLeft, boxBottomLeft, iconCount, defaultSource, iconScale, boxWidth, boxHeight);
+                if (backgroundMode[screen] == 1) AddBackground(batch, boxTopLeft, boxBottomLeft, iconCount, defaultSource, iconScale, boxWidth, boxHeight, showPercent, showExtraIcons);//rectangle
             }
 
             batch.End();
@@ -1084,19 +1132,20 @@ namespace FishingInfoOverlays
             batch.DrawString(font, text, position + new Vector2(-0.2f * scale, -0.2f * scale), color, rotation, origin, scale, effects, layerDepth);
             batch.DrawString(font, text, position + new Vector2(0.2f * scale, 0.2f * scale), color, rotation, origin, scale, effects, layerDepth);
         }
-        private void AddBackground(SpriteBatch batch, Vector2 boxTopLeft, Vector2 boxBottomLeft, int iconCount, Rectangle source, float iconScale, float boxWidth, float boxHeight)
+        private void AddBackground(SpriteBatch batch, Vector2 boxTopLeft, Vector2 boxBottomLeft, int iconCount, Rectangle source, float iconScale, float boxWidth, float boxHeight, bool showPercent, bool showExtraIcons)
         {
+            float fixScale10 = FixIconScale(10f);
             if (backgroundMode[screen] == 0)
             {
-                batch.Draw(background[backgroundMode[screen]], new Rectangle((int)boxBottomLeft.X - 1, (int)boxBottomLeft.Y - 1, (int)(source.Width * iconScale) + 1, (int)(source.Width * iconScale + 1 + (showPercentages[screen] ? FixIconScale(10) : 0))),
+                batch.Draw(background[backgroundMode[screen]], new Rectangle((int)boxBottomLeft.X - 1, (int)boxBottomLeft.Y - 1, (int)(source.Width * iconScale + (showExtraIcons ? fixScale10 : 0)) + 1, (int)(source.Width * iconScale + (showPercent ? fixScale10 : 0)) + 1),
                     null, colorBg, 0f, Vector2.Zero, SpriteEffects.None, 0.5f);
             }
             else if (backgroundMode[screen] == 1)
             {
-                if (iconMode[screen] == 0) batch.Draw(background[backgroundMode[screen]], new Rectangle((int)boxTopLeft.X - 2, (int)boxTopLeft.Y - 2, (int)(source.Width * iconScale * Math.Min(iconCount, maxIconsPerRow[screen])) + 5,
-               (int)((source.Width * iconScale + (showPercentages[screen] ? FixIconScale(10) : 0)) * Math.Ceiling(iconCount / (maxIconsPerRow[screen] * 1.0))) + 5), null, colorBg, 0f, Vector2.Zero, SpriteEffects.None, 0.5f);
-                else if (iconMode[screen] == 1) batch.Draw(background[backgroundMode[screen]], new Rectangle((int)boxTopLeft.X - 2, (int)boxTopLeft.Y - 2, (int)(source.Width * iconScale * Math.Ceiling(iconCount / (maxIconsPerRow[screen] * 1.0))) + 5,
-                    (int)((source.Width * iconScale + (showPercentages[screen] ? FixIconScale(10) : 0)) * Math.Min(iconCount, maxIconsPerRow[screen])) + 5), null, colorBg, 0f, Vector2.Zero, SpriteEffects.None, 0.5f);
+                if (iconMode[screen] == 0) batch.Draw(background[backgroundMode[screen]], new Rectangle((int)boxTopLeft.X - 2, (int)boxTopLeft.Y - 2, (int)(source.Width * iconScale * Math.Min(iconCount, maxIconsPerRow[screen]) + (showExtraIcons ? fixScale10 : 0)) + 5,
+               (int)((source.Width * iconScale + (showPercent ? fixScale10 : 0)) * Math.Ceiling(iconCount / (maxIconsPerRow[screen] * 1.0))) + 5), null, colorBg, 0f, Vector2.Zero, SpriteEffects.None, 0.5f);
+                else if (iconMode[screen] == 1) batch.Draw(background[backgroundMode[screen]], new Rectangle((int)boxTopLeft.X - 2, (int)boxTopLeft.Y - 2, (int)(source.Width * iconScale * Math.Ceiling(iconCount / (maxIconsPerRow[screen] * 1.0)) + (showExtraIcons ? fixScale10 : 0)) + 5,
+                    (int)((source.Width * iconScale + (showPercent ? fixScale10 : 0)) * Math.Min(iconCount, maxIconsPerRow[screen])) + 5), null, colorBg, 0f, Vector2.Zero, SpriteEffects.None, 0.5f);
                 else if (iconMode[screen] == 2) batch.Draw(background[backgroundMode[screen]], new Rectangle((int)boxTopLeft.X - 2, (int)boxTopLeft.Y - 2, (int)(boxWidth - boxTopLeft.X + 6), (int)boxHeight + 4),
                     null, colorBg, 0f, Vector2.Zero, SpriteEffects.None, 0.5f);
             }

@@ -21,6 +21,7 @@ namespace FishingInfoOverlays
         {
             config = helper.ReadConfig<ModConfig>();
             translate = helper.Translation;
+            Overlay.modAquarium = helper.ModRegistry.IsLoaded("Cherry.StardewAquarium");
 
             helper.Events.Input.ButtonPressed += OnButtonPressed;
             helper.Events.GameLoop.DayStarted += OnDayStarted;
