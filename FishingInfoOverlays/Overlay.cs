@@ -504,7 +504,6 @@ namespace FishingInfoOverlays
             Dictionary<string, float> passed = [];
 
             location ??= Game1.getLocationFromName(locationName);
-            Dictionary<string, LocationData> dictionary = DataLoader.Locations(Game1.content);
             LocationData locationData = location != null ? location.GetData() : GameLocation.GetData(locationName);
             Dictionary<string, string> allFishData = DataLoader.Fish(Game1.content);
             Season season = Game1.GetSeasonForLocation(location);
@@ -530,21 +529,18 @@ namespace FishingInfoOverlays
                 }
             }
             Point playerTile = player.TilePoint;
-            itemQueryContext ??= new ItemQueryContext(location, null, Game1.random, "");
-            IEnumerable<SpawnFishData> possibleFish = dictionary["Default"].Fish;
+            itemQueryContext ??= new ItemQueryContext(location, null, Game1.random, "location '" + locationName + "' > fish data");
+            IEnumerable<SpawnFishData> possibleFish = Game1.locationData["Default"].Fish;
             if (locationData != null && locationData.Fish?.Count > 0)
             {
                 possibleFish = possibleFish.Concat(locationData.Fish);
             }
-            possibleFish = from p in possibleFish
-                           orderby p.Precedence, Game1.random.Next()
-                           select p;
             int targetedBaitTries = 0;
             HashSet<string> ignoreQueryKeys = usingMagicBait ? GameStateQuery.MagicBaitIgnoreQueryKeys : null;
             Item firstNonTargetFish = null;
             foreach (SpawnFishData spawn in possibleFish)
             {
-                if (isInherited && !spawn.CanBeInherited || spawn.FishAreaId != null && fishAreaId != spawn.FishAreaId || spawn.Season.HasValue && !usingMagicBait && spawn.Season != season)
+                if ((isInherited && !spawn.CanBeInherited) || (spawn.FishAreaId != null && fishAreaId != spawn.FishAreaId) || (spawn.Season.HasValue && !usingMagicBait && spawn.Season != season))
                 {
                     continue;
                 }
@@ -554,18 +550,12 @@ namespace FishingInfoOverlays
                     continue;
                 }
                 playerPosition = spawn.BobberPosition;
-                if (playerPosition.HasValue && !playerPosition.GetValueOrDefault().Contains((int)bobberTile.X, (int)bobberTile.Y) || player.FishingLevel < spawn.MinFishingLevel || waterDepth < spawn.MinDistanceFromShore || spawn.MaxDistanceFromShore > -1 && waterDepth > spawn.MaxDistanceFromShore || spawn.RequireMagicBait && !usingMagicBait)
+                if ((playerPosition.HasValue && !playerPosition.GetValueOrDefault().Contains((int)bobberTile.X, (int)bobberTile.Y)) || player.FishingLevel < spawn.MinFishingLevel || waterDepth < spawn.MinDistanceFromShore || (spawn.MaxDistanceFromShore > -1 && waterDepth > spawn.MaxDistanceFromShore) || (spawn.RequireMagicBait && !usingMagicBait))
                 {
                     continue;
                 }
                 float chance = spawn.GetChance(hasCuriosityLure, player.DailyLuck, player.LuckLevel, (value, modifiers, mode) => Utility.ApplyQuantityModifiers(value, modifiers, mode, location), spawn.ItemId == baitTargetFish);
-                if (spawn.UseFishCaughtSeededRandom)
-                {
-                    if (!Utility.CreateRandom(Game1.uniqueIDForThisGame, player.stats.Get("PreciseFishCaught") * 859).NextBool(chance))
-                    {
-                        continue;
-                    }
-                }
+
                 if (spawn.Condition != null && !GameStateQuery.CheckConditions(spawn.Condition, location, null, null, null, null, ignoreQueryKeys))
                 {
                     continue;
@@ -648,18 +638,29 @@ namespace FishingInfoOverlays
             bool isTrainingRod = player?.CurrentTool?.QualifiedItemId == "(T)TrainingRod";
             if (isTrainingRod)
             {
-                if (!ArgUtility.TryGetInt(specificFishData, 1, out var difficulty, out _))
+                bool? canUseTrainingRod = spawn.CanUseTrainingRod;
+                if (canUseTrainingRod.HasValue)
                 {
-                    return 0;
+                    if (!canUseTrainingRod.GetValueOrDefault())
+                    {
+                        return 0;
+                    }
                 }
-                if (difficulty >= 50)
+                else
                 {
-                    return 0;
+                    if (!ArgUtility.TryGetInt(specificFishData, 1, out var difficulty, out _, "int difficulty"))
+                    {
+                        return 0;
+                    }
+                    if (difficulty >= 50)
+                    {
+                        return 0;
+                    }
                 }
             }
             if (isTutorialCatch)
             {
-                if (!ArgUtility.TryGetOptionalBool(specificFishData, 13, out var isTutorialFish, out _))
+                if (!ArgUtility.TryGetOptionalBool(specificFishData, 13, out var isTutorialFish, out _, defaultValue: false, "bool isTutorialFish"))
                 {
                     return 0;
                 }
@@ -672,7 +673,7 @@ namespace FishingInfoOverlays
             {
                 if (!usingMagicBait)
                 {
-                    if (!ArgUtility.TryGet(specificFishData, 5, out var rawTimeSpans, out _))
+                    if (!ArgUtility.TryGet(specificFishData, 5, out var rawTimeSpans, out _, allowBlank: true, "string rawTimeSpans"))
                     {
                         return 0;
                     }
@@ -680,7 +681,7 @@ namespace FishingInfoOverlays
                     bool found = false;
                     for (int i = 0; i < timeSpans.Length; i += 2)
                     {
-                        if (!ArgUtility.TryGetInt(timeSpans, i, out var startTime, out _) || !ArgUtility.TryGetInt(timeSpans, i + 1, out var endTime, out _))
+                        if (!ArgUtility.TryGetInt(timeSpans, i, out var startTime, out _, "int startTime") || !ArgUtility.TryGetInt(timeSpans, i + 1, out var endTime, out _, "int endTime"))
                         {
                             return 0;
                         }
@@ -697,7 +698,7 @@ namespace FishingInfoOverlays
                 }
                 if (!usingMagicBait)
                 {
-                    if (!ArgUtility.TryGet(specificFishData, 7, out var weather, out _))
+                    if (!ArgUtility.TryGet(specificFishData, 7, out var weather, out _, allowBlank: true, "string weather"))
                     {
                         return 0;
                     }
@@ -713,7 +714,7 @@ namespace FishingInfoOverlays
                         return 0;
                     }
                 }
-                if (!ArgUtility.TryGetInt(specificFishData, 12, out var minFishingLevel, out _))
+                if (!ArgUtility.TryGetInt(specificFishData, 12, out var minFishingLevel, out _, "int minFishingLevel"))
                 {
                     return 0;
                 }
@@ -721,7 +722,7 @@ namespace FishingInfoOverlays
                 {
                     return 0;
                 }
-                if (!ArgUtility.TryGetInt(specificFishData, 9, out var maxDepth, out _) || !ArgUtility.TryGetFloat(specificFishData, 10, out var chance, out _) || !ArgUtility.TryGetFloat(specificFishData, 11, out var depthMultiplier, out _))
+                if (!ArgUtility.TryGetInt(specificFishData, 9, out var maxDepth, out _, "int maxDepth") || !ArgUtility.TryGetFloat(specificFishData, 10, out var chance, out _, "float chance") || !ArgUtility.TryGetFloat(specificFishData, 11, out var depthMultiplier, out _, "float depthMultiplier"))
                 {
                     return 0;
                 }
@@ -792,6 +793,7 @@ namespace FishingInfoOverlays
                     foreach (var item in Game1.player.fishCaught) who.fishCaught.Add(item);
                     foreach (var m in Game1.player.secretNotesSeen) who.secretNotesSeen.Add(m);
                     who.stats.Values = [];
+                    foreach (var m in Game1.player.stats.Values) who.stats.Set(m.Key, m.Value);
 
                     if (oldGeneric == null)
                     {
