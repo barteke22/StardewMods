@@ -7,6 +7,7 @@ using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
+using StardewValley.GameData.Objects;
 using StardewValley.Tools;
 using System;
 using System.Collections.Generic;
@@ -16,6 +17,12 @@ using System.Text.RegularExpressions;
 
 namespace FishingMinigames
 {
+    // fishing minigame refux: sun haven minigame
+    // treasure appears too - clicking it doesn't cause minigame end
+    // same design as base minigame, just with a counter / smiley face on top - each full pass rises the count (negative score)
+    // like with sun haven, perfect area in different parts of 'accepted' area
+    // different speed patterns based on fish behaviour (or maybe ID? option)
+
     public class ModEntry : Mod
     {
         public static ITranslationHelper translate;
@@ -36,7 +43,6 @@ namespace FishingMinigames
             MinigamesStart.minigameTextures = new Texture2D[] {
                 Game1.content.Load<Texture2D>("LooseSprites\\boardGameBorder"),
                 Game1.content.Load<Texture2D>("LooseSprites\\CraneGame"),
-                Game1.content.Load<Texture2D>("LooseSprites\\buildingPlacementTiles"),
                 Helper.ModContent.Load<Texture2D>("assets/Textures.png") //custom textures
             };
 
@@ -394,9 +400,9 @@ namespace FishingMinigames
         }
 
 
-        private void OnAssetRequested(object sender, AssetRequestedEventArgs e)
+        private void OnAssetRequested(object sender, AssetRequestedEventArgs e)//NEEDS FIXING + AUTOMATION + DATA SPLITING INTO FILES
         {
-            if (canStartEditingAssets)
+            if (true)
             {
                 if (e.Name.IsEquivalentTo("Strings/StringsFromCSFiles"))
                 {
@@ -448,55 +454,65 @@ namespace FishingMinigames
                         }
                     });
                 }
-                else if (e.Name.IsEquivalentTo("Data/ObjectInformation"))
+                else if (e.Name.StartsWith("Data/Objects"))
                 {
                     translate = Helper.Translation;
+
                     e.Edit(asset =>
                     {
-                        var data = asset.AsDictionary<string, string>().Data;
-                        foreach (string itemID in data.Keys.ToArray())
+                        var data = asset.AsDictionary<string, ObjectData>().Data;
+
+                        var targets = DataLoader.Objects(Game1.content).Where(f => f.Value.Category is -21 or -22);//bait+tackle
+                        foreach (var obj in targets)
                         {
-                            try
+                            if (data.TryGetValue(obj.Key, out var item))
                             {
-                                string[] itemData = data[itemID].Split('/');
-                                switch (itemID)
-                                {
-                                    //bait
-                                    case "(O)685"://bait
-                                    case "(O)774"://wild bait
-                                        itemData[5] = AddEffectDescriptions(itemData[0]);
-                                        break;
-                                    case "(O)703"://magnet
-                                    case "(O)908"://magic bait
-                                        itemData[5] = AddEffectDescriptions(itemData[0], itemData[5]);
-                                        break;
-                                    //tackle
-                                    case "(O)686"://spinner
-                                    case "(O)687"://dressed
-                                    case "(O)694"://trap
-                                    case "(O)695"://cork
-                                    case "(O)692"://lead
-                                    case "(O)693"://treasure
-                                    case "(O)691"://barbed
-                                    case "(O)877"://quality
-                                        itemData[4] = translate.Get(itemData[0]);
-                                        itemData[5] = AddEffectDescriptions(itemData[0]);
-                                        break;
-                                    case "(O)856"://curiosity
-                                        itemData[4] = translate.Get(itemData[0]);
-                                        itemData[5] = AddEffectDescriptions(itemData[0], itemData[5]);
-                                        break;
-                                    default:
-                                        continue;
-                                }
-                                data[itemID] = string.Join("/", itemData);
-                                itemIDs[itemData[0]] = itemID;
-                            }
-                            catch (Exception)
-                            {
-                                Monitor.LogOnce("Could not load string for Rod to Net change, line: " + data[itemID] + ". Are the translations missing? Ignore if you removed them intentionally.", LogLevel.Warn);
+                                var disp = translate.Get(item.Name);
+                                if (disp.HasValue()) item.DisplayName = disp;
+                                item.Description = AddEffectDescriptions(item.Name, item.Description);
                             }
                         }
+
+                        //foreach (var item in data)
+                        //{
+                        //    try
+                        //    {
+                        //        switch (item.Key)
+                        //        {
+                        //            //bait
+                        //            case "685"://bait
+                        //            case "774"://wild bait
+                        //                item.Value.Description = AddEffectDescriptions(item.Value.Name);
+                        //                break;
+                        //            case "703"://magnet
+                        //            case "908"://magic bait
+                        //                item.Value.Description = AddEffectDescriptions(item.Value.Name, item.Value.Description);
+                        //                break;
+                        //            //tackle
+                        //            case "686"://spinner
+                        //            case "687"://dressed
+                        //            case "694"://trap
+                        //            case "695"://cork
+                        //            case "692"://lead
+                        //            case "693"://treasure
+                        //            case "691"://barbed
+                        //            case "877"://quality
+                        //                item.Value.DisplayName = translate.Get(item.Value.Name);
+                        //                item.Value.Description = AddEffectDescriptions(item.Value.Name);
+                        //                break;
+                        //            case "856"://curiosity
+                        //                item.Value.DisplayName = translate.Get(item.Value.Name);
+                        //                item.Value.Description = AddEffectDescriptions(item.Value.Name, item.Value.Description);
+                        //                break;
+                        //            default:
+                        //                continue;
+                        //        }
+                        //    }
+                        //    catch (Exception)
+                        //    {
+                        //        Monitor.LogOnce("Could not load string for Rod to Net change, line: " + data[item.Value.Name] + ". Are the translations missing? Ignore if you removed them intentionally.", LogLevel.Warn);
+                        //    }
+                        //}
                     });
                 }
                 else
@@ -530,6 +546,8 @@ namespace FishingMinigames
                                 var editor = asset.AsImage();
                                 sourceImage = Helper.ModContent.Load<Texture2D>("assets/rod_sprites.png");
                                 editor.PatchImage(sourceImage, targetArea: new Rectangle(128, 0, 64, 16));
+                                sourceImage = Helper.ModContent.Load<Texture2D>("assets/rod_advanced.png");
+                                editor.PatchImage(sourceImage, targetArea: new Rectangle(272, 0, 16, 16));
                                 sourceImage = Helper.ModContent.Load<Texture2D>("assets/rod_farmer.png");
                                 editor.PatchImage(sourceImage, targetArea: new Rectangle(0, 289, 295, 95));
                                 sourceImage.Dispose();
@@ -544,21 +562,37 @@ namespace FishingMinigames
             }
         }
 
-        public static string AddEffectDescriptions(string itemName, string initialText = null)
+        public static string AddEffectDescriptions(string itemName, string initialText)
         {
-            foreach (var effect in config.SeeInfoForBelowData[itemName])
+            var text = translate.Get(itemName + "_Desc");
+            if (text.HasValue())
+            {
+                if ("NONE".Equals(text, StringComparison.Ordinal)) initialText = null;
+                else if (!"DEFAULT".Equals(text, StringComparison.Ordinal)) initialText = text;
+            }
+            if (initialText != null)
+            {
+                //initialText = initialText.Replace("\r\n", " ");
+            }
+
+            if (!config.SeeInfoForBelowData.TryGetValue(itemName, out var data))
+            {
+                data = config.SeeInfoForBelowData["Bamboo Pole"];//failsafe
+            }
+
+            foreach (var effect in data)
             {
                 if (effect.Value == 0) continue;
                 if (!effect.Key.StartsWith("EXTRA_", StringComparison.Ordinal))
                 {
                     if (initialText != null) initialText += "\n";
-                    initialText += translate.Get("Effects." + effect.Key).Tokens(new { val = effect.Value });
+                    initialText += " * " + translate.Get("Effects." + effect.Key).Tokens(new { val = effect.Value });
                 }
             }
-            if (config.SeeInfoForBelowData[itemName].TryGetValue("EXTRA_MAX", out int max) && config.SeeInfoForBelowData[itemName].TryGetValue("EXTRA_CHANCE", out int chance) && max != 0 && chance != 0)
+            if (data.TryGetValue("EXTRA_MAX", out int max) && data.TryGetValue("EXTRA_CHANCE", out int chance) && max != 0 && chance != 0)
             {
                 if (initialText != null) initialText += "\n";
-                initialText += translate.Get("Effects.EXTRA").Tokens(new { max, chance });
+                initialText += " * " + translate.Get("Effects.EXTRA").Tokens(new { max, chance });
             }
             return initialText;
         }

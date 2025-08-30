@@ -185,7 +185,7 @@ namespace FishingMinigames
                 {
                     if (fishingFestivalMinigame == 0)
                     {
-                        data.Helper.Multiplayer.SendMessage(Minigames.JUNK.Contains(whichFish) ? Minigames.TRASH : whichFish, "whichFish", modIDs: new[] { "barteke22.FishingInfoOverlays" }, new[] { who.UniqueMultiplayerID });//notify overlay of which fish
+                        data.Helper.Multiplayer.SendMessage((Minigames.JUNK.Contains(whichFish) ? Minigames.TRASH : whichFish).Replace("(O)", ""), "whichFish", modIDs: new[] { "barteke22.FishingInfoOverlays" }, new[] { who.UniqueMultiplayerID });//notify overlay of which fish
                     }
                     Game1.activeClickableMenu = new DummyMenu();
                     minigameStage = 2;
@@ -248,13 +248,13 @@ namespace FishingMinigames
             //board
             if (opacity < 2.7f)
             {
-                batch.Draw(minigameTextures[3], new Rectangle((int)screenMid.X, (int)screenMid.Y, (int)(scale * 324f * Math.Min(opacity, 0.5f)), (int)(scale * 176f * Math.Min(opacity, 0.5f))), new Rectangle(0, 0, 84, 48), Color.White * opacity, 0f, new Vector2(42f, 24f), SpriteEffects.None, 0.1f);
+                batch.Draw(minigameTextures[2], new Rectangle((int)screenMid.X, (int)screenMid.Y, (int)(scale * 324f * Math.Min(opacity, 0.5f)), (int)(scale * 176f * Math.Min(opacity, 0.5f))), new Rectangle(0, 0, 84, 48), Color.White * opacity, 0f, new Vector2(42f, 24f), SpriteEffects.None, 0.1f);
 
                 batch.Draw(minigameTextures[0], screenMid, null, minigameColor * Math.Min((opacity / 1.5f), 1f), 0f, new Vector2(69f, 37f), scale * 2f * Math.Min(opacity, 0.5f), SpriteEffects.None, 0.3f);
             }
             else
             {
-                batch.Draw(minigameTextures[3], new Rectangle((int)screenMid.X, (int)screenMid.Y, (int)(scale * 162f), (int)(scale * 88f)), new Rectangle(0, 0, 84, 48), Color.White, 0f, new Vector2(42f, 24f), SpriteEffects.None, 0.1f);
+                batch.Draw(minigameTextures[2], new Rectangle((int)screenMid.X, (int)screenMid.Y, (int)(scale * 162f), (int)(scale * 88f)), new Rectangle(0, 0, 84, 48), Color.White, 0f, new Vector2(42f, 24f), SpriteEffects.None, 0.1f);
 
                 batch.Draw(minigameTextures[0], screenMid, null, minigameColor, 0f, new Vector2(69f, 37f), scale, SpriteEffects.None, 0.3f);
             }

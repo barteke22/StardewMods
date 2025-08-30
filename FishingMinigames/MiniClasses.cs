@@ -1,6 +1,7 @@
-﻿using HarmonyLib;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using StardewValley;
+using System;
+using Object = StardewValley.Object;
 
 namespace FishingMinigames
 {
@@ -77,23 +78,25 @@ namespace FishingMinigames
         {
             try
             {
-                if (__instance is StardewValley.Tools.FishingRod && __instance.UpgradeLevel != 1)//bamboo+ (except training)
+                if (__instance is StardewValley.Tools.FishingRod rod && __instance.UpgradeLevel != 1)//bamboo+ (except training)
                 {
-                    string desc = Game1.content.LoadString("Strings\\StringsFromCSFiles:FishingRod.cs.14042");
-
-                    desc += "\n" + FishingMinigames.ModEntry.AddEffectDescriptions(__instance.Name);
+                    string desc = FishingMinigames.ModEntry.AddEffectDescriptions(__instance.Name, __instance.Description);
 
                     if (__instance.UpgradeLevel > 1)//fiber/iridium
                     {
-                        if (__instance.attachments[0] != null)
+                        Object bait = rod.GetBait();
+                        if (bait != null)
                         {
-                            desc += "\n\n" + __instance.attachments[0].DisplayName + ((__instance.attachments[0].Quality == 0) ? "" : " (" + FishingMinigames.ModEntry.translate.Get("Mods.Infinite") + ")")
-                                   + ":\n" + FishingMinigames.ModEntry.AddEffectDescriptions(__instance.attachments[0].Name);
+                            desc += "\n\n" + bait.DisplayName + ((bait.Quality == 0) ? "" : " (" + FishingMinigames.ModEntry.translate.Get("Mods.Infinite") + ")")
+                                   + ":\n" + FixDescriptionNewlines(bait.getDescription());
                         }
-                        if (__instance.attachments[1] != null)
+                        foreach (var tackle in rod.GetTackle())
                         {
-                            desc += "\n\n" + __instance.attachments[1].DisplayName + ((__instance.attachments[1].Quality == 0) ? "" : " (" + FishingMinigames.ModEntry.translate.Get("Mods.Infinite") + ")")
-                                   + ":\n" + FishingMinigames.ModEntry.AddEffectDescriptions(__instance.attachments[1].Name);
+                            if (tackle != null)
+                            {
+                                desc += "\n\n" + tackle.DisplayName + ((tackle.Quality == 0) ? "" : " (" + FishingMinigames.ModEntry.translate.Get("Mods.Infinite") + ")")
+                                       + ":\n" + FixDescriptionNewlines(tackle.getDescription());
+                            }
                         }
                     }
                     if (desc.EndsWith("\n")) desc = desc.Substring(0, desc.Length - 1);
@@ -104,6 +107,21 @@ namespace FishingMinigames
             {
                 Log.Error("Error in harmony patch: " + e.Message);
             }
+        }
+        internal static string FixDescriptionNewlines(string desc)
+        {
+            var lines = desc.Split(Environment.NewLine, StringSplitOptions.None);
+            desc = null;
+            foreach (var s in lines)
+            {
+                if (desc != null && !string.IsNullOrEmpty(s))
+                {
+                    if (s.StartsWith(" * ")) desc += '\n';
+                    else if (char.IsUpper(s[0])) desc += ' ';
+                }
+                desc += s;
+            }
+            return desc;
         }
     }
 }

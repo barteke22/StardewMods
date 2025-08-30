@@ -812,7 +812,7 @@ namespace FishingMinigames
                 case null:
                     if (!fromFishPond && fishingFestivalMinigame == 0)
                     {
-                        Helper.Multiplayer.SendMessage(JUNK.Contains(whichFish) ? "(O)168" : whichFish, "whichFish", modIDs: new[] { "barteke22.FishingInfoOverlays" }, new[] { who.UniqueMultiplayerID });//notify overlay of which fish
+                        Helper.Multiplayer.SendMessage(JUNK.Contains(whichFish) ? "168" : whichFish.Replace("(O)", ""), "whichFish", modIDs: new[] { "barteke22.FishingInfoOverlays" }, new[] { who.UniqueMultiplayerID });//notify overlay of which fish
                     }
                     if (!Context.IsSplitScreen && voices.TryGetValue(voiceType[screen], out SoundEffect sfx)) sfx.Play(voiceVolumePersonal, voicePitch[screen], 0);
 
@@ -1684,8 +1684,8 @@ namespace FishingMinigames
 
                     foreach (var pair in tilesAll)
                     {
-                        batch.Draw(MinigamesStart.minigameTextures[2], new Vector2((int)pair.Key.X * 64 - Game1.viewport.X, (int)pair.Key.Y * 64 - Game1.viewport.Y),
-                            new Rectangle((pair.Value) ? 0 : 64, 0, 64, 64), Color.White * 0.5f, 0f, Vector2.Zero, 1f, SpriteEffects.None, 1f);
+                        batch.Draw(Game1.mouseCursors, new Vector2((int)pair.Key.X * 64 - Game1.viewport.X, (int)pair.Key.Y * 64 - Game1.viewport.Y),
+                            new Rectangle((pair.Value) ? 194 : 210, 388, 16, 16), Color.White * 0.5f, 0f, Vector2.Zero, 4f, SpriteEffects.None, 1f);
                     }
                     batch.Draw(Game1.mouseCursors, new Vector2((int)aimTile.X * 64 - Game1.viewport.X, (int)aimTile.Y * 64 - Game1.viewport.Y), new Rectangle(652, 204, 44, 44),
                         (tilesAll.Contains(new KeyValuePair<Vector2, bool>(aimTile, true))) ? new Color(0, 255, 0, 0.5f) : Color.Red * 0.4f, 0f, Vector2.Zero, 1.45f, SpriteEffects.None, 1f);
@@ -1709,7 +1709,7 @@ namespace FishingMinigames
                     {
                         if (who.currentLocation.isTileFishable(x, y) || (who.currentLocation.getTileIndexAt(x, y, "Buildings") == 1208) || (who.currentLocation.getTileIndexAt(x, y, "Buildings") == 1260))
                         {
-                            batch.Draw(MinigamesStart.minigameTextures[2], new Vector2(x * 64 - Game1.viewport.X, y * 64 - Game1.viewport.Y), new Rectangle(0, 0, 64, 64), Color.White * 0.3f, 0f, Vector2.Zero, 1f, SpriteEffects.None, 1f);
+                            batch.Draw(Game1.mouseCursors, new Vector2(x * 64 - Game1.viewport.X, y * 64 - Game1.viewport.Y), new Rectangle(194, 388, 16, 16), Color.White * 0.3f, 0f, Vector2.Zero, 4f, SpriteEffects.None, 1f);
                             tiles.Add(new Vector2(x, y));
                         }
                     }
@@ -1722,7 +1722,7 @@ namespace FishingMinigames
                     {
                         if (!tiles.Contains(new Vector2(x, y)) && (who.currentLocation.isTileFishable(x, y) || (who.currentLocation.getTileIndexAt(x, y, "Buildings") == 1208) || (who.currentLocation.getTileIndexAt(x, y, "Buildings") == 1260)))
                         {
-                            batch.Draw(MinigamesStart.minigameTextures[2], new Vector2(x * 64 - Game1.viewport.X, y * 64 - Game1.viewport.Y), new Rectangle(0, 0, 64, 64), Color.White * 0.3f, 0f, Vector2.Zero, 1f, SpriteEffects.None, 1f);
+                            batch.Draw(Game1.mouseCursors, new Vector2(x * 64 - Game1.viewport.X, y * 64 - Game1.viewport.Y), new Rectangle(194, 388, 16, 16), Color.White * 0.3f, 0f, Vector2.Zero, 4f, SpriteEffects.None, 1f);
                             tiles.Add(new Vector2(x, y));
                         }
                     }
@@ -1735,7 +1735,7 @@ namespace FishingMinigames
                     {
                         if (!tiles.Contains(new Vector2(x, y)) && (who.currentLocation.isTileFishable(x, y) || (who.currentLocation.getTileIndexAt(x, y, "Buildings") == 1208) || (who.currentLocation.getTileIndexAt(x, y, "Buildings") == 1260)))
                         {
-                            batch.Draw(MinigamesStart.minigameTextures[2], new Vector2(x * 64 - Game1.viewport.X, y * 64 - Game1.viewport.Y), new Rectangle(0, 0, 64, 64), Color.White * 0.3f, 0f, Vector2.Zero, 1f, SpriteEffects.None, 1f);
+                            batch.Draw(Game1.mouseCursors, new Vector2(x * 64 - Game1.viewport.X, y * 64 - Game1.viewport.Y), new Rectangle(194, 388, 16, 16), Color.White * 0.3f, 0f, Vector2.Zero, 4f, SpriteEffects.None, 1f);
                             tiles.Add(new Vector2(x, y));
                         }
                     }
