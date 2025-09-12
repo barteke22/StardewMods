@@ -14,6 +14,7 @@ using StardewValley.GameData.Locations;
 using StardewValley.Internal;
 using StardewValley.Locations;
 using StardewValley.Menus;
+using StardewValley.Objects;
 using StardewValley.Tools;
 using Object = StardewValley.Object;
 
@@ -125,8 +126,8 @@ namespace FishingInfoOverlays
                         new Rectangle(682, 2085, 9, 2), bar.bobberInBar ? Color.White : Color.White * 0.25f * ((float)Math.Round(Math.Sin(Game1.currentGameTime.TotalGameTime.TotalMilliseconds / 100.0), 2) + 2f), 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.89f);
 
                     //treasure
-                    batch.Draw(Game1.mouseCursors, new Vector2(bar.xPositionOnScreen + 64 + 18, bar.yPositionOnScreen + 12 + 24 + bar.treasurePosition) + bar.treasureShake + bar.everythingShake,
-                        new Rectangle(638, 1865, 20, 24), Color.White, 0f, new Vector2(10f, 10f), 2f * bar.treasureScale, SpriteEffects.None, 0.9f);
+                    batch.Draw(bar.goldenTreasure ? Game1.mouseCursors_1_6 : Game1.mouseCursors, new Vector2(bar.xPositionOnScreen + 64 + 18, bar.yPositionOnScreen + 12 + 24 + bar.treasurePosition) + bar.treasureShake + bar.everythingShake,
+                        bar.goldenTreasure ? new Rectangle(256, 51, 20, 24) : new Rectangle(638, 1865, 20, 24), Color.White, 0f, new Vector2(10f, 10f), 2f * bar.treasureScale, SpriteEffects.None, 0.9f);
                     if (bar.treasureCatchLevel > 0f && !bar.treasureCaught)//treasure progress
                     {
                         batch.Draw(Game1.staminaRect, new Rectangle(bar.xPositionOnScreen + 64, bar.yPositionOnScreen + 12 + (int)bar.treasurePosition, 40, 8), null, Color.DimGray * 0.5f, 0f, Vector2.Zero, SpriteEffects.None, 0.9f);
@@ -181,7 +182,17 @@ namespace FishingInfoOverlays
                         if (backgroundMode[screen] == 0) AddBackground(batch, boxTopLeft, boxBottomLeft, iconCount, source, iconScale, boxWidth, boxHeight, showPercent, showExtras);
 
                         int baitCount = bait.Stack;
+                        Color baitC = Color.White;
+                        if (bait is ColoredObject obj)
+                        {
+                            baitC = obj.color.Value;
+                            if (!obj.ColorSameIndexAsParentSheetIndex)
+                            {
                         batch.Draw(data.GetTexture(), boxBottomLeft, source, Color.White, 0f, Vector2.Zero, FixIconScale(1.9f), SpriteEffects.None, 0.9f);
+                                source = data.GetSourceRect(1);
+                            }
+                        }
+                        batch.Draw(data.GetTexture(), boxBottomLeft, source, baitC, 0f, Vector2.Zero, FixIconScale(1.9f), SpriteEffects.None, 0.9f);
 
                         if (bait.Quality == 4) batch.Draw(Game1.mouseCursors, boxBottomLeft + new Vector2(FixIconScale(13f), FixIconScale(showPercent ? 24 : 16)),
                             new Rectangle(346, 392, 8, 8), Color.White, 0f, Vector2.Zero, FixIconScale(1.9f), SpriteEffects.None, 1f);
@@ -323,11 +334,13 @@ namespace FishingInfoOverlays
 
                         if (iconCount < maxIcons[screen] && percent > 0)
                         {
-                            iconCount++;                   //BACKUP MAX SIZES instead of loading this each tick
+                            var data = ItemRegistry.GetDataOrErrorItem(fish);
+                            if (data.IsErrorItem) continue;
+
+                            iconCount++;
                             bool fishNeedsMaxSize = false;
                             bool fishNeedsAquarium = false;
                             bool fishNeedsBundle = false;
-                            var data = ItemRegistry.GetDataOrErrorItem(fish);
                             bool caught = who.fishCaught.TryGetValue(data.QualifiedItemId, out var fishCaughtData);
                             if (showExtras && (caught || showExtraIcons[screen] == 1))
                             {
@@ -348,8 +361,6 @@ namespace FishingInfoOverlays
                             string fishNameLocalized = caught ? data.DisplayName : "???";
                             Texture2D txt2d = data.GetTexture();
                             source = data.GetSourceRect();
-
-                            if (data.IsErrorItem) continue;
 
                             if (unqualifiedId == "168") batch.Draw(txt2d, boxBottomLeft + new Vector2(FixIconScale(2), FixIconScale(-5)), source, Color.White,
                                 0f, Vector2.Zero, FixRectScale(source, FixIconScale(1.9f)), SpriteEffects.None, 0.98f);//icon trash
@@ -571,20 +582,14 @@ namespace FishingInfoOverlays
                 foreach (var q in queries)
                 {
                     string query = q;
-                    int max = 1;
                     if (!q.StartsWith('('))
                     {
-                        max = 100;
                         query = q.Replace("BOBBER_X", ((int)bobberTile.X).ToString()).Replace("BOBBER_Y", ((int)bobberTile.Y).ToString()).Replace("WATER_DEPTH", waterDepth.ToString());
                     }
 
-                    List<Item> items = [];
-                    for (int i = 0; i < max; i++)
+                    foreach (var item in ItemQueryResolver.TryResolve(query, itemQueryContext, ItemQuerySearchMode.All, spawn.PerItemCondition, spawn.MaxItems, true))
                     {
-                        var item = ItemQueryResolver.TryResolve(query, itemQueryContext, ItemQuerySearchMode.FirstOfTypeItem, spawn.PerItemCondition, spawn.MaxItems, true);
-                        if (item.FirstOrDefault()?.Item is Item fish && !items.Any(f => f.QualifiedItemId == fish.QualifiedItemId)) items.Add(fish);
-                    }
-                    foreach (var fish in items)
+                        if (item.Item is Item fish && !passed.ContainsKey(fish.QualifiedItemId))
                     {
                         if (fish.Category == Object.junkCategory) fish.ItemId = "168";
                         if (!string.IsNullOrWhiteSpace(spawn.SetFlagOnCatch))
@@ -610,6 +615,7 @@ namespace FishingInfoOverlays
                         }
                     }
                 }
+            }
             }
             if (passed.Count == 0)
             {
