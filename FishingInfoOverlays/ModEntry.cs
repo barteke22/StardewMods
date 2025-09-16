@@ -16,7 +16,6 @@ namespace FishingInfoOverlays
         private readonly PerScreen<Overlay> overlay = new();
 
 
-
         public override void Entry(IModHelper helper)
         {
             config = helper.ReadConfig<ModConfig>();
@@ -45,28 +44,19 @@ namespace FishingInfoOverlays
                 var GenericExtraOptions = Helper.ModRegistry.GetApi<IGMCMOptionsAPI>("jltaylor-us.GMCMOptions");
 
                 GenericMC.Register(ModManifest, () => config = new ModConfig(), () => Helper.WriteConfig(config));
-                GenericMC.AddSectionTitle(ModManifest, () => translate.Get("GenericMC.barLabel")); //All of these strings are stored in the traslation files.
-                GenericMC.AddParagraph(ModManifest, () => "Translation: barteke22".Equals(translate.Get("GenericMC.translation"), StringComparison.Ordinal) ? "" : translate.Get("GenericMC.translation"));
-                GenericMC.AddParagraph(ModManifest, () => translate.Get("GenericMC.barDescription"));
-                GenericMC.AddParagraph(ModManifest, () => translate.Get("GenericMC.barDescription2"));
 
                 try
                 {
-                    GenericMC.AddTextOption(ModManifest, name: () => translate.Get("GenericMC.barSonarMode"), tooltip: () => translate.Get("GenericMC.barSonarModeDesc"),
-                        getValue: () => config.BarSonarMode.ToString(),
-                        setValue: value => config.BarSonarMode = int.Parse(value),
-                        allowedValues: ["0", "1", "2", "3"],
-                        formatAllowedValue: value => value == "3" ? translate.Get($"GenericMC.Disabled") : translate.Get($"GenericMC.barSonarMode{value}"));
-
-                    GenericMCPerScreen(GenericMC, 0);
+                    GenericMCPerScreen(GenericMC, GenericExtraOptions, 0);
+                    AddSeparator(GenericMC, GenericExtraOptions, ModManifest);
                     GenericMC.AddPageLink(ModManifest, "colors", () => translate.Get("GenericMC.barColors"), () => translate.Get("GenericMC.barColors"));
 
                     GenericMC.AddPageLink(ModManifest, "s2", () => translate.Get("GenericMC.SplitScreen2"), () => translate.Get("GenericMC.SplitScreenDesc"));
                     GenericMC.AddPageLink(ModManifest, "s3", () => translate.Get("GenericMC.SplitScreen3"), () => translate.Get("GenericMC.SplitScreenDesc"));
                     GenericMC.AddPageLink(ModManifest, "s4", () => translate.Get("GenericMC.SplitScreen4"), () => translate.Get("GenericMC.SplitScreenDesc"));
-                    GenericMCPerScreen(GenericMC, 1);
-                    GenericMCPerScreen(GenericMC, 2);
-                    GenericMCPerScreen(GenericMC, 3);
+                    GenericMCPerScreen(GenericMC, GenericExtraOptions, 1);
+                    GenericMCPerScreen(GenericMC, GenericExtraOptions, 2);
+                    GenericMCPerScreen(GenericMC, GenericExtraOptions, 3);
 
                     GenericMC.AddPage(ModManifest, "colors", () => translate.Get("GenericMC.barColors"));
                     if (GenericExtraOptions != null)//new pickers
@@ -105,11 +95,26 @@ namespace FishingInfoOverlays
                 }
             }
         }
-        private void GenericMCPerScreen(IGenericModConfigMenuApi GenericMC, int screen)
+        private void GenericMCPerScreen(IGenericModConfigMenuApi GenericMC, IGMCMOptionsAPI GenericExtraOptions, int screen)
         {
-            if (screen > 0)//make new page
+            if (screen == 0)//only page 0
+            {
+                GenericMC.AddSectionTitle(ModManifest, () => translate.Get("GenericMC.barLabel"));
+                GenericMC.AddParagraph(ModManifest, () => "Translation: barteke22".Equals(translate.Get("GenericMC.translation"), StringComparison.Ordinal) ? "" : translate.Get("GenericMC.translation"));
+                GenericMC.AddParagraph(ModManifest, () => translate.Get("GenericMC.barDescription"));
+                GenericMC.AddParagraph(ModManifest, () => translate.Get("GenericMC.barDescription2"));
+
+                GenericMC.AddTextOption(ModManifest, name: () => translate.Get("GenericMC.barSonarMode"), tooltip: () => translate.Get("GenericMC.barSonarModeDesc"), //All of these strings are stored in the traslation files.
+                    getValue: () => config.BarSonarMode.ToString(),
+                    setValue: value => config.BarSonarMode = int.Parse(value),
+                    allowedValues: ["0", "1", "2", "3"],
+                    formatAllowedValue: value => value == "3" ? translate.Get($"GenericMC.Disabled") : translate.Get($"GenericMC.barSonarMode{value}"));
+                AddSeparator(GenericMC, GenericExtraOptions, ModManifest);
+            }
+            else //make new page
             {
                 GenericMC.AddPage(ModManifest, "s" + (screen + 1), () => translate.Get("GenericMC.SplitScreen" + (screen + 1)));
+                GenericMC.AddSectionTitle(ModManifest, () => translate.Get("GenericMC.barLabel"));
             }
             GenericMC.AddTextOption(ModManifest, name: () => translate.Get("GenericMC.barIconMode"), tooltip: () => translate.Get("GenericMC.barIconModeDesc"),
                 getValue: () => config.BarIconMode[screen].ToString(),
@@ -134,17 +139,21 @@ namespace FishingInfoOverlays
                 allowedValues: ["0", "1", "2"],
                 formatAllowedValue: value => value == "2" ? translate.Get($"GenericMC.Disabled") : translate.Get($"GenericMC.barBackgroundMode{value}"));
 
+            AddSeparator(GenericMC, GenericExtraOptions, ModManifest);
+            GenericMC.AddBoolOption(ModManifest, () => config.BarExtraIconsMaxSize[screen], (val) => config.BarExtraIconsMaxSize[screen] = val,
+                () => translate.Get("GenericMC.barExtraIconsMaxSize"), () => translate.Get("GenericMC.barExtraIconsMaxSizeDesc"));
+            GenericMC.AddBoolOption(ModManifest, () => config.BarExtraIconsBundles[screen], (val) => config.BarExtraIconsBundles[screen] = val,
+                () => translate.Get("GenericMC.barExtraIconsBundles"), () => translate.Get("GenericMC.barExtraIconsBundlesDesc"));
+            GenericMC.AddBoolOption(ModManifest, () => config.BarExtraIconsAquarium[screen], (val) => config.BarExtraIconsAquarium[screen] = val,
+                () => translate.Get("GenericMC.barExtraIconsAquarium"), () => translate.Get("GenericMC.barExtraIconsAquariumDesc"));
+            GenericMC.AddBoolOption(ModManifest, () => config.BarExtraIconsUncaught[screen], (val) => config.BarExtraIconsUncaught[screen] = val,
+                () => translate.Get("GenericMC.barExtraIconsUncaught"), () => translate.Get("GenericMC.barExtraIconsUncaughtDesc"));
+            AddSeparator(GenericMC, GenericExtraOptions, ModManifest);
+
             GenericMC.AddBoolOption(ModManifest, () => config.BarShowBaitAndTackleInfo[screen], (val) => config.BarShowBaitAndTackleInfo[screen] = val,
                 () => translate.Get("GenericMC.barShowBaitTackle"), () => translate.Get("GenericMC.barShowBaitTackleDesc"));
             GenericMC.AddBoolOption(ModManifest, () => config.BarShowPercentages[screen], (val) => config.BarShowPercentages[screen] = val,
                 () => translate.Get("GenericMC.barShowPercentages"), () => translate.Get("GenericMC.barShowPercentagesDesc"));
-
-            GenericMC.AddTextOption(ModManifest, name: () => translate.Get("GenericMC.barShowExtraIcons"), 
-                tooltip: () => translate.Get("GenericMC.barShowExtraIconsDesc") + (Overlay.modAquarium ? translate.Get("GenericMC.barShowExtraIconsDesc2") : ""),
-                getValue: () => config.BarShowExtraIcons[screen].ToString(),
-                setValue: value => config.BarShowExtraIcons[screen] = int.Parse(value),
-                allowedValues: ["0", "1", "2"],
-                formatAllowedValue: value => value == "0" ? translate.Get($"GenericMC.Disabled") : translate.Get($"GenericMC.barShowExtraIcons{value}"));
 
             GenericMC.AddTextOption(ModManifest, name: () => translate.Get("GenericMC.barSortMode"), tooltip: () => translate.Get("GenericMC.barSortModeDesc"),
                 getValue: () => config.BarSortMode[screen].ToString(),
@@ -152,29 +161,32 @@ namespace FishingInfoOverlays
                 allowedValues: ["0", "1", "2"],
                 formatAllowedValue: value => value == "2" ? translate.Get($"GenericMC.Disabled") : translate.Get($"GenericMC.barSortMode{value}"));
 
-            GenericMC.AddNumberOption(ModManifest, () => config.BarScanRadius[screen], (val) => config.BarScanRadius[screen] = val,
-                () => translate.Get("GenericMC.barScanRadius"), () => translate.Get("GenericMC.barScanRadiusDesc"), 1, 60);
-            GenericMC.AddBoolOption(ModManifest, () => config.BarCrabPotEnabled[screen], (val) => config.BarCrabPotEnabled[screen] = val,
-                () => translate.Get("GenericMC.barCrabPotEnabled"), () => translate.Get("GenericMC.barCrabPotEnabledDesc"));
             GenericMC.AddBoolOption(ModManifest, () => config.UncaughtFishAreDark[screen], (val) => config.UncaughtFishAreDark[screen] = val,
                 () => translate.Get("GenericMC.barUncaughtDarker"), () => translate.Get("GenericMC.barUncaughtDarkerDesc"));
             GenericMC.AddBoolOption(ModManifest, () => config.OnlyFish[screen], (val) => config.OnlyFish[screen] = val,
                 () => translate.Get("GenericMC.barOnlyFish"), () => translate.Get("GenericMC.barOnlyFishDesc"));
+            GenericMC.AddBoolOption(ModManifest, () => config.BarCrabPotEnabled[screen], (val) => config.BarCrabPotEnabled[screen] = val,
+                () => translate.Get("GenericMC.barCrabPotEnabled"), () => translate.Get("GenericMC.barCrabPotEnabledDesc"));
+
+            AddSeparator(GenericMC, GenericExtraOptions, ModManifest);
+            GenericMC.AddNumberOption(ModManifest, () => config.BarScanRadius[screen], (val) => config.BarScanRadius[screen] = val,
+                () => translate.Get("GenericMC.barScanRadius"), () => translate.Get("GenericMC.barScanRadiusDesc"), 1, 60);
 
             if (screen == 0)//only page 0
             {
                 GenericMC.AddNumberOption(ModManifest, () => config.BarExtraCheckFrequency, (val) => config.BarExtraCheckFrequency = val,
                     () => translate.Get("GenericMC.barExtraCheckFrequency"), () => translate.Get("GenericMC.barExtraCheckFrequencyDesc"), 0, 22);
-
-                GenericMC.AddSectionTitle(ModManifest, () => translate.Get("GenericMC.MinigameLabel"));
-                GenericMC.AddParagraph(ModManifest, () => translate.Get("GenericMC.MinigameDescription"));
-                GenericMC.AddParagraph(ModManifest, () => translate.Get("GenericMC.MinigameDescription2"));
             }
-            GenericMC.AddTextOption(ModManifest, name: () => translate.Get("GenericMC.MinigameMode"), tooltip: () => translate.Get("GenericMC.MinigameModeDesc"),
-                getValue: () => config.MinigamePreviewMode[screen].ToString(),
-                setValue: value => config.MinigamePreviewMode[screen] = int.Parse(value),
-                allowedValues: ["0", "1", "2", "3"],
-                formatAllowedValue: value => value == "3" ? translate.Get($"GenericMC.Disabled") : translate.Get($"GenericMC.MinigameMode{value}"));
+            AddSeparator(GenericMC, GenericExtraOptions, ModManifest);
+            GenericMC.AddSectionTitle(ModManifest, () => translate.Get("GenericMC.MinigameLabel"));
+            if (screen == 0) GenericMC.AddParagraph(ModManifest, () => translate.Get("GenericMC.MinigameDescription"));
+            GenericMC.AddBoolOption(ModManifest, () => config.MinigamePreviewBar[screen], (val) => config.MinigamePreviewBar[screen] = val,
+                () => translate.Get("GenericMC.MinigameBar"), () => translate.Get("GenericMC.MinigameBarDesc"));
+            GenericMC.AddBoolOption(ModManifest, () => config.MinigamePreviewRod[screen], (val) => config.MinigamePreviewRod[screen] = val,
+                () => translate.Get("GenericMC.MinigameRod"), () => translate.Get("GenericMC.MinigameRodDesc"));
+            GenericMC.AddBoolOption(ModManifest, () => config.MinigamePreviewWater[screen], (val) => config.MinigamePreviewWater[screen] = val,
+                () => translate.Get("GenericMC.MinigameWater"), () => translate.Get("GenericMC.MinigameWaterDesc"));
+
         }
 
 
@@ -227,21 +239,26 @@ namespace FishingInfoOverlays
                 Overlay.barPosition[i] = new Vector2(config.BarTopLeftLocationX[i] + 2, config.BarTopLeftLocationY[i] + 2); //config: Position of bar
             }
 
+            Overlay.sonarMode = config.BarSonarMode;                                                                        //config: Sonar requirement: 0=everything, 1=minigame, 2=shift scan, 3=not needed
             Overlay.backgroundMode = config.BarBackgroundMode;                                                              //config: 0=Circles (dynamic), 1=Rectangle (single), 2=Off
             Overlay.barCrabEnabled = config.BarCrabPotEnabled;                                                              //config: If bait/tackle/bait preview is enabled when holding a fishing rod
             Overlay.barScale = config.BarScale;                                                                             //config: Custom scale for the location bar.
-            Overlay.sonarMode = config.BarSonarMode;                                                                        //config: Sonar requirement: 0=everything, 1=minigame, 2=shift scan, 3=not needed
             Overlay.iconMode = config.BarIconMode;                                                                          //config: 0=Horizontal Icons, 1=Vertical Icons, 2=Vertical Icons + Text, 3=Off
             Overlay.maxIcons = config.BarMaxIcons;                                                                          //config: ^Max amount of tackle + trash + fish icons
             Overlay.maxIconsPerRow = config.BarMaxIconsPerRow;                                                              //config: ^How many per row/column.
             Overlay.onlyFish = config.OnlyFish;                                                                             //config: Whether to hide things like furniture.
-            Overlay.miniMode = config.MinigamePreviewMode;                                                                  //config: Fish preview in minigame: 0=Full, 1=Simple, 2=BarOnly, 3=Off
             Overlay.scanRadius = config.BarScanRadius;                                                                      //config: 0: Only checks if can fish, 1-50: also checks if there's water within X tiles around player.
             Overlay.showPercentages = config.BarShowPercentages;                                                            //config: Whether it should show catch percentages.
             Overlay.showTackles = config.BarShowBaitAndTackleInfo;                                                          //config: Whether it should show Bait and Tackle info.
-            Overlay.showExtraIcons = config.BarShowExtraIcons;                                                              //config: 0= Off, 1 = Always, 2 = Once caught
+            Overlay.extraIconsUncaught = config.BarExtraIconsUncaught;                                                      //config: Show extra icons when uncaught.
+            Overlay.extraIconsMaxSize = config.BarExtraIconsMaxSize;                                                        //config: Show star when fish isn't maxed size.
+            Overlay.extraIconsBundles = config.BarExtraIconsBundles;                                                        //config: Show chest when fish needed for bundle.
+            Overlay.extraIconsAquarium = config.BarExtraIconsAquarium;                                                      //config: Show pufferfish when needed for Aquarium mod.
             Overlay.sortMode = config.BarSortMode;                                                                          //config: 0= By Name (text mode only), 1= By Percentage, 2=Off
             Overlay.uncaughtDark = config.UncaughtFishAreDark;                                                              //config: Whether uncaught fish are displayed as ??? and use dark icons
+            Overlay.minigameBar = config.MinigamePreviewBar;                                                                //config: Fish preview in bar.
+            Overlay.minigameRod = config.MinigamePreviewRod;                                                                //config: Fish preview in minigame.
+            Overlay.minigameWater = config.MinigamePreviewWater;                                                            //config: Fish preview in water. 
 
             if (config.BarExtraCheckFrequency > 22) config.BarExtraCheckFrequency /= 10;
             Overlay.extraCheckFrequency = config.BarExtraCheckFrequency;                                                    //config: 20-220: Bad performance dynamic check to see if there's modded/hardcoded fish
@@ -292,6 +309,15 @@ namespace FishingInfoOverlays
 
             whitePixel.SetData(data);
             return whitePixel;
+        }
+
+        private static void AddSeparator(IGenericModConfigMenuApi GenericMC, IGMCMOptionsAPI GenericExtraOptions, IManifest ModManifest)
+        {
+            if (GenericExtraOptions != null)
+            {
+                GenericExtraOptions.AddHorizontalSeparator(ModManifest, () => 1f);
+            }
+            else GenericMC.AddParagraph(ModManifest, () => "____________________________________________________________________");
         }
     }
 }

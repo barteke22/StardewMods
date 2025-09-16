@@ -16,16 +16,19 @@ namespace FishingInfoOverlays
         public int[] BarTextColorRGBA { get; set; } = [255, 255, 255, 255];
         public bool[] BarShowBaitAndTackleInfo { get; set; } = [true, true, true, true];
         public bool[] BarShowPercentages { get; set; } = [true, true, true, true];
-        public int[] BarShowExtraIcons { get; set; } = [0, 0, 0, 0];
         public int[] BarSortMode { get; set; } = [0, 0, 0, 0];
         public string Comment_BarSortMode { get; set; } = "Above BarSortMode values: 0= Sort Icons by Name (text mode only), 1= Sort icons by catch chance (Extra Check Frequency based), 2= Off";
+        public bool[] BarExtraIconsUncaught { get; set; } = [false, false, false, false];
+        public bool[] BarExtraIconsMaxSize { get; set; } = [true, true, true, true];
+        public bool[] BarExtraIconsBundles { get; set; } = [true, true, true, true];
+        public bool[] BarExtraIconsAquarium { get; set; } = [true, true, true, true];
         public int BarExtraCheckFrequency { get; set; } = 0;
         public int[] BarScanRadius { get; set; } = [20, 20, 20, 20];
         public bool[] BarCrabPotEnabled { get; set; } = [true, true, true, true];
         public bool[] UncaughtFishAreDark { get; set; } = [true, true, true, true];
         public bool[] OnlyFish { get; set; } = [false, false, false, false];
-        public int[] MinigamePreviewMode { get; set; } = [0, 0, 0, 0];
-        public string Comment_MinigamePreviewMode { get; set; } = "0= Copies multiple layers to look better. 1= Looks worse, but might perform/work better. 2= Only outlines it in the Bar (BarEnabled needed), 3= Off.";
-
+        public bool[] MinigamePreviewBar { get; set; } = [true, true, true, true];
+        public bool[] MinigamePreviewRod { get; set; } = [true, true, true, true];
+        public bool[] MinigamePreviewWater { get; set; } = [true, true, true, true];
     }
 }
