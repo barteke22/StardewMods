@@ -204,7 +204,7 @@ namespace FishingInfoOverlays
                     }
                     else if (bobberTileX - 1 >= 0 && !who.currentLocation.isTileFishable(bobberTileX - 1, rotation < 0f ? bobberTileY2 : bobberTileY)) flip = true;
                     if (!flip) position.X -= 18f * size;
-                    
+
                     who.currentLocation.TemporarySprites.Add(new TemporaryAnimatedSprite(txt2d.Name, source, position, flip, 0f, Color.White)
                     {
                         scale = size,
@@ -245,8 +245,8 @@ namespace FishingInfoOverlays
                 bool extrasAquarium = modAquarium && extraIconsAquarium[screen];
                 bool extrasBundles = extraIconsBundles[screen];
                 bool extrasMaxSize = extraIconsMaxSize[screen];
-                bool showExtras = extrasAquarium || extrasBundles || extrasMaxSize;
-                if (rod != null && showTackles[screen])    //BAIT AND TACKLE (BOBBERS) PREVIEW
+                bool showExtras = extrasAquarium || extrasBundles || extrasMaxSize;    //BAIT AND TACKLE (BOBBERS) PREVIEW
+                if (rod != null && showTackles[screen])
                 {
                     Object bait = rod.GetBait();
                     if (bait != null)
@@ -266,7 +266,7 @@ namespace FishingInfoOverlays
                                 source = data.GetSourceRect(1);
                             }
                         }
-                        batch.Draw(data.GetTexture(), boxBottomLeft, source, baitC, 0f, Vector2.Zero, FixIconScale(1.9f), SpriteEffects.None, 0.9f);
+                        batch.Draw(data.GetTexture(), boxBottomLeft, source, baitC, 0f, Vector2.Zero, FixIconScale(1.9f), SpriteEffects.None, 0.9f + 2E-05f);
 
                         if (bait.Quality == 4) batch.Draw(Game1.mouseCursors, boxBottomLeft + new Vector2(FixIconScale(13f), FixIconScale(showPercent ? 24 : 16)),
                             new Rectangle(346, 392, 8, 8), Color.White, 0f, Vector2.Zero, FixIconScale(1.9f), SpriteEffects.None, 1f);
@@ -860,13 +860,12 @@ namespace FishingInfoOverlays
                     who.currentLocation = Game1.player.currentLocation;
                     who.setTileLocation(Game1.player.Tile);
                     who.setSkillLevel("Fishing", Game1.player.FishingLevel);
-                    //if there's ever any downside of referencing player rod directly, use below + add bait/tackle to it
-                    //FishingRod rod = (FishingRod)(Game1.player.CurrentTool as FishingRod).getOne();
-                    //who.CurrentTool = rod;
-                    FishingRod rod2 = new() { UpgradeLevel = rod.UpgradeLevel };
+                    FishingRod rod2 = rod.getOne() as FishingRod;
+                    rod2.UpgradeLevel = rod.UpgradeLevel;
                     foreach (var item in rod.attachments)
                     {
-                        if (ItemRegistry.Create(item.QualifiedItemId, item.Stack, item.Quality, true) is Object obj)
+                        if (item == null) rod2.attachments.Add(null);
+                        else if (ItemRegistry.Create(item.QualifiedItemId, item.Stack, item.Quality, true) is Object obj)
                         {
                             rod2.attachments.Add(obj);
                         }
