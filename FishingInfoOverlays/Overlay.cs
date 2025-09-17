@@ -682,7 +682,7 @@ namespace FishingInfoOverlays
                                 float c = CheckGenericFishRequirements(fish, allFishData, location, player, spawn, waterDepth, usingMagicBait, hasCuriosityLure, spawn.ItemId == baitTargetFish, isTutorialCatch);
                                 if (c > 0)
                                 {
-                                    if (baitTargetFish == null || !(fish.QualifiedItemId != baitTargetFish) || targetedBaitTries >= 2)
+                                    if (baitTargetFish == null || fish.QualifiedItemId == baitTargetFish || targetedBaitTries >= 2)
                                     {
                                         passed[fish.QualifiedItemId] = chance * c;
                                     }
@@ -867,7 +867,7 @@ namespace FishingInfoOverlays
                         if (item == null) rod2.attachments.Add(null);
                         else if (ItemRegistry.Create(item.QualifiedItemId, item.Stack, item.Quality, true) is Object obj)
                         {
-                            rod2.attachments.Add(obj);
+                            rod2.attachments.Add(item.getOne() as Object);
                         }
                     }
                     who.CurrentTool = rod2;
