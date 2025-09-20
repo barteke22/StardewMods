@@ -41,16 +41,22 @@
 	"GenericMC.barShowBaitTackleDesc": "Enables icons that show how much bait and tackle durability your current fishing rod has (if any).",
 
 	"GenericMC.barShowPercentages": "Show Percentages",
-	"GenericMC.barShowPercentagesDesc": "Shows simulated percentage chance of catching each fish under its icon. Relies heavily on Extra Check Frequency, the higher, the better.",
+	"GenericMC.barShowPercentagesDesc": "Shows percentage chance of catching each fish under its icon. Relies heavily on Extra Check Frequency, the higher, the better.",
+	"GenericMC.barShowPercentages0": "With symbol",
+	"GenericMC.barShowPercentages1": "No symbol",
 
-	"GenericMC.barExtraIconsMaxSize": "Show \"Not maxed\" Icon",
-	"GenericMC.barExtraIconsMaxSizeDesc": "Star icon: Max fish size not caught yet.",
-	"GenericMC.barExtraIconsBundles": "Show \"Bundle\" Icon",
-	"GenericMC.barExtraIconsBundlesDesc": "Bundle icon: Fish needed for Community Center bundle (bundle must be unlocked).",
-	"GenericMC.barExtraIconsAquarium": "Show \"Aquarium\" Icon",
-	"GenericMC.barExtraIconsAquariumDesc": "Pufferfish icon: Fish hasn't been donated to the Stardew Aquarium yet (if mod installed).",
-	"GenericMC.barExtraIconsUncaught": "Show Icons when uncaught",
-	"GenericMC.barExtraIconsUncaughtDesc": "Whether to show extra icons next to the fish even if it hasn't been caught yet.",
+	"GenericMC.barExtraIconsMaxSize": "Extra Icon: Cyan Star",
+	"GenericMC.barExtraIconsMaxSizeDesc": "Max fish size not caught yet.",
+	"GenericMC.barExtraIconsBundles": "Extra Icon: Bundle",
+	"GenericMC.barExtraIconsBundlesDesc": "Fish needed for Community Center bundle (bundle must be unlocked).",
+	"GenericMC.barExtraIconsAquarium": "Extra Icon: Pufferfish",
+	"GenericMC.barExtraIconsAquariumDesc": "Fish hasn't been donated to the Stardew Aquarium yet (if mod installed).",
+	"GenericMC.barExtraIconsAlwaysShow": "Always show Extra Icons",
+	"GenericMC.barExtraIconsAlwaysShowDesc": "Whether to show extra icons next to the fish even if it hasn't been caught yet.",
+	"GenericMC.barUncaughtEffect": "Uncaught Fish Effect",
+	"GenericMC.barUncaughtEffectDesc": "Makes uncaught fish appear:\n - Make darker: Like in the Collections Tab. In minigame too. Text Icon Mode will show them as \"???\".\n - Bronze star: Same as caught. Adds an extra icon next to fish (ignores \"Always show\" setting).\n - Disabled: Same as caught.",
+	"GenericMC.barUncaughtEffect0": "Make darker",
+	"GenericMC.barUncaughtEffect1": "Bronze star",
 
 	"GenericMC.barSortMode": "Sorting Mode",
 	"GenericMC.barSortModeDesc": "Sorting by Name arranges icons alphabetically.\nSorting by Catch Chance (%) relies heavily on Extra Check Frequency, the higher, the better.\nWithout sorting, the order is: Trash, by ID, and extras.",
@@ -66,9 +72,6 @@
 	"GenericMC.barCrabPotEnabled": "Crab Pot Preview Enabled",
 	"GenericMC.barCrabPotEnabledDesc": "Extends the preview to also work for Crab Pots.",
 
-	"GenericMC.barUncaughtDarker": "Uncaught Fish Appear Darker",
-	"GenericMC.barUncaughtDarkerDesc": "Makes uncaught fish icons appear dark like they do in the Collections Tab (also applies to the minigame). Text Icon Mode also shows them as \"???\".",
-
 	"GenericMC.barOnlyFish": "Only Fish",
 	"GenericMC.barOnlyFishDesc": "The bar will only show things from the official fish list (and trash), skipping things like furniture or notes. They will still contribute to percentage calculations. This is mainly for consistency's sake, since some of these items are already blacklisted (hidden). Keep in mind that there's a tiny chance that some mod didn't add its fish to this list, though those wouldn't really count as fish.",
 
@@ -81,6 +84,8 @@
 	"GenericMC.MinigameRodDesc": "Overlays the fish over the generic sprite in the fishing minigame.\nCompatibility: So long as the other mod overrides the BobberBar position variable it should work.",
 	"GenericMC.MinigameWater": "In Water",
 	"GenericMC.MinigameWaterDesc": "Shows fish nibling on the bobber. Transparency depends on Sonar Mode and Sonar Tackle.",
+	"GenericMC.MinigameSonar": "Sonar Display",
+	"GenericMC.MinigameSonarDesc": "Shows fish on the base game Sonar Display.",
 
 	"GenericMC.SplitScreenDesc": "Split Screen-specific settings, these only matter for Split Screen players. Only the main player should change these.",
 	"GenericMC.SplitScreen2": "Split Screen 2: (Top) Right",

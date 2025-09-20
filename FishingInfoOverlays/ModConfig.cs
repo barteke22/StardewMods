@@ -15,20 +15,21 @@ namespace FishingInfoOverlays
         public int[] BarBackgroundColorRGBA { get; set; } = [0, 0, 0, 128];
         public int[] BarTextColorRGBA { get; set; } = [255, 255, 255, 255];
         public bool[] BarShowBaitAndTackleInfo { get; set; } = [true, true, true, true];
-        public bool[] BarShowPercentages { get; set; } = [true, true, true, true];
+        public int[] BarShowPercentagesMode { get; set; } = [0, 0, 0, 0];
         public int[] BarSortMode { get; set; } = [0, 0, 0, 0];
         public string Comment_BarSortMode { get; set; } = "Above BarSortMode values: 0= Sort Icons by Name (text mode only), 1= Sort icons by catch chance (Extra Check Frequency based), 2= Off";
-        public bool[] BarExtraIconsUncaught { get; set; } = [false, false, false, false];
-        public bool[] BarExtraIconsMaxSize { get; set; } = [true, true, true, true];
+        public bool[] BarExtraIconsAlwaysShow { get; set; } = [false, false, false, false];
+        public bool[] BarExtraIconsMaxSize { get; set; } = [false, false, false, false];
         public bool[] BarExtraIconsBundles { get; set; } = [true, true, true, true];
         public bool[] BarExtraIconsAquarium { get; set; } = [true, true, true, true];
+        public int[] BarUncaughtFishEffect { get; set; } = [0, 0, 0, 0];
         public int BarExtraCheckFrequency { get; set; } = 0;
         public int[] BarScanRadius { get; set; } = [20, 20, 20, 20];
         public bool[] BarCrabPotEnabled { get; set; } = [true, true, true, true];
-        public bool[] UncaughtFishAreDark { get; set; } = [true, true, true, true];
         public bool[] OnlyFish { get; set; } = [false, false, false, false];
         public bool[] MinigamePreviewBar { get; set; } = [true, true, true, true];
         public bool[] MinigamePreviewRod { get; set; } = [true, true, true, true];
         public bool[] MinigamePreviewWater { get; set; } = [true, true, true, true];
+        public bool[] MinigamePreviewSonar { get; set; } = [false, false, false, false];
     }
 }

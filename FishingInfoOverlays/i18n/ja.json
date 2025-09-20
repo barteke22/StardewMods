@@ -43,14 +43,18 @@
 	"GenericMC.barShowPercentages": "確率を示す",
 	"GenericMC.barShowPercentagesDesc": "各魚のアイコンの下に、釣れる確率のシミュレーションが示されます.エクストラチェックの頻度に大きく依存し、高ければ高いほど良い.",
 
-	"GenericMC.barExtraIconsMaxSize": "「最大サイズに達していない」アイコンを表示する",
-	"GenericMC.barExtraIconsMaxSizeDesc": "星アイコン：最大サイズの魚がまだ釣れていない.",
-	"GenericMC.barExtraIconsBundles": "「バンドル」アイコンを表示する",
-	"GenericMC.barExtraIconsBundlesDesc": "バンドルアイコン：公民館バンドルに必要な魚（バンドルはアンロックされている必要があります）",
-	"GenericMC.barExtraIconsAquarium": "「水族館」アイコンを表示する",
-	"GenericMC.barExtraIconsAquariumDesc": "フグアイコン：Stardew水族館にまだ魚が寄付されていない（MODがインストールされている場合）. Mod: Stardew Aquarium.",
-	"GenericMC.barExtraIconsUncaught": "未釣魚のアイコンを表示する",
-	"GenericMC.barExtraIconsUncaughtDesc": "魚の横に追加アイコンを表示する（釣れていない場合も）まだ捕まっていないよ.",
+	"GenericMC.barExtraIconsMaxSize": "追加アイコン：シアンスター",
+	"GenericMC.barExtraIconsMaxSizeDesc": "最大サイズの魚がまだ釣れていません.",
+	"GenericMC.barExtraIconsBundles": "追加アイコン：バンドル",
+	"GenericMC.barExtraIconsBundlesDesc": "公民館バンドルに必要な魚（バンドルはアンロックされている必要があります）.",
+	"GenericMC.barExtraIconsAquarium": "追加アイコン：フグ",
+	"GenericMC.barExtraIconsAquariumDesc": "Stardew水族館にまだ魚が寄付されていません（MODがインストールされている場合）. Mod: Stardew Aquarium.",
+	"GenericMC.barExtraIconsAlwaysShow": "常に追加アイコンを表示する",
+	"GenericMC.barExtraIconsAlwaysShowDesc": "まだ釣れていない場合でも、魚の横に追加アイコンを表示します.",
+	"GenericMC.barUncaughtEffect": "未捕獲魚エフェクト",
+	"GenericMC.barUncaughtEffectDesc": "未捕獲魚の表示を次のように変更します:\n - 暗くする: コレクションタブと同じ.\n -- ミニゲームでも。テキストアイコンモードでは「???」と表示されます.\n - ブロンズスター: 捕獲時と同じ. 魚の横に追加のアイコンを追加します（「常に表示」設定は無視されます）.\n - 使用しない: 捕獲時と同じ.",
+	"GenericMC.barUncaughtEffect0": "暗くする",
+	"GenericMC.barUncaughtEffect1": "ブロンズスター",
 
 	"GenericMC.barSortMode": "ソートモード",
 	"GenericMC.barSortModeDesc": "名前順にすると、アイコンがアルファベット順に並びます.\n捕獲率(%)でソートすると、エクストラチェック頻度が高い方から並びます.\nソートしない場合は、以下の順序になります.ごみ、ID、おまけの順です.",
@@ -66,9 +70,6 @@
 	"GenericMC.barCrabPotEnabled": "カニかごプレビューを有効にする",
 	"GenericMC.barCrabPotEnabledDesc": "カニかごに対しても働くように変更します.",
 
-	"GenericMC.barUncaughtDarker": "捕獲していない魚の色を暗くする",
-	"GenericMC.barUncaughtDarkerDesc": "捕獲していない魚のアイコンをコレクション画面のように暗く示すようにします（ミニゲームにも適用されます）. テキストアイコンモードでも代わりが示されるようになります.",
-
 	"GenericMC.barOnlyFish": "魚のみ",
 	"GenericMC.barOnlyFishDesc": "バーには公式の魚リスト（とごみ）だけが示され、家具やメモのようなものはスキップされます.これらはまだパーセンテージの計算に寄与します.これは主に一貫性を保つためで、これらのアイテムのいくつかはすでにブラックリスト（示されない）になっているからです.あるMODがこのリストに魚を追加していない可能性もありますが、それらは実際には魚としてカウントされないことを覚えておいてください.",
 
@@ -81,6 +82,8 @@
 	"GenericMC.MinigameRodDesc": "釣りミニゲームで、汎用スプライトの上に魚を重ねて表示します.\n互換性：他のMODがBobberBarの位置変数をオーバーライドしている限り、動作するはずです.",
 	"GenericMC.MinigameWater": "水中",
 	"GenericMC.MinigameWaterDesc": "浮きに魚が食いついている様子を表示します。透明度はソナーモードとソナータックルに依存します.",
+	"GenericMC.MinigameSonar": "ソナー表示",
+	"GenericMC.MinigameSonarDesc": "ベースゲームのソナー表示に魚を表示します.",
 
 	"GenericMC.SplitScreenDesc": "画面分割固有の設定です.これらは画面分割のプレイヤーにのみ関係します.メインプレーヤーだけが変更する必要があります.",
 	"GenericMC.SplitScreen2": "分割画面2: 右",

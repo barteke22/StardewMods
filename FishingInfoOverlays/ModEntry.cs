@@ -24,8 +24,8 @@ namespace FishingInfoOverlays
 
             helper.Events.Input.ButtonPressed += OnButtonPressed;
             helper.Events.GameLoop.DayStarted += OnDayStarted;
-            helper.Events.Display.Rendered += Rendered;
             helper.Events.Display.MenuChanged += OnMenuChanged;
+            helper.Events.Display.Rendered += Rendered;
             helper.Events.Display.RenderedActiveMenu += OnRenderMenu;
             helper.Events.Display.RenderedActiveMenu += GenericModConfigMenuIntegration;
             helper.Events.Multiplayer.ModMessageReceived += OnModMessageReceived;
@@ -127,7 +127,7 @@ namespace FishingInfoOverlays
             GenericMC.AddNumberOption(ModManifest, () => config.BarTopLeftLocationY[screen], (val) => config.BarTopLeftLocationY[screen] = val,
                 () => translate.Get("GenericMC.barPosY"), () => translate.Get("GenericMC.barPosYDesc"), 0);
             GenericMC.AddNumberOption(ModManifest, () => config.BarScale[screen], (val) => config.BarScale[screen] = val,
-                () => translate.Get("GenericMC.barScale"), () => translate.Get("GenericMC.barScaleDesc"), 0.1f, 5f, 0.1f);
+                () => translate.Get("GenericMC.barScale"), () => translate.Get("GenericMC.barScaleDesc"), 0.1f, 3f, 0.05f);
             GenericMC.AddNumberOption(ModManifest, () => config.BarMaxIcons[screen], (val) => config.BarMaxIcons[screen] = val,
                 () => translate.Get("GenericMC.barMaxIcons"), () => translate.Get("GenericMC.barMaxIconsDesc"), 4, 500);
             GenericMC.AddNumberOption(ModManifest, () => config.BarMaxIconsPerRow[screen], (val) => config.BarMaxIconsPerRow[screen] = val,
@@ -146,14 +146,23 @@ namespace FishingInfoOverlays
                 () => translate.Get("GenericMC.barExtraIconsBundles"), () => translate.Get("GenericMC.barExtraIconsBundlesDesc"));
             GenericMC.AddBoolOption(ModManifest, () => config.BarExtraIconsAquarium[screen], (val) => config.BarExtraIconsAquarium[screen] = val,
                 () => translate.Get("GenericMC.barExtraIconsAquarium"), () => translate.Get("GenericMC.barExtraIconsAquariumDesc"));
-            GenericMC.AddBoolOption(ModManifest, () => config.BarExtraIconsUncaught[screen], (val) => config.BarExtraIconsUncaught[screen] = val,
-                () => translate.Get("GenericMC.barExtraIconsUncaught"), () => translate.Get("GenericMC.barExtraIconsUncaughtDesc"));
+            GenericMC.AddBoolOption(ModManifest, () => config.BarExtraIconsAlwaysShow[screen], (val) => config.BarExtraIconsAlwaysShow[screen] = val,
+                () => translate.Get("GenericMC.barExtraIconsAlwaysShow"), () => translate.Get("GenericMC.barExtraIconsAlwaysShowDesc"));
+
+            GenericMC.AddTextOption(ModManifest, name: () => translate.Get("GenericMC.barUncaughtEffect"), tooltip: () => translate.Get("GenericMC.barUncaughtEffectDesc"),
+                getValue: () => config.BarUncaughtFishEffect[screen].ToString(),
+                setValue: value => config.BarUncaughtFishEffect[screen] = int.Parse(value),
+                allowedValues: ["0", "1", "2"],
+                formatAllowedValue: value => value == "2" ? translate.Get($"GenericMC.Disabled") : translate.Get($"GenericMC.barUncaughtEffect{value}"));
             AddSeparator(GenericMC, GenericExtraOptions, ModManifest);
 
             GenericMC.AddBoolOption(ModManifest, () => config.BarShowBaitAndTackleInfo[screen], (val) => config.BarShowBaitAndTackleInfo[screen] = val,
                 () => translate.Get("GenericMC.barShowBaitTackle"), () => translate.Get("GenericMC.barShowBaitTackleDesc"));
-            GenericMC.AddBoolOption(ModManifest, () => config.BarShowPercentages[screen], (val) => config.BarShowPercentages[screen] = val,
-                () => translate.Get("GenericMC.barShowPercentages"), () => translate.Get("GenericMC.barShowPercentagesDesc"));
+            GenericMC.AddTextOption(ModManifest, name: () => translate.Get("GenericMC.barShowPercentages"), tooltip: () => translate.Get("GenericMC.barShowPercentagesDesc"),
+                getValue: () => config.BarShowPercentagesMode[screen].ToString(),
+                setValue: value => config.BarShowPercentagesMode[screen] = int.Parse(value),
+                allowedValues: ["0", "1", "2"],
+                formatAllowedValue: value => value == "2" ? translate.Get($"GenericMC.Disabled") : translate.Get($"GenericMC.barShowPercentages{value}"));
 
             GenericMC.AddTextOption(ModManifest, name: () => translate.Get("GenericMC.barSortMode"), tooltip: () => translate.Get("GenericMC.barSortModeDesc"),
                 getValue: () => config.BarSortMode[screen].ToString(),
@@ -161,8 +170,6 @@ namespace FishingInfoOverlays
                 allowedValues: ["0", "1", "2"],
                 formatAllowedValue: value => value == "2" ? translate.Get($"GenericMC.Disabled") : translate.Get($"GenericMC.barSortMode{value}"));
 
-            GenericMC.AddBoolOption(ModManifest, () => config.UncaughtFishAreDark[screen], (val) => config.UncaughtFishAreDark[screen] = val,
-                () => translate.Get("GenericMC.barUncaughtDarker"), () => translate.Get("GenericMC.barUncaughtDarkerDesc"));
             GenericMC.AddBoolOption(ModManifest, () => config.OnlyFish[screen], (val) => config.OnlyFish[screen] = val,
                 () => translate.Get("GenericMC.barOnlyFish"), () => translate.Get("GenericMC.barOnlyFishDesc"));
             GenericMC.AddBoolOption(ModManifest, () => config.BarCrabPotEnabled[screen], (val) => config.BarCrabPotEnabled[screen] = val,
@@ -186,6 +193,8 @@ namespace FishingInfoOverlays
                 () => translate.Get("GenericMC.MinigameRod"), () => translate.Get("GenericMC.MinigameRodDesc"));
             GenericMC.AddBoolOption(ModManifest, () => config.MinigamePreviewWater[screen], (val) => config.MinigamePreviewWater[screen] = val,
                 () => translate.Get("GenericMC.MinigameWater"), () => translate.Get("GenericMC.MinigameWaterDesc"));
+            GenericMC.AddBoolOption(ModManifest, () => config.MinigamePreviewSonar[screen], (val) => config.MinigamePreviewSonar[screen] = val,
+                () => translate.Get("GenericMC.MinigameSonar"), () => translate.Get("GenericMC.MinigameSonarDesc"));
 
         }
 
@@ -209,13 +218,30 @@ namespace FishingInfoOverlays
         private void Rendered(object sender, RenderedEventArgs e)
         {
             overlay.Value ??= new Overlay(this);
-            if (Context.IsWorldReady) overlay.Value.Rendered(sender, e);
+            if (Context.IsWorldReady)
+            {
+                if (!Overlay.hudMode)
+                {
+                    Helper.Events.Display.RenderedHud -= RenderedHud;
+                    overlay.Value.RenderedBoth();
+                }
+                overlay.Value.RenderedMinigame(e);
+            }
+        }
+        private void RenderedHud(object sender, RenderedHudEventArgs e)
+        {
+            overlay.Value ??= new Overlay(this);
+            if (Context.IsWorldReady) overlay.Value.RenderedBoth();
         }
 
         private void OnMenuChanged(object sender, MenuChangedEventArgs e)   //Minigame data
         {
             overlay.Value ??= new Overlay(this);
-            if (Context.IsWorldReady) overlay.Value.OnMenuChanged(sender, e);
+            if (Context.IsWorldReady)
+            {
+                UpdateRenderMode();
+                overlay.Value.OnMenuChanged(sender, e);
+            }
         }
         private void OnRenderMenu(object sender, RenderedActiveMenuEventArgs e)
         {
@@ -229,6 +255,7 @@ namespace FishingInfoOverlays
 
         private void OnWarped(object sender, WarpedEventArgs e)
         {
+            UpdateRenderMode();
             overlay.Value?.OnWarped(sender, e);
         }
 
@@ -248,20 +275,21 @@ namespace FishingInfoOverlays
             Overlay.maxIconsPerRow = config.BarMaxIconsPerRow;                                                              //config: ^How many per row/column.
             Overlay.onlyFish = config.OnlyFish;                                                                             //config: Whether to hide things like furniture.
             Overlay.scanRadius = config.BarScanRadius;                                                                      //config: 0: Only checks if can fish, 1-50: also checks if there's water within X tiles around player.
-            Overlay.showPercentages = config.BarShowPercentages;                                                            //config: Whether it should show catch percentages.
+            Overlay.showPercentagesMode = config.BarShowPercentagesMode;                                                            //config: Whether it should show catch percentages.
             Overlay.showTackles = config.BarShowBaitAndTackleInfo;                                                          //config: Whether it should show Bait and Tackle info.
-            Overlay.extraIconsUncaught = config.BarExtraIconsUncaught;                                                      //config: Show extra icons when uncaught.
+            Overlay.extraIconsShowAlways = config.BarExtraIconsAlwaysShow;                                                    //config: Show extra icons when uncaught.
             Overlay.extraIconsMaxSize = config.BarExtraIconsMaxSize;                                                        //config: Show star when fish isn't maxed size.
             Overlay.extraIconsBundles = config.BarExtraIconsBundles;                                                        //config: Show chest when fish needed for bundle.
             Overlay.extraIconsAquarium = config.BarExtraIconsAquarium;                                                      //config: Show pufferfish when needed for Aquarium mod.
             Overlay.sortMode = config.BarSortMode;                                                                          //config: 0= By Name (text mode only), 1= By Percentage, 2=Off
-            Overlay.uncaughtDark = config.UncaughtFishAreDark;                                                              //config: Whether uncaught fish are displayed as ??? and use dark icons
+            Overlay.uncaughtFishEffect = config.BarUncaughtFishEffect;                                                          //config: Whether uncaught fish are displayed as ??? and use dark icons
             Overlay.minigameBar = config.MinigamePreviewBar;                                                                //config: Fish preview in bar.
             Overlay.minigameRod = config.MinigamePreviewRod;                                                                //config: Fish preview in minigame.
-            Overlay.minigameWater = config.MinigamePreviewWater;                                                            //config: Fish preview in water. 
+            Overlay.minigameWater = config.MinigamePreviewWater;                                                            //config: Fish preview in water.
+            Overlay.minigameSonar = config.MinigamePreviewSonar;                                                            //config: Fish preview on sonar display.
 
             if (config.BarExtraCheckFrequency > 22) config.BarExtraCheckFrequency /= 10;
-            Overlay.extraCheckFrequency = config.BarExtraCheckFrequency;                                                    //config: 20-220: Bad performance dynamic check to see if there's modded/hardcoded fish
+            Overlay.extraCheckFrequency = config.BarExtraCheckFrequency;                                                    //config: 0-22: Bad performance dynamic check to see if there's modded/hardcoded fish
 
             Overlay.colorBg = new Color(config.BarBackgroundColorRGBA[0], config.BarBackgroundColorRGBA[1], config.BarBackgroundColorRGBA[2], config.BarBackgroundColorRGBA[3]);
             Overlay.colorText = new Color(config.BarTextColorRGBA[0], config.BarTextColorRGBA[1], config.BarTextColorRGBA[2], config.BarTextColorRGBA[3]);
@@ -275,6 +303,21 @@ namespace FishingInfoOverlays
             }
 
             overlay.ResetAllScreens();
+            UpdateRenderMode(true);
+        }
+
+        private void UpdateRenderMode(bool reset = false) //checks whether UI or Zoom is closer to 100% and applies rendering in that mode
+        {
+            float dist = Math.Abs(Game1.options.zoomLevel - 1f);
+            float distHud = Math.Abs(Game1.options.uiScale - 1f);
+            bool hud = dist > distHud;
+
+            if (hud != Overlay.hudMode || reset)
+            {
+                Overlay.hudMode = hud;
+                if (hud) Helper.Events.Display.RenderedHud += RenderedHud;
+                else Helper.Events.Display.RenderedHud -= RenderedHud;
+            }
         }
 
 

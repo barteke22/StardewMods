@@ -43,14 +43,18 @@
 	"GenericMC.barShowPercentages": "Mostrar Porcentajes",
 	"GenericMC.barShowPercentagesDesc": "Muestra el porcentaje simulado de probabilidad de captura de cada pez debajo de su icono. Depende mucho de la Frecuencia de Revisión Extra: cuanto más alta, mejor.",
 
-	"GenericMC.barExtraIconsMaxSize": "Mostrar el icono \"No máximo\"",
-	"GenericMC.barExtraIconsMaxSizeDesc": "Icono de estrella: Peces de tamaño máximo aún no capturados.",
-	"GenericMC.barExtraIconsBundles": "Mostrar el icono \"Paquete\"",
-	"GenericMC.barExtraIconsBundlesDesc": "Icono de paquete: Peces necesarios para el paquete del Centro Comunitario (el paquete debe estar desbloqueado).",
-	"GenericMC.barExtraIconsAquarium": "Mostrar el icono \"Acuario\"",
-	"GenericMC.barExtraIconsAquariumDesc": "Icono de pez globo: El pez aún no se ha donado al Acuario de Stardew (si el mod está instalado). Mod: Stardew Aquarium.",
-	"GenericMC.barExtraIconsUncaught": "Mostrar iconos cuando no se haya capturado",
-	"GenericMC.barExtraIconsUncaughtDesc": "Mostrar si se muestra iconos adicionales junto al pez incluso si aún no ha sido capturado.",
+	"GenericMC.barExtraIconsMaxSize": "Icono extra: Estrella cian",
+	"GenericMC.barExtraIconsMaxSizeDesc": "Tamaño máximo del pez aún no capturado.",
+	"GenericMC.barExtraIconsBundles": "Icono extra: Lote",
+	"GenericMC.barExtraIconsBundlesDesc": "Se necesitan peces para el lote del Centro Comunitario (el lote debe estar desbloqueado).",
+	"GenericMC.barExtraIconsAquarium": "Icono extra: Pez globo",
+	"GenericMC.barExtraIconsAquariumDesc": "El pez aún no se ha donado al Acuario de Stardew (si el mod está instalado). Mod: Stardew Aquarium.",
+	"GenericMC.barExtraIconsAlwaysShow": "Mostrar siempre Iconos extra",
+	"GenericMC.barExtraIconsAlwaysShowDesc": "Mostrar iconos extra junto al pez, incluso si aún no se ha capturado.",
+	"GenericMC.barUncaughtEffect": "Efecto de pez no capturado",
+	"GenericMC.barUncaughtEffectDesc": "Hace que los peces no capturados aparezcan como:\n - Oscurecer: Como en la pestaña Colecciones.\n -- También en el minijuego. El modo de icono de texto los mostrará como \"???\".\n - Estrella de bronce: Igual que capturado. Añade un icono adicional junto al pez (ignora la opción \"Mostrar siempre\").\n - Desactivado: Igual que capturado.",
+	"GenericMC.barUncaughtEffect0": "Oscurecer",
+	"GenericMC.barUncaughtEffect1": "Estrella de bronce",
 
 	"GenericMC.barSortMode": "Estilo de Ordenamiento",
 	"GenericMC.barSortModeDesc": "Ordenar por nombre organiza los iconos alfabéticamente.\nOrdenar por probabilidad de captura (%) depende mucho de la Frecuencia de Revisión Extra: cuanto más alta, mejor.\nSin ordenamiento, el orden es: basura, por ID y extras.",
@@ -66,9 +70,6 @@
 	"GenericMC.barCrabPotEnabled": "Vista Previa Trampas para Cangrejos Activa",
 	"GenericMC.barCrabPotEnabledDesc": "Extiende la vista previa para que también funcione con las trampas para cangrejos.",
 
-	"GenericMC.barUncaughtDarker": "Peces Faltantes Aparecen Oscuros",
-	"GenericMC.barUncaughtDarkerDesc": "Hace que los iconos de peces no capturados aparezcan oscuros como en la pestaña de colecciones (también se aplica al minijuego). El modo de icono con texto los mostrará como \"???\".",
-
 	"GenericMC.barOnlyFish": "Solo Peces",
 	"GenericMC.barOnlyFishDesc": "La barra solo mostrará peces oficiales y basura, ignorando otros objetos como muebles o notas. Estos aún cuentan para los porcentajes. Algunos mods podrían no incluir sus peces en la lista oficial.",
 
@@ -81,6 +82,8 @@
 	"GenericMC.MinigameRodDesc": "Superpone el pez sobre el sprite genérico en el minijuego de pesca.\nCompatibilidad: Siempre que el otro mod anule la variable de posición de la barra de flotador, debería funcionar.",
 	"GenericMC.MinigameWater": "En el agua",
 	"GenericMC.MinigameWaterDesc": "Muestra los peces mordisqueando el flotador. La transparencia depende del equipo de sonar.",
+	"GenericMC.MinigameSonar": "Pantalla del sónar",
+	"GenericMC.MinigameSonarDesc": "Muestra los peces en la pantalla del sónar del juego base.",
 
 	"GenericMC.SplitScreenDesc": "Configuraciones específicas para Pantalla Dividida, solo importantes para jugadores en pantalla dividida. Solo el jugador principal debería cambiarlas.",
 	"GenericMC.SplitScreen2": "Pantalla Dividida 2: (Arriba) Derecha",

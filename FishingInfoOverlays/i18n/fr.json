@@ -43,14 +43,18 @@
 	"GenericMC.barShowPercentages": "Montrer les pourcentages",
 	"GenericMC.barShowPercentagesDesc": "Montre un pourcentage de chance simulé d’attraper chaque poisson sous son icône.\ns’appuie beaucoup sur la fréquence de vérification : plus il y en, mieux c’est.",
 
-	"GenericMC.barExtraIconsMaxSize": "Afficher l'icône «Non atteint le maximum»",
-	"GenericMC.barExtraIconsMaxSizeDesc": "Icône étoile: Poisson de taille maximale non encore capturé.",
-	"GenericMC.barExtraIconsBundles": "Afficher l'icône «Lot»",
-	"GenericMC.barExtraIconsBundlesDesc": "Icône du lot : Poisson requis pour le lot du centre communautaire (le lot doit être débloqué).",
-	"GenericMC.barExtraIconsAquarium": "Afficher l'icône «Aquarium»",
-	"GenericMC.barExtraIconsAquariumDesc": "Icône poisson-globe : Poisson non encore donné à l'aquarium Stardew (si le mod est installé). Mod: Stardew Aquarium.",
-	"GenericMC.barExtraIconsUncaught": "Afficher les icônes lorsque le poisson n'est pas capturé",
-	"GenericMC.barExtraIconsUncaughtDesc": "Afficher des icônes supplémentaires à côté du poisson même s'il n'a pas encore été pêché.",
+	"GenericMC.barExtraIconsMaxSize": "Icône supplémentaire : Étoile cyan",
+	"GenericMC.barExtraIconsMaxSizeDesc": "Taille maximale du poisson non encore pêché.",
+	"GenericMC.barExtraIconsBundles": "Icône supplémentaire : Lot",
+	"GenericMC.barExtraIconsBundlesDesc": "Poisson requis pour le lot du Centre communautaire (le lot doit être débloqué).",
+	"GenericMC.barExtraIconsAquarium": "Icône supplémentaire : Poisson-globe",
+	"GenericMC.barExtraIconsAquariumDesc": "Le poisson n'a pas encore été donné à l'aquarium Stardew (si le mod est installé). Mod: Stardew Aquarium.",
+	"GenericMC.barExtraIconsAlwaysShow": "oujours afficher les Icônes supplémentaires",
+	"GenericMC.barExtraIconsAlwaysShowDesc": "Afficher les icônes supplémentaires à côté du poisson, même s'il n'a pas encore été pêché.",
+	"GenericMC.barUncaughtEffect": "Effet Poisson non capturé",
+	"GenericMC.barUncaughtEffectDesc": "Affichage des poissons non capturés:\n - Foncer: Comme dans l'onglet Collections.\n -- Également dans le mini-jeu. Le mode Icône de texte les affichera comme «???».\n - Étoile de bronze: Identique à «Pêché». Ajoute une icône supplémentaire à côté du poisson (ignore le paramètre «Toujours afficher»).\n - Désactivé: Identique à «Pêché»",
+	"GenericMC.barUncaughtEffect0": "Foncer",
+	"GenericMC.barUncaughtEffect1": "Étoile de bronze",
 
 	"GenericMC.barSortMode": "Mode de tri",
 	"GenericMC.barSortModeDesc": "Trier par nom arrange les icônes de façon alphabétique.\nTrier par probabilité (%) s’appuie sur la fréquence de vérification : plus il y en, mieux c’est.\nSans tri, l’ordre est : Déchets ; par ID ; extras.",
@@ -66,9 +70,6 @@
 	"GenericMC.barCrabPotEnabled": "Aperçu du casier de crabes",
 	"GenericMC.barCrabPotEnabledDesc": "Étend l’aperçu au casier de crabes.",
 
-	"GenericMC.barUncaughtDarker": "Poissons inconnus cachés",
-	"GenericMC.barUncaughtDarkerDesc": "Fait apparaître les icônes de poissons non encore attrapés noir comme dans l’onglet Collection (s’applique aussi au mini-jeu). Le mode Icone Textuelle les montre aussi comme « ??? ».",
-
 	"GenericMC.barOnlyFish": "Seulement les poissons",
 	"GenericMC.barOnlyFishDesc": "La barre va uniquement montrer des choses provenant de la liste officielle des poissons (et déchets), passant sur des choses comme des meubles ou notes. Ils contribuent toujours au calcul des probabilités. C’est principalement par souci de cohérence, puisque certains de ces objets sont déjà sur liste noire (cachés). Gardez en tête qu’il y a une petite probabilité que certains mods n’ajoutent pas leurs poissons sur cette liste, même si ceux-ci ne compteraient pas vraiment comme des poissons.",
 
@@ -81,6 +82,8 @@
 	"GenericMC.MinigameRodDesc": "Superpose le poisson au sprite générique dans le mini-jeu de pêche.\nCompatibilité : Tant que l'autre mod remplace la variable de position BobberBar, cela devrait fonctionner.",
 	"GenericMC.MinigameWater": "Dans l'eau",
 	"GenericMC.MinigameWaterDesc": "Affiche les poissons grignotant sur le flotteur. La transparence dépend du mode et du matériel du sonar.",
+	"GenericMC.MinigameSonar": "Affichage du sonar",
+	"GenericMC.MinigameSonarDesc": "Affiche les poissons sur l'écran du sonar du jeu de base.",
 
 	"GenericMC.SplitScreenDesc": "Paramètres Écran-partagé. Seulement le joueur principal devrait changer ceci.",
 	"GenericMC.SplitScreen2": "Écran partagé 2 : (Haut) Droite",

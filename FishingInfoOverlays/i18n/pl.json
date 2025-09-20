@@ -43,14 +43,18 @@
 	"GenericMC.barShowPercentages": "Pokaż Procenty",
 	"GenericMC.barShowPercentagesDesc": "Pokazuje symulowaną szansę złapania danej ryby pod jej ikoną. Dokładność bardzo zależy od Częstotliwości Ekstra Testów, im większa, tym lepiej.",
 
-	"GenericMC.barExtraIconsMaxSize": "Pokaż ikonę \"Nie największa\"",
-	"GenericMC.barExtraIconsMaxSizeDesc": "Ikona gwiazdka: Maksymalny rozmiar ryby nie został jeszcze złapany.",
-	"GenericMC.barExtraIconsBundles": "Pokaż ikonę \"Pakiet\"",
-	"GenericMC.barExtraIconsBundlesDesc": "Ikona pakiet: Ryba potrzebna do pakietu Centrum Społeczności (pakiet musi być odblokowany).",
-	"GenericMC.barExtraIconsAquarium": "Pokaż ikonę \"Akwarium\"",
-	"GenericMC.barExtraIconsAquariumDesc": "Ikona rozdymki: Ryba nie została jeszcze przekazana do Akwarium Stardew (jeśli mod jest zainstalowany). Mod: Stardew Aquarium.",
-	"GenericMC.barExtraIconsUncaught": "Pokaż ikony, gdy ryba nie została złapana",
-	"GenericMC.barExtraIconsUncaughtDesc": "Pokaż dodatkowe ikony obok ryby, nawet jeśli nie została jeszcze złowiona.",
+	"GenericMC.barExtraIconsMaxSize": "Dodatkowa ikona: Błękitna gwiazda",
+	"GenericMC.barExtraIconsMaxSizeDesc": "Maksymalny rozmiar ryby nie został jeszcze złowiony.",
+	"GenericMC.barExtraIconsBundles": "Dodatkowa ikona: Pakiet",
+	"GenericMC.barExtraIconsBundlesDesc": "Ryba potrzebna do pakietu Centrum Społeczności (pakiet musi być odblokowany).",
+	"GenericMC.barExtraIconsAquarium": "Dodatkowa ikona: Rozdymka",
+	"GenericMC.barExtraIconsAquariumDesc": "Ryba nie została jeszcze przekazana do Akwarium Stardew (jeśli mod jest zainstalowany). Mod: Stardew Aquarium.",
+	"GenericMC.barExtraIconsAlwaysShow": "Zawsze pokazuj Dodatkowe Ikony",
+	"GenericMC.barExtraIconsAlwaysShowDesc": "Czy wyświetlać dodatkowe ikony obok ryby, nawet jeśli jeszcze jej nie złapano.",
+	"GenericMC.barUncaughtEffect": "Efekt niezłapanej ryby",
+	"GenericMC.barUncaughtEffectDesc": "Sprawia, że ​​niezłapane ryby wyglądają tak:\n – Przyciemnione: Tak jak w zakładce Kolekcje. Również w minigrze. Tryb ikon tekstowych będzie je wyświetlał jako \"???\".\n – Brązowa gwiazdka: Tak samo jak złapana. Dodaje dodatkową ikonę obok ryby (ignoruje ustawienie „Zawsze pokazuj”).\n – Wyłącz: Tak samo jak złapana.",
+	"GenericMC.barUncaughtEffect0": "Przyciemnione",
+	"GenericMC.barUncaughtEffect1": "Brązowa gwiazdka",
 
 	"GenericMC.barSortMode": "Tryb Sortowania",
 	"GenericMC.barSortModeDesc": "Sortowanie według Nazwy aranżuje ikony alfabetycznie.\nSortowanie według Szansy Złapania bardzo zależy od Częstotliwości Ekstra Testów, im większa, tym lepiej.\nBez sortowania ikony mają daną kolejność: Śmieci, według ID, i ekstra.",
@@ -66,9 +70,6 @@
 	"GenericMC.barCrabPotEnabled": "Pułapki na Kraby Też",
 	"GenericMC.barCrabPotEnabledDesc": "Sprawia, że Pasek Info również działa gdy trzymasz pułapkę na kraby.",
 
-	"GenericMC.barUncaughtDarker": "Niezłowione ryby są ciemniejsze",
-	"GenericMC.barUncaughtDarkerDesc": "Sprawia, że ​​ikony niezłapanych ryb są ciemne, tak jak w Menu Kolekcji (dotyczy również minigry). Tryb ikon z tekstem pokazuje je również jako \"???\".",
-
 	"GenericMC.barOnlyFish": "Tylko Ryby",
 	"GenericMC.barOnlyFishDesc": "Pasek pokaże tylko rzeczy z oficjalnej listy ryb (i śmieci), pomijając rzeczy takie jak meble bądź notatki. Nadal będą przyczyniać się do obliczeń procentowych. Opcja dodana głównie ze względu na spójność, ponieważ niektóre z tych przedmiotów są już na czarnej liście (ukryte). Ostrzegam: Jest minimalna szansa, że jakiś mod nie dodał swoich ryb to tej listy, lecz nie liczyłyby się w tym przypadku jako ryby.",
 
@@ -81,6 +82,8 @@
 	"GenericMC.MinigameRodDesc": "Nakłada rybę na sprite'a w minigrze wędkarskiej.\nKompatibilność: Jeśli inny mod zmienia pozycje BobberBar, powinno działać.",
 	"GenericMC.MinigameWater": "W wodzie",
 	"GenericMC.MinigameWaterDesc": "Pokazuje rybę skubającą spławik. Przezroczystość zależy od trybu i spławika sonarowego.",
+	"GenericMC.MinigameSonar": "Wyświetlacz sonaru",
+	"GenericMC.MinigameSonarDesc": "Pokazuje ryby na wyświetlaczu sonaru jak w grze podstawowej.",
 
 	"GenericMC.SplitScreenDesc": "Opcje dla trybu dzielonego ekranu, nie są ważne w innych trybach. Tylko główny użytkownik powinien je zmieniać.",
 	"GenericMC.SplitScreen2": "Podzielony Ekran 2: Prawy (Górny)",
