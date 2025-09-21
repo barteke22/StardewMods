@@ -54,7 +54,7 @@
 	"GenericMC.barExtraIconsAlwaysShow": "Always show Extra Icons",
 	"GenericMC.barExtraIconsAlwaysShowDesc": "Whether to show extra icons next to the fish even if it hasn't been caught yet.",
 	"GenericMC.barUncaughtEffect": "Uncaught Fish Effect",
-	"GenericMC.barUncaughtEffectDesc": "Makes uncaught fish appear:\n - Make darker: Like in the Collections Tab. In minigame too. Text Icon Mode will show them as \"???\".\n - Bronze star: Same as caught. Adds an extra icon next to fish (ignores \"Always show\" setting).\n - Disabled: Same as caught.",
+	"GenericMC.barUncaughtEffectDesc": "Makes uncaught fish appear:\n - Make darker: Like in the Collections Tab. In minigame too. The \"Icons + Text\" mode will show them as \"???\".\n - Bronze star: Same as caught. Adds an extra icon next to fish (ignores \"Always show\" setting).\n - Disabled: Same as caught.",
 	"GenericMC.barUncaughtEffect0": "Make darker",
 	"GenericMC.barUncaughtEffect1": "Bronze star",
 
