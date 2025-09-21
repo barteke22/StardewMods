@@ -1,16 +1,21 @@
 ﻿{
-  "Name": "Fishing Minigames",
-  "Author": "barteke22 (Here Fishy base by aedenthorn)",
-  "Version": "1.0.4",
-  "Description": "Alternative fishing minigames, including Here Fishy!",
-  "UniqueID": "barteke22.FishingMinigames",
-  "EntryDll": "FishingMinigames.dll",
-  "MinimumApiVersion": "3.12.0",
-  "Dependencies": [
-    {
-      "UniqueID": "spacechase0.GenericModConfigMenu",
-      "IsRequired": false
-    }
-  ],
-  "UpdateKeys": [ "Nexus:9345" ]
+    "Name": "Fishing Minigames",
+    "Author": "barteke22 (Here Fishy base by aedenthorn)",
+    "Version": "1.1.0",
+    "Description": "Alternative fishing minigames, including Here Fishy!",
+    "UniqueID": "barteke22.FishingMinigames",
+    "EntryDll": "FishingMinigames.dll",
+    "MinimumApiVersion": "4.1.10",
+    "MinimumGameVersion": "1.6.15",
+    "Dependencies": [
+        {
+            "UniqueID": "spacechase0.GenericModConfigMenu",
+            "IsRequired": false
+        },
+        {
+            "UniqueID": "jltaylor-us.GMCMOptions",
+            "IsRequired": false
+        }
+    ],
+    "UpdateKeys": [ "Nexus:9345" ]
 }

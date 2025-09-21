@@ -118,7 +118,7 @@ namespace FishingMinigames
                 }
             }
 
-            Texture2D t2 = new Texture2D(Game1.graphics.GraphicsDevice, texture.Width, texture.Height);//if you want to edit the imported source directly, there's no need to copy and return it - just setData on texture
+            Texture2D t2 = new(Game1.graphics.GraphicsDevice, texture.Width, texture.Height);//if you want to edit the imported source directly, there's no need to copy and return it - just setData on texture
             t2.SetData<Color>(tcolor);
             return t2;
         }

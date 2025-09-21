@@ -7,6 +7,7 @@ using StardewValley;
 
 namespace GenericModConfigMenu
 {
+    /// <summary>The API which lets other mods add a config UI through Generic Mod Config Menu.</summary>
     public interface IGenericModConfigMenuApi
     {
         /*********
@@ -126,6 +127,108 @@ namespace GenericModConfigMenu
         /// <param name="mod">The mod's manifest.</param>
         void Unregister(IManifest mod);
     }
+}
+
+/// <summary>
+/// Extra GMCM options mod API
+/// </summary>
+public interface IGMCMOptionsAPI
+{
+    /// <summary>Add a <c cref="Color">Color</c> option at the current position in the GMCM form.</summary>
+    /// <param name="mod">The mod's manifest.</param>
+    /// <param name="getValue">Get the current value from the mod config.</param>
+    /// <param name="setValue">Set a new value in the mod config.</param>
+    /// <param name="name">The label text to show in the form.</param>
+    /// <param name="tooltip">The tooltip text shown when the cursor hovers on the field, or <c>null</c> to disable the tooltip.</param>
+    /// <param name="showAlpha">Whether the color picker should allow setting the Alpha channel</param>
+    /// <param name="colorPickerStyle">Flags to control how the color picker is rendered.  <see cref="ColorPickerStyle"/></param>
+    /// <param name="fieldId">The unique field ID for use with GMCM's <c>OnFieldChanged</c>, or <c>null</c> to auto-generate a randomized ID.</param>
+    /// <param name="drawSample">
+    ///   A function to draw a sample of the current color.  The arguments are the SpriteBatch, x and y coordinates
+    ///   of the top left corner of the area in which to draw the sample, and the Color to render.
+    ///   Passing <c>null</c> is equivalent to passing the result of <c>MakeColorSwatchDrawer()</c>.
+    /// </param>
+#nullable enable
+    void AddColorOption(IManifest mod, Func<Color> getValue, Action<Color> setValue, Func<string> name,
+        Func<string>? tooltip = null, bool showAlpha = true, uint colorPickerStyle = 0, string? fieldId = null,
+        Action<SpriteBatch, int, int, Color>? drawSample = null);
+
+        #pragma warning disable format
+        /// <summary>
+        /// Flags to control how the <c cref="ColorPickerOption">ColorPickerOption</c> widget is displayed.
+        /// </summary>
+        [Flags]
+        public enum ColorPickerStyle : uint {
+            Default = 0,
+            RGBSliders    = 0b00000001,
+            HSVColorWheel = 0b00000010,
+            HSLColorWheel = 0b00000100,
+            AllStyles     = 0b11111111,
+            NoChooser     = 0,
+            RadioChooser  = 0b01 << 8,
+            ToggleChooser = 0b10 << 8
+        }
+        #pragma warning restore format
+
+        /// <summary>
+        ///   Return a function (suitable for passing as the <c>drawSample</c> parameter of <c>AddColorOption</c>)
+        ///   that draws a color swatch.
+        /// </summary>
+        /// <param name="drawBackground">
+        ///   A function that draws the background of the color swatch.  By default (i.e., if passed <c>null</c>),
+        ///   this draws a black and white checkerboard pattern.
+        /// </param>
+        /// <param name="drawForeground">
+        ///   A function that draws the foreground of the color swatch.  By default (i.e., if passed <c>null</c>),
+        ///   this draws a square of the given Color.
+        /// </param>
+        /// <returns>A function that draws a color swatch</returns>
+        Action<SpriteBatch, int, int, Color> MakeColorSwatchDrawer(
+            Action<SpriteBatch, Rectangle>? drawBackground = null,
+            Action<SpriteBatch, Rectangle, Color>? drawForeground = null);
+
+
+    /// <summary>
+    /// Add a horizontal separator.
+    /// </summary>
+    /// <param name="mod">The mod's manifest.</param>
+    /// <param name="getWidthFraction">
+    ///   A function that returns the fraction of the GMCM window that the separator
+    ///   should occupy.  1.0 is the entire window.  Defaults to 0.85.
+    /// </param>
+    /// <param name="height">The height of the separator (in pixels)</param>
+    /// <param name="padAbove">How much padding (in pixels) to place above the separator</param>
+    /// <param name="padBelow">How much padding (in pixels) to place below the separator</param>
+    /// <param name="alignment">
+    ///   The horizontal alignment of the separator.
+    ///   Use a value from the <c cref="HorizontalAlignment">HorizontalAlignment enumeration</c>.
+    /// </param>
+    /// <param name="getColor">
+    ///   A function to return the color to use for the separator.  Defaults to the game's text color.
+    /// </param>
+    /// <param name="getShadowColor">
+    ///   A function to return the color to use for the shadow drawn under the separator.  Defaults to the
+    ///   game's text shadow color.  Return <c>Color.Transparent</c> to remove the shadow completely.
+    /// </param>
+    void AddHorizontalSeparator(IManifest mod,
+                                Func<double>? getWidthFraction = null,
+                                int height = 3,
+                                int padAbove = 0,
+                                int padBelow = 0,
+                                int alignment = (int)HorizontalAlignment.Center,
+                                Func<Color>? getColor = null,
+                                Func<Color>? getShadowColor = null);
+
+    /// <summary>
+    /// Valid values for the <c>alignment</c> parameter of <c>AddHorizontalSeparator</c> and <c>AddSimpleHorizontalSeparator</c>
+    /// </summary>
+    public enum HorizontalAlignment
+    {
+        Left = -1,
+        Center = 0,
+        Right = 1
+    }
+#nullable disable
 }
 
 

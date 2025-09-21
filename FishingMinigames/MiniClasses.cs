@@ -59,7 +59,7 @@ namespace FishingMinigames
     class MinigameColor
     {
         public Color color;
-        public Vector2 pos = new Vector2(0f);
+        public Vector2 pos = new(0f);
         public int whichSlider = 0;
     }
     class DummyMenu : StardewValley.Menus.IClickableMenu
