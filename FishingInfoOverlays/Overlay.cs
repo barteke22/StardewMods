@@ -198,7 +198,8 @@ namespace FishingInfoOverlays
                     if (iconMode[screen] == 2 && iconCount > 0)
                     {
                         boxBottomLeft = boxTopLeft + new Vector2(0, source.Width * iconScale + (showPercent ? fixScale10 : 0));
-                        boxWidth = iconCount * (source.Width + (showExtras && iconMode[screen] != 2 ? 4.8f : 0)) * iconScale;
+                        if (iconCount == 3 && fishHere?.Count > 3) iconCount = 2;
+                        boxWidth = iconCount * (source.Width + (showExtras ? 4.8f : 0)) * iconScale + boxTopLeft.X;
                         boxHeight += source.Width * iconScale + (showPercent ? fixScale10 : 0);
                         iconCount = 1;
                     }
@@ -687,7 +688,15 @@ namespace FishingInfoOverlays
                         query = q.Replace("BOBBER_X", ((int)bobberTile.X).ToString()).Replace("BOBBER_Y", ((int)bobberTile.Y).ToString()).Replace("WATER_DEPTH", waterDepth.ToString());
                     }
 
-                    foreach (var item in ItemQueryResolver.TryResolve(query, itemQueryContext, ItemQuerySearchMode.All, spawn.PerItemCondition, spawn.MaxItems, true))
+                    int attempt = 0;
+                    ItemQueryResult[] items = ItemQueryResolver.TryResolve(query, itemQueryContext, ItemQuerySearchMode.All, spawn.PerItemCondition, spawn.MaxItems, true); ;
+                    while (items.Length == 0 && attempt < 10)
+                    {
+                        items = ItemQueryResolver.TryResolve(query, itemQueryContext, ItemQuerySearchMode.All, spawn.PerItemCondition, spawn.MaxItems, true);
+                        attempt++;
+                    }
+
+                    foreach (var item in items)
                     {
                         if (item.Item is Item fish && !passed.ContainsKey(fish.QualifiedItemId))
                         {
