@@ -172,7 +172,6 @@ namespace FishingInfoOverlays
                             source = data.GetSourceRect();
                             if (backgroundMode[screen] == 0) AddBackground(batch, boxTopLeft, boxBottomLeft, iconCount, source, iconScale, boxWidth, boxHeight, showPercent, showExtras);
 
-                            int baitCount = tackle.Stack;
                             Color baitC = Color.White;
                             if (tackle is ColoredObject obj)
                             {
@@ -187,8 +186,12 @@ namespace FishingInfoOverlays
 
                             if (tackle.Quality == 4) batch.Draw(Game1.mouseCursors, boxBottomLeft + new Vector2(FixIconScale(13f), FixIconScale(showPercent ? 24 : 16)),
                                 new Rectangle(346, 392, 8, 8), Color.White, 0f, Vector2.Zero, FixIconScale(1.9f), SpriteEffects.None, 1f);
-                            else Utility.drawTinyDigits(baitCount, batch, boxBottomLeft + new Vector2(source.Width * iconScale - Utility.getWidthOfTinyDigitString(baitCount, FixIconScale(2f)),
+                            else
+                            {
+                                int count = tackle.Category == Object.tackleCategory ? FishingRod.maxTackleUses - tackle.uses.Value : tackle.Stack;
+                                Utility.drawTinyDigits(count, batch, boxBottomLeft + new Vector2(source.Width * iconScale - Utility.getWidthOfTinyDigitString(count, FixIconScale(2f)),
                                 FixIconScale(showPercent ? 26 : 19)), FixIconScale(2f), 1f, colorText);
+                            }
 
                             if (iconMode[screen] == 1) boxBottomLeft += new Vector2(0, source.Width * iconScale + (showPercent ? fixScale10 : 0));
                             else boxBottomLeft += new Vector2(source.Width * iconScale + (showExtras && iconMode[screen] != 2 ? fixScale10 : 0), 0);
