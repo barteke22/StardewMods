@@ -37,28 +37,45 @@ namespace FishingInfoOverlays
         private int totalPlayersOnThisPC;
 
 
-        private List<string> fishHere;
-        private Dictionary<string, int> fishChances;
-        private Dictionary<string, int> fishChancesSlow;
-        private int fishChancesModulo;
-        private List<string> oldGeneric;
-        private Dictionary<string, int> fishFailed;
+        private List<FishEntry> fishHere = [];
+        private Dictionary<string, int> fishChancesDynamic = [];
+        private Dictionary<string, int> fishChancesDynamicFailed = [];
+        private int fishChancesDynamicDistance = 1;
+        private int fishChancesDynamicTotal;
+        private int fishChancesTotal;
         private bool isMinigameOther = false;
         private float fixedZoom = 1f;
+        private float iconScale = 1f;
 
-        private bool isMinigame = false;    //minigame fish preview data, Reflection
+        private bool isMinigame;    //minigame fish preview data, Reflection
         private string miniFish;
         private bool hasSonar;
+        private bool showUI;
+        private bool showExtras;
+        private bool showPercent;
+        private bool foundWater;
+        private bool showTile;
+        private int iconScale16;
+        private float fixScale10;
+        private int iconCount;
+        private float boxWidth;
+        private float boxHeight;
+        private Vector2 boxTopLeft;
+        private Vector2 boxBottomLeft;
+        private Vector2 nearestWaterTile;
 
 
         public static string nonFishCaughtID;
+        public static Func<FishingRod, Farmer, int> getAddedDistance;
         public static bool hudMode;
         public static Color colorBg;
         public static Color colorText;
         public static bool modAquarium;
+        public static ParsedItemData trash;
         public static Dictionary<string, LocationData> locationData;
         public static Dictionary<string, string> fishData;
         public static Texture2D[] background = new Texture2D[2];
+        public static Rectangle defaultSource = new(0, 0, 16, 16);
 
 
         public static int sonarMode;   //config values
@@ -86,44 +103,13 @@ namespace FishingInfoOverlays
         public static bool[] minigameWater = new bool[4];
         public static bool[] minigameSonar = new bool[4];
 
-        public void RenderedBoth()
+
+
+        public void UpdateTicked(UpdateTickedEventArgs e)
         {
             screen = Context.ScreenId;
-            if (iconMode[screen] != 3)
+            if (maxIcons[screen] == 500 || e.Ticks % 9 == 0)
             {
-                who = Game1.player;
-                if (Game1.eventUp || who.CurrentItem == null ||
-                    !(who.CurrentItem is FishingRod || "Crab Pot".Equals(who.CurrentItem.Name, StringComparison.Ordinal) && barCrabEnabled[screen])) return;//code stop conditions
-
-                totalPlayersOnThisPC = 1;
-                foreach (IMultiplayerPeer peer in Helper.Multiplayer.GetConnectedPlayers())
-                {
-                    if (peer.IsSplitScreen) totalPlayersOnThisPC++;
-                }
-
-                hasSonar = false;
-                int maxDist = 0;
-                FishingRod rod = who.CurrentItem as FishingRod;
-                if (rod != null)
-                {
-                    hasSonar = rod.GetTackleQualifiedItemIDs().Contains("(O)SonarBobber");
-                    if (sonarMode == 0 && !hasSonar) return;
-
-                    var m = typeof(FishingRod).GetMethod("getAddedDistance", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                    maxDist = (int)m?.Invoke(rod, [who]) + 4;
-                }
-
-                SpriteFont font = Game1.smallFont;               //UI INIT
-                SpriteBatch batch = Game1.spriteBatch;
-                ParsedItemData data;
-                Texture2D txt2d;
-                Rectangle source = new(0, 0, 16, 16);
-
-                batch.End();    //stop current UI drawing and start mode where where layers work from 0f-1f
-                batch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise);
-
-
-                float iconScale;
                 if (hudMode)
                 {
                     fixedZoom = barScale[screen] / Game1.options.baseUIScale;
@@ -134,17 +120,188 @@ namespace FishingInfoOverlays
                     fixedZoom = barScale[screen] / Game1.options.zoomLevel;
                     iconScale = Game1.pixelZoom / 2f * fixedZoom;
                 }
-                int iconScale16 = (int)(16f * iconScale);
-                float fixScale10 = FixIconScale(10f);
-                int iconCount = 0;
-                float boxWidth = 0;
-                float boxHeight = 0;
-                Vector2 boxTopLeft = barPosition[screen] / (hudMode ? Game1.options.baseUIScale : Game1.options.zoomLevel);
-                Vector2 boxBottomLeft = boxTopLeft;
+                iconScale16 = (int)(16f * iconScale);
+                fixScale10 = FixIconScale(10f);
+
+                who = Game1.player;
+                FishingRod rod = who.CurrentItem as FishingRod;
+
+                hasSonar = false;
+                if (rod != null)
+                {
+                    hasSonar = rod.GetTackleQualifiedItemIDs().Contains("(O)SonarBobber");
+                    if (sonarMode == 0 && !hasSonar) return;
+                }
+
+                showUI = false;
+                if (iconMode[screen] != 3)
+                {
+                    if (Game1.eventUp || who.CurrentItem == null || !(rod != null || who.CurrentItem is CrabPot && barCrabEnabled[screen])) return;//code stop conditions
+
+                    if (!foundWater || e.Ticks % 3 == 0)
+                    {
+                        totalPlayersOnThisPC = 1;
+                        foreach (IMultiplayerPeer peer in Helper.Multiplayer.GetConnectedPlayers())
+                        {
+                            if (peer.IsSplitScreen) totalPlayersOnThisPC++;
+                        }
+                        boxTopLeft = barPosition[screen] / (hudMode ? Game1.options.baseUIScale : Game1.options.zoomLevel);
+
+                        foundWater = false;
+                        showTile = false;
+                        nearestWaterTile = new(99999f, 99999f);      //any water nearby + nearest water tile check
+                        if (who.currentLocation.canFishHere())
+                        {
+                            if (rod != null)
+                            {
+                                if (screen == 0 && (hasSonar || sonarMode == 3) && scanKey.IsDown())
+                                {
+                                    showTile = true;
+                                    int x = (int)Game1.currentCursorTile.X;
+                                    int y = (int)Game1.currentCursorTile.Y;
+                                    if (!who.currentLocation.isTileBuildingFishable(x, y) && isTileFishable(who.currentLocation, x, y))
+                                    {
+                                        nearestWaterTile = new(x, y);
+                                        foundWater = true;
+                                    }
+                                }
+                                if (!foundWater)
+                                {
+                                    int maxDist = getAddedDistance.Invoke(rod, who) + 4;
+                                    int dir = who.FacingDirection;//0=up,1=r,2=d,3=l
+                                    bool isX = dir is Game1.left or Game1.right;
+                                    bool positive = dir > 1;
+                                    if (!isX) maxDist--;
+                                    for (int i = maxDist; i >= 0; i--)
+                                    {
+                                        int x = (int)who.Tile.X;
+                                        int y = (int)who.Tile.Y;
+                                        if (isX)
+                                        {
+                                            if (positive) x -= i;
+                                            else x += i;
+                                        }
+                                        else
+                                        {
+                                            if (positive) y += i;
+                                            else y -= i;
+                                        }
+                                        if (!who.currentLocation.isTileBuildingFishable(x, y) && isTileFishable(who.currentLocation, x, y))
+                                        {
+                                            nearestWaterTile = new(x, y);
+                                            foundWater = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            if (!foundWater)
+                            {
+                                Vector2 scanTopLeft = who.Tile - new Vector2(scanRadius[screen] + 1);
+                                Vector2 scanBottomRight = who.Tile + new Vector2(scanRadius[screen] + 2);
+                                for (int x = (int)scanTopLeft.X; x < (int)scanBottomRight.X; x++)
+                                {
+                                    for (int y = (int)scanTopLeft.Y; y < (int)scanBottomRight.Y; y++)
+                                    {
+                                        if (!who.currentLocation.isTileBuildingFishable(x, y) && isTileFishable(who.currentLocation, x, y))
+                                        {
+                                            Vector2 tile = new(x, y);
+                                            float distance = Vector2.DistanceSquared(who.Tile, tile);
+                                            float distanceNearest = Vector2.DistanceSquared(who.Tile, nearestWaterTile);
+                                            if (distance < distanceNearest || distance == distanceNearest && Game1.player.GetGrabTile() == tile) nearestWaterTile = tile;
+                                            foundWater = true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (foundWater)
+                    {
+                        if (!foundWater || e.Ticks % 2 == 1)
+                        {
+                            if (rod != null)   //LOCATION FISH PREVIEW
+                            {
+                                if (!isMinigame)
+                                {
+                                    if (extraCheckFrequency == 0)
+                                    {
+                                        AddGenericFishToList(nearestWaterTile);
+                                    }
+                                    else AddFishToListDynamic(nearestWaterTile);
+                                }
+                            }
+                            else AddCrabPotFish();
+                            if (sortMode[screen] == 0) SortListByDisplayName();
+                            else if (sortMode[screen] == 1) SortListByPercentages();
+
+
+                            showPercent = showPercentagesMode[screen] < 2;
+                            bool extrasAquarium = modAquarium && extraIconsAquarium[screen];
+                            bool extrasBundles = extraIconsBundles[screen];
+                            bool extrasMaxSize = extraIconsMaxSize[screen];
+                            bool extrasNotCaught = uncaughtFishEffect[screen] == 1;
+                            showExtras = extrasAquarium || extrasBundles || extrasMaxSize || extrasNotCaught;
+
+                            foreach (var fishEntry in fishHere)
+                            {
+                                int[] fishCaughtData = HasCaught(fishEntry.data);
+                                bool caught = fishCaughtData != null;
+                                if (showExtras)
+                                {
+                                    fishEntry.needsCaught = extrasNotCaught && !caught;
+                                    if (caught || extraIconsShowAlways[screen])
+                                    {
+                                        try
+                                        {
+                                            if (fishEntry.data.Category == Object.FishCategory)
+                                            {
+                                                fishEntry.needsMaxSize = extrasMaxSize && (!caught || fishData.TryGetValue(fishEntry.data.ItemId, out var array) && !(fishCaughtData[1] > Convert.ToInt32(array.Split('/')[4])));
+                                                fishEntry.needsAquarium = extrasAquarium && !Game1.MasterPlayer.hasOrWillReceiveMail("AquariumDonated:" + fishEntry.data.InternalName.Replace(" ", string.Empty, StringComparison.Ordinal));
+                                            }
+                                            if (extrasBundles)
+                                            {
+                                                FieldInfo bundlesIngredientsInfoField = typeof(CommunityCenter).GetField("bundlesIngredientsInfo", BindingFlags.NonPublic | BindingFlags.Instance);
+                                                var bundlesIngredientsInfo = (Dictionary<string, List<List<int>>>)bundlesIngredientsInfoField.GetValue(Game1.RequireLocation<CommunityCenter>("CommunityCenter"));
+                                                fishEntry.needsBundle = bundlesIngredientsInfo.ContainsKey(fishEntry.data.QualifiedItemId) || bundlesIngredientsInfo.ContainsKey(fishEntry.data.Category.ToString());
+                                            }
+                                        }
+                                        catch { }
+                                    }
+                                }
+                                fishEntry.caught = caught |= uncaughtFishEffect[screen] > 0;
+                            }
+                        }
+                    }
+                    showUI = true;
+                }
+            }
+        }
+        private bool isTileFishable(GameLocation loc, int tileX, int tileY)
+        {
+            if (!loc.isWaterTile(tileX, tileY) || loc.doesTileHaveProperty(tileX, tileY, "NoFishing", "Back") != null || loc.hasTileAt(tileX, tileY, "Buildings"))
+            {
+                return loc.doesTileHaveProperty(tileX, tileY, "Water", "Buildings") != null;
+            }
+            return true;
+        }
+
+
+        public void RenderedBoth()
+        {
+            if (showUI)
+            {
+                screen = Context.ScreenId;
+                who = Game1.player;
+                SpriteFont font = Game1.smallFont;               //UI INIT
+                SpriteBatch batch = Game1.spriteBatch;
+
+                batch.End();    //stop current UI drawing and start mode where where layers work from 0f-1f
+                batch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise);
 
 
                 //this.Monitor.Log("\n", LogLevel.Debug);
-                if (who.currentLocation is MineShaft && "Crab Pot".Equals(who.CurrentItem.Name, StringComparison.Ordinal))//crab pot
+                if (who.currentLocation is MineShaft && who.CurrentItem is CrabPot)//crab pot
                 {
                     string warning = translate.Get("Bar.CrabMineWarning");
                     DrawStringWithBorder(batch, font, warning, boxBottomLeft + new Vector2(16 * iconScale, 0), Color.Red, 0f, Vector2.Zero, FixIconScale(1f), SpriteEffects.None, 1f, colorBg); //text
@@ -153,248 +310,141 @@ namespace FishingInfoOverlays
                     return;
                 }
 
+                ParsedItemData data;
+                Texture2D txt2d;
+                Rectangle source = defaultSource;
+                iconCount = 0;
+                boxWidth = 0;
+                boxHeight = 0;
+                boxBottomLeft = boxTopLeft;
 
-                bool showPercent = showPercentagesMode[screen] < 2;
-                bool extrasAquarium = modAquarium && extraIconsAquarium[screen];
-                bool extrasBundles = extraIconsBundles[screen];
-                bool extrasMaxSize = extraIconsMaxSize[screen];
-                bool extrasNotCaught = uncaughtFishEffect[screen] == 1;
-                bool showExtras = extrasAquarium || extrasBundles || extrasMaxSize || extrasNotCaught;    //BAIT AND TACKLE (BOBBERS) PREVIEW
-                if (rod != null && showTackles[screen])
+                if (who.CurrentItem is FishingRod rod)
                 {
-                    var tackles = rod.GetTackle();
-                    tackles.Insert(0, rod.GetBait());
-                    foreach (var tackle in tackles)
+                    if (showTackles[screen])
                     {
-                        if (tackle != null)
+                        var tackles = rod.GetTackle();    //BAIT AND TACKLE (BOBBERS) PREVIEW
+                        tackles.Insert(0, rod.GetBait());
+                        foreach (var tackle in tackles)
                         {
-                            data = ItemRegistry.GetData(tackle.QualifiedItemId);
-                            source = data.GetSourceRect();
-                            if (backgroundMode[screen] == 0) AddBackground(batch, boxTopLeft, boxBottomLeft, iconCount, source, iconScale, boxWidth, boxHeight, showPercent, showExtras);
-
-                            Color baitC = Color.White;
-                            if (tackle is ColoredObject obj)
+                            if (tackle != null)
                             {
-                                baitC = obj.color.Value;
-                                if (!obj.ColorSameIndexAsParentSheetIndex)
+                                data = ItemRegistry.GetData(tackle.QualifiedItemId);
+                                source = data.GetSourceRect();
+                                if (backgroundMode[screen] == 0) AddBackground(batch, boxTopLeft, boxBottomLeft, iconCount, source, iconScale, boxWidth, boxHeight, showPercent, showExtras);
+
+                                Color baitC = Color.White;
+                                if (tackle is ColoredObject obj)
                                 {
-                                    batch.Draw(data.GetTexture(), boxBottomLeft, source, Color.White, 0f, Vector2.Zero, FixIconScale(1.9f), SpriteEffects.None, 0.9f);
-                                    source = data.GetSourceRect(1);
+                                    baitC = obj.color.Value;
+                                    if (!obj.ColorSameIndexAsParentSheetIndex)
+                                    {
+                                        batch.Draw(data.GetTexture(), boxBottomLeft, source, Color.White, 0f, Vector2.Zero, FixIconScale(1.9f), SpriteEffects.None, 0.9f);
+                                        source = data.GetSourceRect(1);
+                                    }
                                 }
-                            }
-                            batch.Draw(data.GetTexture(), boxBottomLeft, source, baitC, 0f, Vector2.Zero, FixIconScale(1.9f), SpriteEffects.None, 0.9f + 2E-05f);
+                                batch.Draw(data.GetTexture(), boxBottomLeft, source, baitC, 0f, Vector2.Zero, FixIconScale(1.9f), SpriteEffects.None, 0.9f + 2E-05f);
 
-                            if (tackle.Quality == 4) batch.Draw(Game1.mouseCursors, boxBottomLeft + new Vector2(FixIconScale(13f), FixIconScale(showPercent ? 24 : 16)),
-                                new Rectangle(346, 392, 8, 8), Color.White, 0f, Vector2.Zero, FixIconScale(1.9f), SpriteEffects.None, 1f);
-                            else
-                            {
-                                int count = tackle.Category == Object.tackleCategory ? FishingRod.maxTackleUses - tackle.uses.Value : tackle.Stack;
-                                Utility.drawTinyDigits(count, batch, boxBottomLeft + new Vector2(source.Width * iconScale - Utility.getWidthOfTinyDigitString(count, FixIconScale(2f)),
-                                FixIconScale(showPercent ? 26 : 19)), FixIconScale(2f), 1f, colorText);
-                            }
-
-                            if (iconMode[screen] == 1) boxBottomLeft += new Vector2(0, source.Width * iconScale + (showPercent ? fixScale10 : 0));
-                            else boxBottomLeft += new Vector2(source.Width * iconScale + (showExtras && iconMode[screen] != 2 ? fixScale10 : 0), 0);
-                            iconCount++;
-                        }
-                    }
-                    if (iconMode[screen] == 2 && iconCount > 0)
-                    {
-                        boxBottomLeft = boxTopLeft + new Vector2(0, source.Width * iconScale + (showPercent ? fixScale10 : 0));
-                        if (iconCount == 3 && fishHere?.Count > 3) iconCount = 2;
-                        boxWidth = iconCount * (source.Width + (showExtras ? 4.8f : 0)) * iconScale + boxTopLeft.X;
-                        boxHeight += source.Width * iconScale + (showPercent ? fixScale10 : 0);
-                        iconCount = 1;
-                    }
-                }
-
-
-
-                bool foundWater = false;
-                bool showTile = false;
-                Vector2 nearestWaterTile = new(99999f, 99999f);      //any water nearby + nearest water tile check
-                if (who.currentLocation.canFishHere())
-                {
-                    if (rod != null)
-                    {
-                        if (screen == 0 && (hasSonar || sonarMode == 3) && scanKey.IsDown())
-                        {
-                            showTile = true;
-                            int x = (int)Game1.currentCursorTile.X;
-                            int y = (int)Game1.currentCursorTile.Y;
-                            if (who.currentLocation.isTileFishable(x, y) && !who.currentLocation.isTileBuildingFishable(x, y))
-                            {
-                                nearestWaterTile = new(x, y);
-                                foundWater = true;
-                            }
-                        }
-                        if (!foundWater)
-                        {
-                            int dir = who.FacingDirection;//0=up,1=r,2=d,3=l
-                            bool isX = dir is Game1.left or Game1.right;
-                            bool positive = dir > 1;
-                            if (!isX) maxDist--;
-                            for (int i = maxDist; i >= 0; i--)
-                            {
-                                int x = (int)who.Tile.X;
-                                int y = (int)who.Tile.Y;
-                                if (isX)
-                                {
-                                    if (positive) x -= i;
-                                    else x += i;
-                                }
+                                if (tackle.Quality == 4) batch.Draw(Game1.mouseCursors, boxBottomLeft + new Vector2(FixIconScale(13f), FixIconScale(showPercent ? 24 : 16)),
+                                    new Rectangle(346, 392, 8, 8), Color.White, 0f, Vector2.Zero, FixIconScale(1.9f), SpriteEffects.None, 1f);
                                 else
                                 {
-                                    if (positive) y += i;
-                                    else y -= i;
+                                    int count = tackle.Category == Object.tackleCategory ? FishingRod.maxTackleUses - tackle.uses.Value : tackle.Stack;
+                                    Utility.drawTinyDigits(count, batch, boxBottomLeft + new Vector2(source.Width * iconScale - Utility.getWidthOfTinyDigitString(count, FixIconScale(2f)),
+                                    FixIconScale(showPercent ? 26 : 19)), FixIconScale(2f), 1f, colorText);
                                 }
-                                if (who.currentLocation.isTileFishable(x, y) && !who.currentLocation.isTileBuildingFishable(x, y))
-                                {
-                                    nearestWaterTile = new(x, y);
-                                    foundWater = true;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    if (!foundWater)
-                    {
-                        Vector2 scanTopLeft = who.Tile - new Vector2(scanRadius[screen] + 1);
-                        Vector2 scanBottomRight = who.Tile + new Vector2(scanRadius[screen] + 2);
-                        for (int x = (int)scanTopLeft.X; x < (int)scanBottomRight.X; x++)
-                        {
-                            for (int y = (int)scanTopLeft.Y; y < (int)scanBottomRight.Y; y++)
-                            {
-                                if (who.currentLocation.isTileFishable(x, y) && !who.currentLocation.isTileBuildingFishable(x, y))
-                                {
-                                    Vector2 tile = new(x, y);
-                                    float distance = Vector2.DistanceSquared(who.Tile, tile);
-                                    float distanceNearest = Vector2.DistanceSquared(who.Tile, nearestWaterTile);
-                                    if (distance < distanceNearest || distance == distanceNearest && Game1.player.GetGrabTile() == tile) nearestWaterTile = tile;
-                                    foundWater = true;
-                                }
-                            }
-                        }
-                    }
-                }
 
-                var defaultSource = new Rectangle(0, 0, 16, 16);
-                if (foundWater)
-                {
-                    if (rod != null)   //LOCATION FISH PREVIEW
-                    {
-                        if (!isMinigame)
-                        {
-                            if (extraCheckFrequency == 0) AddGenericFishToList(nearestWaterTile);
-                            else AddFishToListDynamic(nearestWaterTile);
-                        }
-                    }
-                    else AddCrabPotFish();
-
-                    if (showTile)
-                    {
-                        batch.Draw(Game1.mouseCursors, new Vector2((int)nearestWaterTile.X * 64 - Game1.viewport.X, (int)nearestWaterTile.Y * 64 - Game1.viewport.Y), new Rectangle(652, 204, 44, 44),
-                            new Color(0, 255, 0, 0.5f), 0f, Vector2.Zero, 1.45f, SpriteEffects.None, 1f);
-                    }
-
-                    foreach (var fish in fishHere)
-                    {
-                        if (iconCount < maxIcons[screen])
-                        {
-                            int percent = fishChancesSlow.ContainsKey(fish) ? (int)Math.Round((float)fishChancesSlow[fish] / fishChancesSlow["-1"] * 100f) : 0; //chance of this fish
-                            if (percent > 0)
-                            {
-                                data = ItemRegistry.GetDataOrErrorItem(fish);
-                                if (data.IsErrorItem || (onlyFish[screen] && data.ObjectType != FISH_TYPE)) continue;//skip if not fish, except trash
-
+                                if (iconMode[screen] == 1) boxBottomLeft += new Vector2(0, source.Width * iconScale + (showPercent ? fixScale10 : 0));
+                                else boxBottomLeft += new Vector2(source.Width * iconScale + (showExtras && iconMode[screen] != 2 ? fixScale10 : 0), 0);
                                 iconCount++;
-                                bool fishNeedsCaught = false;
-                                bool fishNeedsMaxSize = false;
-                                bool fishNeedsAquarium = false;
-                                bool fishNeedsBundle = false;
-                                int[] fishCaughtData = HasCaught(data);
-                                bool caught = fishCaughtData != null;
-                                if (showExtras)
+                            }
+                        }
+                        if (iconMode[screen] == 2 && iconCount > 0)
+                        {
+                            boxBottomLeft = boxTopLeft + new Vector2(0, source.Width * iconScale + (showPercent ? fixScale10 : 0));
+                            if (iconCount == 3 && fishHere.Count > 3) iconCount = 2;
+                            boxWidth = iconCount * (source.Width + (showExtras ? 4.8f : 0)) * iconScale + boxTopLeft.X;
+                            boxHeight += source.Width * iconScale + (showPercent ? fixScale10 : 0);
+                            iconCount = 1;
+                        }
+                    }
+                    if (foundWater)
+                    {
+                        if (showTile)
+                        {
+                            batch.Draw(Game1.mouseCursors, new Vector2((int)nearestWaterTile.X * 64 - Game1.viewport.X, (int)nearestWaterTile.Y * 64 - Game1.viewport.Y), new Rectangle(652, 204, 44, 44),
+                                new Color(0, 255, 0, 0.5f), 0f, Vector2.Zero, 1.45f, SpriteEffects.None, 1f);
+                        }
+
+                        foreach (var fishEntry in fishHere)
+                        {
+                            if (iconCount < maxIcons[screen])
+                            {
+                                int percent = (int)Math.Round(100f * fishEntry.count / fishChancesTotal); //chance of this fish
+                                if (percent > 0)
                                 {
-                                    fishNeedsCaught = extrasNotCaught && !caught;
-                                    if (caught || extraIconsShowAlways[screen])
+                                    data = fishEntry.data;
+                                    if (data.IsErrorItem || (onlyFish[screen] && data.ObjectType != FISH_TYPE)) continue;//skip if not fish, except trash
+
+                                    iconCount++;
+                                    string fishNameLocalized = fishEntry.caught || hasSonar ? data.DisplayName : "???";
+                                    txt2d = data.GetTexture();
+                                    source = data.GetSourceRect();
+
+                                    batch.Draw(txt2d, FixSourceOffset(source, boxBottomLeft), source,
+                                        fishEntry.caught ? Color.White : Color.DarkSlateGray, 0f, Vector2.Zero, FixIconScale(FixRectScale(source, 1.9f)), SpriteEffects.None, 0.98f);//icon
+
+                                    if (showPercent) //percent text
                                     {
-                                        try
+                                        if (showPercentagesMode[screen] == 0)
                                         {
-                                            if (data.Category == Object.FishCategory)
-                                            {
-                                                fishNeedsMaxSize = extrasMaxSize && (!caught || fishData.TryGetValue(data.ItemId, out var array) && !(fishCaughtData[1] > Convert.ToInt32(array.Split('/')[4])));
-                                                fishNeedsAquarium = extrasAquarium && !Game1.MasterPlayer.hasOrWillReceiveMail("AquariumDonated:" + data.InternalName.Replace(" ", string.Empty, StringComparison.Ordinal));
-                                            }
-                                            if (extrasBundles)
-                                            {
-                                                FieldInfo bundlesIngredientsInfoField = typeof(CommunityCenter).GetField("bundlesIngredientsInfo", BindingFlags.NonPublic | BindingFlags.Instance);
-                                                var bundlesIngredientsInfo = (Dictionary<string, List<List<int>>>)bundlesIngredientsInfoField.GetValue(Game1.RequireLocation<CommunityCenter>("CommunityCenter"));
-                                                fishNeedsBundle = bundlesIngredientsInfo.ContainsKey(fish) || bundlesIngredientsInfo.ContainsKey(data.Category.ToString());
-                                            }
+                                            DrawStringWithBorder(batch, font, percent + "%", boxBottomLeft + new Vector2(8f * iconScale, FixIconScale(27f)),
+                                                fishEntry.caught ? colorText : colorText * 0.8f, 0f, new Vector2(font.MeasureString(percent + "%").X / 2f, 0f), FixIconScale(0.58f), SpriteEffects.None, 1f, colorBg);
                                         }
-                                        catch { }
+                                        else Utility.drawTinyDigits(percent, batch, boxBottomLeft + new Vector2((percent > 9 ? percent > 99 ? 1f : 3f : 5f) * iconScale, FixIconScale(27f)), FixIconScale(2f), 1f, colorText);
                                     }
-                                }
-                                caught |= uncaughtFishEffect[screen] > 0;
-                                string fishNameLocalized = caught || hasSonar ? data.DisplayName : "???";
-                                txt2d = data.GetTexture();
-                                source = data.GetSourceRect();
-
-                                batch.Draw(txt2d, FixSourceOffset(source, boxBottomLeft), source,
-                                    caught ? Color.White : Color.DarkSlateGray, 0f, Vector2.Zero, FixIconScale(FixRectScale(source, 1.9f)), SpriteEffects.None, 0.98f);//icon
-
-                                if (showPercent) //percent text
-                                {
-                                    if (showPercentagesMode[screen] == 0)
+                                    if (showExtras) //completion icons
                                     {
-                                        DrawStringWithBorder(batch, font, percent + "%", boxBottomLeft + new Vector2(8f * iconScale, FixIconScale(27f)),
-                                            caught ? colorText : colorText * 0.8f, 0f, new Vector2(font.MeasureString(percent + "%").X / 2f, 0f), FixIconScale(0.58f), SpriteEffects.None, 1f, colorBg);
+                                        if (fishEntry.needsMaxSize || fishEntry.needsCaught) batch.Draw(Game1.mouseCursors, boxBottomLeft + new Vector2(FixIconScale(31), FixIconScale(6)), new(338, 400, 8, 8), fishEntry.needsCaught ? Color.Peru : Color.Cyan, 0f, Vector2.Zero, FixIconScale(1.1f), SpriteEffects.None, 0.98f);
+                                        if (fishEntry.needsBundle) batch.Draw(Game1.mouseCursors, boxBottomLeft + new Vector2(FixIconScale(30.5f), FixIconScale(15)), new(330, 373, 16, 16), Color.White, 0f, Vector2.Zero, FixIconScale(0.6f), SpriteEffects.None, 0.98f);
+                                        if (fishEntry.needsAquarium) batch.Draw(Game1.objectSpriteSheet, boxBottomLeft + new Vector2(FixIconScale(31), FixIconScale(24)), new(128, 80, 16, 16), Color.White, 0f, Vector2.Zero, FixIconScale(0.6f), SpriteEffects.None, 1.98f);
                                     }
-                                    else Utility.drawTinyDigits(percent, batch, boxBottomLeft + new Vector2((percent > 9 ? percent > 99 ? 1f : 3f : 5f) * iconScale, FixIconScale(27f)), FixIconScale(2f), 1f, colorText);
-                                }
-                                if (showExtras) //completion icons
-                                {
-                                    if (fishNeedsMaxSize || fishNeedsCaught) batch.Draw(Game1.mouseCursors, boxBottomLeft + new Vector2(FixIconScale(31), FixIconScale(6)), new(338, 400, 8, 8), fishNeedsCaught ? Color.Peru : Color.Cyan, 0f, Vector2.Zero, FixIconScale(1.1f), SpriteEffects.None, 0.98f);
-                                    if (fishNeedsBundle) batch.Draw(Game1.mouseCursors, boxBottomLeft + new Vector2(FixIconScale(30.5f), FixIconScale(15)), new(330, 373, 16, 16), Color.White, 0f, Vector2.Zero, FixIconScale(0.6f), SpriteEffects.None, 0.98f);
-                                    if (fishNeedsAquarium) batch.Draw(Game1.objectSpriteSheet, boxBottomLeft + new Vector2(FixIconScale(31), FixIconScale(24)), new(128, 80, 16, 16), Color.White, 0f, Vector2.Zero, FixIconScale(0.6f), SpriteEffects.None, 1.98f);
-                                }
 
-                                if (data.ItemId == miniFish && minigameBar[screen]) //green minigame outline on bar
-                                {
-                                    batch.Draw(background[screen], new Rectangle((int)boxBottomLeft.X, (int)boxBottomLeft.Y, iconScale16, iconScale16), null, Color.GreenYellow, 0f, Vector2.Zero, SpriteEffects.None, 0.9f);
-                                }
-
-                                if (backgroundMode[screen] == 0) AddBackground(batch, boxTopLeft, boxBottomLeft, iconCount, defaultSource, iconScale, boxWidth, boxHeight, showPercent, showExtras);//circles
-
-                                if (iconMode[screen] == 0)      //Horizontal Preview
-                                {
-                                    if (iconCount % maxIconsPerRow[screen] == 0) boxBottomLeft = new Vector2(boxTopLeft.X, boxBottomLeft.Y + iconScale16 + (showPercent ? fixScale10 : 0)); //row switch
-                                    else boxBottomLeft += new Vector2(iconScale16 + (showExtras ? fixScale10 : 0), 0);
-                                }
-                                else                    //Vertical Preview
-                                {
-                                    if (iconMode[screen] == 2 && !hideText)  // + text
+                                    if (data.ItemId == miniFish && minigameBar[screen]) //green minigame outline on bar
                                     {
-                                        DrawStringWithBorder(batch, font, fishNameLocalized, boxBottomLeft + new Vector2(FixIconScale(35) + (showExtras ? fixScale10 : 0), 0 + (showPercent ? FixIconScale(5) : 0)),
-                                            caught ? colorText : colorText * 0.65f, 0f, new Vector2(0, -3), FixIconScale(1f), SpriteEffects.None, 0.98f, colorBg); //text
-                                        boxWidth = Math.Max(boxWidth, boxBottomLeft.X + FixIconScale(font.MeasureString(fishNameLocalized).X) + iconScale16) + (showExtras ? FixIconScale(6f) : 0);
+                                        batch.Draw(background[screen], new Rectangle((int)boxBottomLeft.X, (int)boxBottomLeft.Y, iconScale16, iconScale16), null, Color.GreenYellow, 0f, Vector2.Zero, SpriteEffects.None, 0.9f);
                                     }
 
-                                    if (iconCount % maxIconsPerRow[screen] == 0) //row switch
+                                    if (backgroundMode[screen] == 0) AddBackground(batch, boxTopLeft, boxBottomLeft, iconCount, defaultSource, iconScale, boxWidth, boxHeight, showPercent, showExtras);//circles
+
+                                    if (iconMode[screen] == 0)      //Horizontal Preview
                                     {
-                                        if (iconMode[screen] == 2) boxBottomLeft = new Vector2(boxWidth + 20, boxTopLeft.Y);
-                                        else boxBottomLeft = new Vector2(boxBottomLeft.X + iconScale16 + (showExtras ? fixScale10 : 0), boxTopLeft.Y);
+                                        if (iconCount % maxIconsPerRow[screen] == 0) boxBottomLeft = new Vector2(boxTopLeft.X, boxBottomLeft.Y + iconScale16 + (showPercent ? fixScale10 : 0)); //row switch
+                                        else boxBottomLeft += new Vector2(iconScale16 + (showExtras ? fixScale10 : 0), 0);
                                     }
-                                    else boxBottomLeft += new Vector2(0, iconScale16 + (showPercent ? fixScale10 : 0));
-                                    if (iconMode[screen] == 2 && iconCount <= maxIconsPerRow[screen]) boxHeight += iconScale16 + (showPercent ? fixScale10 : 0);
+                                    else                    //Vertical Preview
+                                    {
+                                        if (iconMode[screen] == 2 && !hideText)  // + text
+                                        {
+                                            DrawStringWithBorder(batch, font, fishNameLocalized, boxBottomLeft + new Vector2(FixIconScale(35) + (showExtras ? fixScale10 : 0), 0 + (showPercent ? FixIconScale(5) : 0)),
+                                                fishEntry.caught ? colorText : colorText * 0.65f, 0f, new Vector2(0, -3), FixIconScale(1f), SpriteEffects.None, 0.98f, colorBg); //text
+                                            boxWidth = Math.Max(boxWidth, boxBottomLeft.X + FixIconScale(font.MeasureString(fishNameLocalized).X) + iconScale16) + (showExtras ? FixIconScale(6f) : 0);
+                                        }
+
+                                        if (iconCount % maxIconsPerRow[screen] == 0) //row switch
+                                        {
+                                            if (iconMode[screen] == 2) boxBottomLeft = new Vector2(boxWidth + 20, boxTopLeft.Y);
+                                            else boxBottomLeft = new Vector2(boxBottomLeft.X + iconScale16 + (showExtras ? fixScale10 : 0), boxTopLeft.Y);
+                                        }
+                                        else boxBottomLeft += new Vector2(0, iconScale16 + (showPercent ? fixScale10 : 0));
+                                        if (iconMode[screen] == 2 && iconCount <= maxIconsPerRow[screen]) boxHeight += iconScale16 + (showPercent ? fixScale10 : 0);
+                                    }
                                 }
                             }
                         }
                     }
-                }
-                if (backgroundMode[screen] == 1) AddBackground(batch, boxTopLeft, boxBottomLeft, iconCount, defaultSource, iconScale, boxWidth, boxHeight, showPercent, showExtras);//rectangle
+                    if (backgroundMode[screen] == 1) AddBackground(batch, boxTopLeft, boxBottomLeft, iconCount, defaultSource, iconScale, boxWidth, boxHeight, showPercent, showExtras);//rectangle
 
+                }
                 batch.End();
                 batch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise);
             }
@@ -553,57 +603,51 @@ namespace FishingInfoOverlays
 
         private void AddGenericFishToList(Vector2 bobberTile)
         {
-            if (Game1.ticks % (isMinigame ? 600 : 30) == 0 || oldGeneric == null)
+            fishHere = [];
+            fishChancesDynamic = [];
+            fishChancesTotal = 100;
+
+            var hardcoded = AddHardcoded(bobberTile, false);
+            if (hardcoded != "-2")
             {
-                oldGeneric = [];
-                fishHere = ["(O)168"];
-                fishChancesSlow = new() { { "-1", 100 }, { "(O)168", 0 } };//-1 represents the total
+                Dictionary<string, float> data = GetFishFromLocationData(who.currentLocation.Name, bobberTile, 5, who, !who.fishCaught.Any(), false, who.currentLocation, null);
 
-                var hard = AddHardcoded(bobberTile, false);
-                if (hard != "-2")
+                if (hardcoded != "-1")
                 {
-                    Dictionary<string, float> data = GetFishFromLocationData(who.currentLocation.Name, bobberTile, 5, who, !who.fishCaught.Any(), false, who.currentLocation, null);
-
-                    if (hard != "-1")
+                    if (hardcoded.Contains('|'))
                     {
-                        if (hard.Contains('|'))
+                        var d = hardcoded.Split('|');
+                        for (int i = 0; i < d.Length; i += 2)
                         {
-                            var d = hard.Split('|');
-                            for (int i = 0; i < d.Length; i += 2)
-                            {
-                                var c = float.Parse(d[i + 1]);
-                                data[d[i]] = c * (data.Sum(f => f.Value) + c);
-                            }
-                        }
-                        else data[hard] = 1000;
-                    }
-
-                    float total = data.Sum(f => f.Value);
-                    var j = data.FirstOrDefault(f => ItemRegistry.GetDataOrErrorItem(f.Key).Category == Object.junkCategory);
-                    float notJunk = j.Key != null ? j.Value : 1f;
-                    total -= notJunk;
-                    foreach (var fish in data)
-                    {
-                        int itemCategory = ItemRegistry.GetDataOrErrorItem(fish.Key).Category;
-                        if (fish.Value < 1f && itemCategory != Object.junkCategory)
-                        {
-                            notJunk *= 1f - fish.Value;
+                            var c = float.Parse(d[i + 1]);
+                            data[d[i]] = c * (data.Sum(f => f.Value) + c);
                         }
                     }
-                    total += notJunk;
-                    foreach (var fish in data)
-                    {
-                        int itemCategory = ItemRegistry.GetDataOrErrorItem(fish.Key).Category;
-                        if (itemCategory != Object.junkCategory)
-                        {
-                            if (sortMode[screen] == 0) SortItemIntoListByDisplayName(fish.Key); //sort by name
-                            else fishHere.Add(fish.Key);
-                            fishChancesSlow[fish.Key] = (int)Math.Round(fish.Value / total * 100);
-                        }
-                    }
-                    fishChancesSlow["(O)168"] = (int)Math.Round(notJunk / total * 100);
+                    else data[hardcoded] = 1000;
                 }
-                if (sortMode[screen] == 1) SortListByPercentages(); //sort by %
+
+                float total = data.Sum(f => f.Value);
+                var j = data.FirstOrDefault(f => ItemRegistry.GetDataOrErrorItem(f.Key).Category == Object.junkCategory);
+                float notJunk = j.Key != null ? j.Value : 1f;
+                total -= notJunk;
+                foreach (var fish in data)
+                {
+                    int itemCategory = ItemRegistry.GetDataOrErrorItem(fish.Key).Category;
+                    if (fish.Value < 1f && itemCategory != Object.junkCategory)
+                    {
+                        notJunk *= 1f - fish.Value;
+                    }
+                }
+                total += notJunk;
+                foreach (var fish in data)
+                {
+                    var itemData = ItemRegistry.GetDataOrErrorItem(fish.Key);
+                    if (itemData.Category != Object.junkCategory)
+                    {
+                        fishHere.Add(new(itemData, (int)Math.Round(fish.Value / total * 100f)));
+                    }
+                }
+                fishHere.Add(new(trash, (int)Math.Round(notJunk / total * 100)));
             }
         }
 
@@ -642,9 +686,9 @@ namespace FishingInfoOverlays
             Point playerTile = player.TilePoint;
             itemQueryContext ??= new ItemQueryContext(location, null, Game1.random, "location '" + locationName + "' > fish data");
             IEnumerable<SpawnFishData> possibleFish = Game1.locationData["Default"].Fish;
-            if (locationData != null && locationData.Fish?.Count > 0)
+            if (locationData?.Fish?.Count > 0)
             {
-                possibleFish = possibleFish.Concat(locationData.Fish);
+                possibleFish = possibleFish.Concat(locationData.Fish).OrderBy(p => p.Precedence);
             }
             int targetedBaitTries = 0;
             HashSet<string> ignoreQueryKeys = usingMagicBait ? GameStateQuery.MagicBaitIgnoreQueryKeys : null;
@@ -912,16 +956,15 @@ namespace FishingInfoOverlays
                     who.stats.Values = [];
                     foreach (var m in Game1.player.stats.Values) who.stats.Set(m.Key, m.Value);
 
-                    if (oldGeneric == null)
+                    if (fishChancesDynamic.Count == 0)
                     {
-                        oldGeneric = [];
-                        fishFailed = [];
-                        fishHere = ["(O)168"];
-                        fishChances = new() { { "-1", 0 }, { "(O)168", 0 } };
-                        fishChancesSlow = [];
-                        fishChancesModulo = 1;
+                        fishHere = [new(trash)];
+                        fishChancesDynamic = new() { { trash.QualifiedItemId, 0 } };
+                        fishChancesDynamicFailed = [];
+                        fishChancesDynamicDistance = 1;
+                        fishChancesTotal = fishChancesDynamicTotal = 0;
                     }
-                    int freq = isMinigame || isMinigameOther ? 6 / totalPlayersOnThisPC : extraCheckFrequency * 10 / totalPlayersOnThisPC; //minigame lowers frequency
+                    int freq = isMinigame || isMinigameOther ? 6 / totalPlayersOnThisPC : extraCheckFrequency * 50 / totalPlayersOnThisPC; //minigame lowers frequency
                     for (int i = 0; i < freq; i++)
                     {
                         string fish = AddHardcoded(bobberTile, true);
@@ -956,65 +999,69 @@ namespace FishingInfoOverlays
                                 item = ItemRegistry.Create(fish);
                             }
                             int val;
-                            if (fishChances["-1"] < int.MaxValue) //percentages, slow version (the one shown) is updated less over time
+                            if (item.Category == Object.junkCategory) //percentages, slow version (the one shown) is updated less over time
                             {
-                                if (item.Category == Object.junkCategory)
-                                {
-                                    fishChances.TryGetValue("(O)168", out val);
-                                    fishChances["(O)168"] = val + 1;
-                                }
-                                else if (!fishHere.Contains(fish))
-                                {
-                                    fishChances = new() { { "-1", 0 } };//reset % on new fish added
-                                    foreach (var f in fishHere) fishChances.Add(f, 1);
-                                    fishChancesSlow = [];
-                                    fishChancesModulo = 1;
-
-                                    if (sortMode[screen] == 0) SortItemIntoListByDisplayName(fish); //sort by name
-                                    else fishHere.Add(fish);
-                                    fishChances.Add(fish, 1);
-                                }
-                                else
-                                {
-                                    fishChances.TryGetValue(fish, out val);
-                                    fishChances[fish] = val + 1;
-                                }
+                                fishChancesDynamic.TryGetValue("(O)168", out val);
+                                fishChancesDynamic["(O)168"] = val + 1;
                             }
-                            fishChances.TryGetValue("-1", out val);
-                            fishChances["-1"] = val + 1;
-                            if (fishChances["-1"] % fishChancesModulo == 0)
+                            else if (!fishHere.Any(f => f.data.QualifiedItemId == fish))
                             {
-                                if (fishChancesModulo < 10000) fishChancesModulo *= 10;
-                                fishChancesSlow = fishChances.ToDictionary(entry => entry.Key, entry => entry.Value);
+                                fishChancesDynamic = [];//reset % on new fish added
+                                fishChancesDynamicDistance = 1;
+                                fishChancesTotal = fishChancesDynamicTotal = 0;
+                                foreach (var f in fishHere)
+                                {
+                                    fishChancesDynamic.Add(f.data.QualifiedItemId, 1);
+                                    fishChancesDynamicTotal++;
+                                }
+                                fishHere.Add(new(fish));
+                                fishChancesDynamic.Add(fish, 1);
                             }
-                            if (sortMode[screen] == 1) SortListByPercentages(); //sort by %
-
-
+                            else
+                            {
+                                fishChancesDynamic.TryGetValue(fish, out val);
+                                fishChancesDynamic[fish] = val + 1;
+                            }
+                            fishChancesDynamicTotal += 1;
 
                             //if fish not in last X attempts, redo lists
                             if (item.Category != Object.junkCategory)
                             {
-                                fishChances.TryGetValue(fish, out val);
-                                float chance = (float)val / fishChances["-1"] * 100f;
-                                if (chance < 0.5f) fishFailed[fish] = 5000;
-                                else if (chance < 1f) fishFailed[fish] = 3500;
-                                else if (chance < 2f) fishFailed[fish] = 3000;
-                                else if (chance < 3f) fishFailed[fish] = 2500;
-                                else if (chance < 4f) fishFailed[fish] = 1500;
-                                else fishFailed[fish] = 1000;
+                                fishChancesDynamic.TryGetValue(fish, out val);
+                                float chance = (float)val / fishChancesDynamicTotal * 100f;
+                                if (chance < 0.5f) fishChancesDynamicFailed[fish] = 2000;
+                                else if (chance < 1f) fishChancesDynamicFailed[fish] = 1700;
+                                else if (chance < 2f) fishChancesDynamicFailed[fish] = 1400;
+                                else if (chance < 3f) fishChancesDynamicFailed[fish] = 1200;
+                                else if (chance < 4f) fishChancesDynamicFailed[fish] = 700;
+                                else fishChancesDynamicFailed[fish] = 400;
                             }
                         }
-                        foreach (var key in fishFailed.Keys.ToList())
+                        foreach (var key in fishChancesDynamicFailed.Keys)
                         {
-                            fishFailed[key]--;
-                            if (fishFailed[key] < 1) oldGeneric = null;
+                            fishChancesDynamicFailed[key]--;
+                            if (fishChancesDynamicFailed[key] < 1) fishChancesDynamic = [];
+                        }
+                    }
+                    if (fishChancesDynamicTotal - fishChancesTotal > fishChancesDynamicDistance)
+                    {
+                        fishChancesTotal = fishChancesDynamicTotal;
+                        if (fishChancesDynamicDistance < 15000) fishChancesDynamicDistance += 1500;
+                        foreach (var f in fishHere)
+                        {
+                            if (fishChancesDynamic.TryGetValue(f.data.QualifiedItemId, out int v))
+                            {
+                                f.count = v;
+                            }
                         }
                     }
                     who = Game1.player;
                 }
             }
-            catch
-            { }
+            catch (Exception ex)
+            {
+                Monitor.LogOnce("Dynamic error: " + ex.Message, LogLevel.Error);
+            }
         }
 
         private string AddHardcoded(Vector2 bobberTile, bool dynamic)//-2 skip dynamic, -1 dynamic, above -1 = item to add to dynamic
@@ -1028,15 +1075,14 @@ namespace FishingInfoOverlays
                 {
                     if (!(who.currentLocation as IslandSouthEast).fishedWalnut.Value)
                     {
-                        fishHere = ["(O)73"];
-                        fishChancesSlow = new() { { "-1", 1 }, { "(O)73", 1 }, { "(O)168", 0 } };
+                        fishHere = [new("(O)73", 100)];
                     }
                     else
                     {
-                        fishHere = ["(O)168"];
-                        fishChancesSlow = new() { { "-1", 1 }, { "(O)168", 1 } };
+                        fishHere = [new(trash, 100)];
                     }
-                    oldGeneric = null;
+                    fishChancesTotal = 100;
+                    fishChancesDynamic = [];
                     return "-2";//prevents altering game state in dynamic
                 }
             }
@@ -1118,8 +1164,6 @@ namespace FishingInfoOverlays
             fishHere = [];
 
             bool isMariner = who.professions.Contains(10);
-            if (!isMariner) fishHere.Add("(O)168");//trash
-            fishChancesSlow = [];
 
             double fishChance = 1f;
             if (!isMariner && who.currentLocation.TryGetFishAreaForTile(who.Tile, out var _, out var data))
@@ -1142,16 +1186,16 @@ namespace FishingInfoOverlays
                     {
                         if (text == item2)//match area
                         {
-                            string fish = "(O)" + item.Key;
-                            if (!fishHere.Contains(fish))
+                            var fishData = ItemRegistry.GetDataOrErrorItem(item.Key);
+                            if (!fishData.IsErrorItem && !fishHere.Any(f => f.data.QualifiedItemId == fishData.QualifiedItemId))
                             {
-                                if (sortMode[screen] == 0) SortItemIntoListByDisplayName(fish);
-                                else fishHere.Add(fish);
+                                var entry = new FishEntry(fishData);
+                                fishHere.Add(entry);
 
                                 if (showPercentagesMode[screen] < 2 || sortMode[screen] == 1)
                                 {
                                     float rawChance = float.Parse(array[2]);//chance
-                                    fishChancesSlow.Add(fish, (int)Math.Round(rawChance * fishChance * 100f));
+                                    entry.count = (int)Math.Round(rawChance * fishChance * 100f);
                                     fishChance *= 1f - rawChance;
                                 }
                             }
@@ -1160,48 +1204,56 @@ namespace FishingInfoOverlays
                     }
                 }
             }
-            if (isMariner) fishChancesSlow.Add("-1", fishChancesSlow.Sum(x => x.Value));
-            else
+            if (!isMariner)
             {
-                fishChancesSlow.Add("(O)168", 100 - fishChancesSlow.Sum(x => x.Value));
-                fishChancesSlow.Add("-1", 100);
+                fishHere.Add(new(trash, 100 - fishHere.Sum(x => x.count)));
             }
-
-            if (sortMode[screen] == 1) SortListByPercentages();
+            fishChancesTotal = fishHere.Sum(x => x.count);
         }
 
-        private void SortItemIntoListByDisplayName(string itemId)
+        private void SortListByDisplayName()
         {
-            var data = ItemRegistry.GetDataOrErrorItem(itemId);
-            for (int j = 0; j < fishHere.Count; j++)
-            {
-                if (string.Compare(data.DisplayName, ItemRegistry.GetDataOrErrorItem(fishHere[j]).DisplayName, StringComparison.CurrentCulture) <= 0)
-                {
-                    fishHere.Insert(j, itemId);
-                    return;
-                }
-            }
-            fishHere.Add(itemId);
+            //var data = ItemRegistry.GetDataOrErrorItem(itemId);
+            //for (int j = 0; j < fishHere.Count; j++)
+            //{
+            //    if (string.Compare(data.DisplayName, ItemRegistry.GetDataOrErrorItem(fishHere[j]).DisplayName, StringComparison.CurrentCulture) <= 0)
+            //    {
+            //        fishHere.Insert(j, itemId);
+            //        return;
+            //    }
+            //}
+            //fishHere.Add(itemId);
+            fishHere.Sort((x, y) => x.data.DisplayName.CompareTo(y.data.DisplayName));
         }
 
         private void SortListByPercentages()
         {
-            int index = 0;
-            foreach (var item in fishChancesSlow.OrderByDescending(d => d.Value).ToList())
+            //int index = 0;
+            //foreach (var item in fishChancesSlow.OrderByDescending(d => d.Value))
+            //{
+            //    if (fishHere.Contains(item.Key))
+            //    {
+            //        fishHere.Remove(item.Key);
+            //        fishHere.Insert(index, item.Key);
+            //        index++;
+            //    }
+            //}
+            fishHere.Sort((x, y) =>
             {
-                if (fishHere.Contains(item.Key))
-                {
-                    fishHere.Remove(item.Key);
-                    fishHere.Insert(index, item.Key);
-                    index++;
-                }
-            }
+                int result = y.count.CompareTo(x.count);
+                if (result == 0) return x.data.DisplayName.CompareTo(y.data.DisplayName);
+                return result;
+            });
         }
 
 
         public void OnWarped(object sender, WarpedEventArgs e)//for less janky cleanup on loc change
         {
-            if (e.IsLocalPlayer) oldGeneric = null;
+            if (e.IsLocalPlayer)
+            {
+                fishChancesDynamic = [];
+                foundWater = false;
+            }
         }
 
 
@@ -1297,6 +1349,20 @@ namespace FishingInfoOverlays
                 }
             }
             return null;
+        }
+
+
+        internal class FishEntry(ParsedItemData data, int count = 0)
+        {
+            public ParsedItemData data = data;
+            public int count = count;
+            public bool caught;
+            public bool needsCaught;
+            public bool needsMaxSize;
+            public bool needsBundle;
+            public bool needsAquarium;
+
+            public FishEntry(string qualifiedID, int percent = 0) : this(ItemRegistry.GetDataOrErrorItem(qualifiedID), percent) { }
         }
     }
 }

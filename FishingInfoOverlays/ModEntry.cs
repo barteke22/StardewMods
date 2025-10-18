@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq.Expressions;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
@@ -22,9 +23,15 @@ namespace FishingInfoOverlays
             translate = helper.Translation;
             Overlay.modAquarium = helper.ModRegistry.IsLoaded("Cherry.StardewAquarium");
             Overlay.nonFishCaughtID = helper.ModRegistry.ModID + "/nfc";
+            Overlay.getAddedDistance = (Func<StardewValley.Tools.FishingRod, Farmer, int>)Delegate.CreateDelegate(
+                typeof(Func<StardewValley.Tools.FishingRod, Farmer, int>),
+                null,
+                typeof(StardewValley.Tools.FishingRod).GetMethod("getAddedDistance", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance),
+                true);
 
             helper.Events.Input.ButtonPressed += OnButtonPressed;
             helper.Events.GameLoop.DayStarted += OnDayStarted;
+            helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
             helper.Events.Display.MenuChanged += OnMenuChanged;
             helper.Events.Display.Rendered += Rendered;
             helper.Events.Display.RenderedActiveMenu += OnRenderMenu;
@@ -32,7 +39,6 @@ namespace FishingInfoOverlays
             helper.Events.Multiplayer.ModMessageReceived += OnModMessageReceived;
             helper.Events.Player.Warped += OnWarped;
         }
-
 
         private void GenericModConfigMenuIntegration(object sender, RenderedActiveMenuEventArgs e)     //Generic Mod Config Menu API
         {
@@ -216,9 +222,14 @@ namespace FishingInfoOverlays
             UpdateConfig(false);
         }
 
-        private void Rendered(object sender, RenderedEventArgs e)
+        private void OnUpdateTicked(object sender, UpdateTickedEventArgs e)
         {
             overlay.Value ??= new Overlay(this);
+            if (Context.IsWorldReady) overlay.Value.UpdateTicked(e);
+        }
+        
+        private void Rendered(object sender, RenderedEventArgs e)
+        {
             if (Context.IsWorldReady)
             {
                 if (!Overlay.hudMode)
@@ -231,13 +242,11 @@ namespace FishingInfoOverlays
         }
         private void RenderedHud(object sender, RenderedHudEventArgs e)
         {
-            overlay.Value ??= new Overlay(this);
             if (Context.IsWorldReady) overlay.Value.RenderedBoth();
         }
 
         private void OnMenuChanged(object sender, MenuChangedEventArgs e)   //Minigame data
         {
-            overlay.Value ??= new Overlay(this);
             if (Context.IsWorldReady)
             {
                 UpdateRenderMode();
@@ -262,6 +271,8 @@ namespace FishingInfoOverlays
 
         private void UpdateConfig(bool GMCM)
         {
+            Overlay.trash = ItemRegistry.GetData("(O)168");
+
             for (int i = 0; i < 4; i++)
             {
                 Overlay.barPosition[i] = new Vector2(config.BarTopLeftLocationX[i] + 2, config.BarTopLeftLocationY[i] + 2); //config: Position of bar
