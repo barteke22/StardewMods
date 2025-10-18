@@ -1,21 +1,26 @@
 ﻿using System;
-using System.Linq.Expressions;
+using System.Reflection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
+using StardewValley.Tools;
 
 namespace FishingInfoOverlays
 {
     /// <summary>The mod entry point.</summary>
     public class ModEntry : Mod
     {
-        ITranslationHelper translate;
+        private ITranslationHelper translate;
         private ModConfig config;
-        private readonly PerScreen<Overlay> overlay = new();
+        private readonly PerScreen<Overlay> overlays;
 
+        public ModEntry()
+        {
+            overlays = new(() => new Overlay(this));
+        }
 
         public override void Entry(IModHelper helper)
         {
@@ -23,21 +28,19 @@ namespace FishingInfoOverlays
             translate = helper.Translation;
             Overlay.modAquarium = helper.ModRegistry.IsLoaded("Cherry.StardewAquarium");
             Overlay.nonFishCaughtID = helper.ModRegistry.ModID + "/nfc";
-            Overlay.getAddedDistance = (Func<StardewValley.Tools.FishingRod, Farmer, int>)Delegate.CreateDelegate(
-                typeof(Func<StardewValley.Tools.FishingRod, Farmer, int>),
-                null,
-                typeof(StardewValley.Tools.FishingRod).GetMethod("getAddedDistance", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance),
-                true);
+            Overlay.getAddedDistance = (Func<FishingRod, Farmer, int>)Delegate.CreateDelegate(typeof(Func<FishingRod, Farmer, int>), null,
+                typeof(FishingRod).GetMethod("getAddedDistance", BindingFlags.NonPublic | BindingFlags.Instance), true);
 
-            helper.Events.Input.ButtonPressed += OnButtonPressed;
-            helper.Events.GameLoop.DayStarted += OnDayStarted;
-            helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
-            helper.Events.Display.MenuChanged += OnMenuChanged;
+            helper.Events.Input.ButtonPressed += ButtonPressed;
+            helper.Events.GameLoop.UpdateTicked += UpdateTicked;
+            helper.Events.Display.MenuChanged += MenuChanged;
             helper.Events.Display.Rendered += Rendered;
-            helper.Events.Display.RenderedActiveMenu += OnRenderMenu;
+            helper.Events.Display.RenderedActiveMenu += RenderedActiveMenu;
             helper.Events.Display.RenderedActiveMenu += GenericModConfigMenuIntegration;
-            helper.Events.Multiplayer.ModMessageReceived += OnModMessageReceived;
-            helper.Events.Player.Warped += OnWarped;
+            helper.Events.Player.Warped += Warped;
+            helper.Events.GameLoop.SaveLoaded += SaveLoaded;
+            helper.Events.Multiplayer.PeerConnected += PeerConnected;
+            helper.Events.Multiplayer.ModMessageReceived += ModMessageReceived;
         }
 
         private void GenericModConfigMenuIntegration(object sender, RenderedActiveMenuEventArgs e)     //Generic Mod Config Menu API
@@ -208,7 +211,7 @@ namespace FishingInfoOverlays
 
 
 
-        private void OnButtonPressed(object sender, ButtonPressedEventArgs e)
+        private void ButtonPressed(object sender, ButtonPressedEventArgs e)
         {
             if (!Context.IsWorldReady || !(e.Button == SButton.F5)) return; // ignore if player hasn't loaded a save yet
             config = Helper.ReadConfig<ModConfig>();
@@ -216,18 +219,16 @@ namespace FishingInfoOverlays
             UpdateConfig(false);
         }
 
-
-        private void OnDayStarted(object sender, DayStartedEventArgs e)
+        private void SaveLoaded(object sender, SaveLoadedEventArgs e)
         {
             UpdateConfig(false);
         }
 
-        private void OnUpdateTicked(object sender, UpdateTickedEventArgs e)
+        private void UpdateTicked(object sender, UpdateTickedEventArgs e)
         {
-            overlay.Value ??= new Overlay(this);
-            if (Context.IsWorldReady) overlay.Value.UpdateTicked(e);
+            if (Context.IsWorldReady) overlays.Value.UpdateTicked(e);
         }
-        
+
         private void Rendered(object sender, RenderedEventArgs e)
         {
             if (Context.IsWorldReady)
@@ -235,73 +236,54 @@ namespace FishingInfoOverlays
                 if (!Overlay.hudMode)
                 {
                     Helper.Events.Display.RenderedHud -= RenderedHud;
-                    overlay.Value.RenderedBoth();
+                    overlays.Value.RenderedBoth();
                 }
-                overlay.Value.RenderedMinigame(e);
+                overlays.Value.RenderedMinigame(e);
             }
         }
         private void RenderedHud(object sender, RenderedHudEventArgs e)
         {
-            if (Context.IsWorldReady) overlay.Value.RenderedBoth();
+            if (Context.IsWorldReady) overlays.Value.RenderedBoth();
         }
 
-        private void OnMenuChanged(object sender, MenuChangedEventArgs e)   //Minigame data
+        private void MenuChanged(object sender, MenuChangedEventArgs e)   //Minigame data
         {
             if (Context.IsWorldReady)
             {
                 UpdateRenderMode();
-                overlay.Value.OnMenuChanged(sender, e);
+                overlays.Value.MenuChanged(sender, e);
             }
         }
-        private void OnRenderMenu(object sender, RenderedActiveMenuEventArgs e)
+        private void RenderedActiveMenu(object sender, RenderedActiveMenuEventArgs e)
         {
-            if (Context.IsWorldReady) overlay.Value?.OnRenderMenu(sender, e);
+            if (Context.IsWorldReady) overlays.Value.RenderedActiveMenu(sender, e);
         }
 
-        private void OnModMessageReceived(object sender, ModMessageReceivedEventArgs e)
+        private void ModMessageReceived(object sender, ModMessageReceivedEventArgs e)
         {
-            if (Context.IsWorldReady) overlay?.Value?.OnModMessageReceived(sender, e);
+            if (Context.IsWorldReady) overlays.Value.ModMessageReceived(sender, e);
         }
 
-        private void OnWarped(object sender, WarpedEventArgs e)
+        private void Warped(object sender, WarpedEventArgs e)
         {
             UpdateRenderMode();
-            overlay.Value?.OnWarped(sender, e);
+            overlays.Value.OnWarped(sender, e);
+        }
+
+        private void PeerConnected(object sender, PeerConnectedEventArgs e)
+        {
+            if (e.Peer.IsSplitScreen) UpdateConfigPerScreenID(false, e.Peer.ScreenID.Value);
         }
 
         private void UpdateConfig(bool GMCM)
         {
             Overlay.trash = ItemRegistry.GetData("(O)168");
 
-            for (int i = 0; i < 4; i++)
-            {
-                Overlay.barPosition[i] = new Vector2(config.BarTopLeftLocationX[i] + 2, config.BarTopLeftLocationY[i] + 2); //config: Position of bar
-            }
-
-            Overlay.sonarMode = config.BarSonarMode;                                                                        //config: Sonar requirement: 0=everything, 1=minigame, 2=shift scan, 3=not needed
-            Overlay.backgroundMode = config.BarBackgroundMode;                                                              //config: 0=Circles (dynamic), 1=Rectangle (single), 2=Off
-            Overlay.barCrabEnabled = config.BarCrabPotEnabled;                                                              //config: If bait/tackle/bait preview is enabled when holding a fishing rod
-            Overlay.barScale = config.BarScale;                                                                             //config: Custom scale for the location bar.
-            Overlay.iconMode = config.BarIconMode;                                                                          //config: 0=Horizontal Icons, 1=Vertical Icons, 2=Vertical Icons + Text, 3=Off
-            Overlay.maxIcons = config.BarMaxIcons;                                                                          //config: ^Max amount of tackle + trash + fish icons
-            Overlay.maxIconsPerRow = config.BarMaxIconsPerRow;                                                              //config: ^How many per row/column.
-            Overlay.onlyFish = config.OnlyFish;                                                                             //config: Whether to hide things like furniture.
-            Overlay.scanRadius = config.BarScanRadius;                                                                      //config: 0: Only checks if can fish, 1-50: also checks if there's water within X tiles around player.
-            Overlay.showPercentagesMode = config.BarShowPercentagesMode;                                                            //config: Whether it should show catch percentages.
-            Overlay.showTackles = config.BarShowBaitAndTackleInfo;                                                          //config: Whether it should show Bait and Tackle info.
-            Overlay.extraIconsShowAlways = config.BarExtraIconsAlwaysShow;                                                    //config: Show extra icons when uncaught.
-            Overlay.extraIconsMaxSize = config.BarExtraIconsMaxSize;                                                        //config: Show star when fish isn't maxed size.
-            Overlay.extraIconsBundles = config.BarExtraIconsBundles;                                                        //config: Show chest when fish needed for bundle.
-            Overlay.extraIconsAquarium = config.BarExtraIconsAquarium;                                                      //config: Show pufferfish when needed for Aquarium mod.
-            Overlay.sortMode = config.BarSortMode;                                                                          //config: 0= By Name (text mode only), 1= By Percentage, 2=Off
-            Overlay.uncaughtFishEffect = config.BarUncaughtFishEffect;                                                          //config: Whether uncaught fish are displayed as ??? and use dark icons
-            Overlay.minigameBar = config.MinigamePreviewBar;                                                                //config: Fish preview in bar.
-            Overlay.minigameRod = config.MinigamePreviewRod;                                                                //config: Fish preview in minigame.
-            Overlay.minigameWater = config.MinigamePreviewWater;                                                            //config: Fish preview in water.
-            Overlay.minigameSonar = config.MinigamePreviewSonar;                                                            //config: Fish preview on sonar display.
+            UpdateConfigPerScreen(GMCM);
 
             if (config.BarExtraCheckFrequency > 22) config.BarExtraCheckFrequency /= 10;
-            Overlay.extraCheckFrequency = config.BarExtraCheckFrequency;                                                    //config: 0-22: Bad performance dynamic check to see if there's modded/hardcoded fish
+            Overlay.extraCheckFrequency = config.BarExtraCheckFrequency;                     //config: 0-22: Bad performance dynamic check to see if there's modded/hardcoded fish
+            Overlay.sonarMode = config.BarSonarMode;                                         //config: Sonar requirement: 0=everything, 1=minigame, 2=shift scan, 3=not needed
 
             Overlay.colorBg = new Color(config.BarBackgroundColorRGBA[0], config.BarBackgroundColorRGBA[1], config.BarBackgroundColorRGBA[2], config.BarBackgroundColorRGBA[3]);
             Overlay.colorText = new Color(config.BarTextColorRGBA[0], config.BarTextColorRGBA[1], config.BarTextColorRGBA[2], config.BarTextColorRGBA[3]);
@@ -309,13 +291,55 @@ namespace FishingInfoOverlays
             if (!GMCM)
             {
                 Overlay.locationData = DataLoader.Locations(Game1.content);       //gets location data (which fish are here)
-                Overlay.fishData = DataLoader.Fish(Game1.content);                   //gets fish data
+                Overlay.fishData = DataLoader.Fish(Game1.content);                //gets fish data
                 Overlay.background[0] = WhiteCircle(17, 30);
                 Overlay.background[1] = WhitePixel();
             }
 
-            overlay.ResetAllScreens();
             UpdateRenderMode(true);
+        }
+        private void UpdateConfigPerScreen(bool GMCM)
+        {
+            if (Context.IsWorldReady)
+            {
+                if (Context.IsMultiplayer)
+                {
+                    foreach (IMultiplayerPeer peer in Helper.Multiplayer.GetConnectedPlayers())
+                    {
+                        if (peer.IsSplitScreen)
+                        {
+                            UpdateConfigPerScreenID(GMCM, peer.ScreenID.Value);
+                        }
+                    }
+                }
+                else UpdateConfigPerScreenID(GMCM, Context.ScreenId);
+            }
+        }
+        private void UpdateConfigPerScreenID(bool GMCM, int index)
+        {
+            var overlay = overlays.GetValueForScreen(index);
+
+            overlay.barPosition = new Vector2(config.BarTopLeftLocationX[index] + 2, config.BarTopLeftLocationY[index] + 2); //config: Position of bar
+            overlay.backgroundMode = config.BarBackgroundMode[index];                                                        //config: 0=Circles (dynamic), 1=Rectangle (single), 2=Off
+            overlay.barCrabEnabled = config.BarCrabPotEnabled[index];                                                        //config: If bait/tackle/bait preview is enabled when holding a fishing rod
+            overlay.barScale = config.BarScale[index];                                                                       //config: Custom scale for the location bar.
+            overlay.iconMode = config.BarIconMode[index];                                                                    //config: 0=Horizontal Icons, 1=Vertical Icons, 2=Vertical Icons + Text, 3=Off
+            overlay.maxIcons = config.BarMaxIcons[index];                                                                    //config: ^Max amount of tackle + trash + fish icons
+            overlay.maxIconsPerRow = config.BarMaxIconsPerRow[index];                                                        //config: ^How many per row/column.
+            overlay.onlyFish = config.OnlyFish[index];                                                                       //config: Whether to hide things like furniture.
+            overlay.scanRadius = config.BarScanRadius[index];                                                                //config: 0: Only checks if can fish, 1-50: also checks if there's water within X tiles around player.
+            overlay.showPercentagesMode = config.BarShowPercentagesMode[index];                                              //config: Whether it should show catch percentages.
+            overlay.showTackles = config.BarShowBaitAndTackleInfo[index];                                                    //config: Whether it should show Bait and Tackle info.
+            overlay.extraIconsShowAlways = config.BarExtraIconsAlwaysShow[index];                                            //config: Show extra icons when uncaught.
+            overlay.extraIconsMaxSize = config.BarExtraIconsMaxSize[index];                                                  //config: Show star when fish isn't maxed size.
+            overlay.extraIconsBundles = config.BarExtraIconsBundles[index];                                                  //config: Show chest when fish needed for bundle.
+            overlay.extraIconsAquarium = config.BarExtraIconsAquarium[index];                                                //config: Show pufferfish when needed for Aquarium mod.
+            overlay.sortMode = config.BarSortMode[index];                                                                    //config: 0= By Name (text mode only), 1= By Percentage, 2=Off
+            overlay.uncaughtFishEffect = config.BarUncaughtFishEffect[index];                                                //config: Whether uncaught fish are displayed as ??? and use dark icons
+            overlay.minigameBar = config.MinigamePreviewBar[index];                                                          //config: Fish preview in bar.
+            overlay.minigameRod = config.MinigamePreviewRod[index];                                                          //config: Fish preview in minigame.
+            overlay.minigameWater = config.MinigamePreviewWater[index];                                                      //config: Fish preview in water.
+            overlay.minigameSonar = config.MinigamePreviewSonar[index];                                                      //config: Fish preview on sonar display.
         }
 
         private void UpdateRenderMode(bool reset = false) //checks whether UI or Zoom is closer to 100% and applies rendering in that mode
