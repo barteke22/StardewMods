@@ -26,7 +26,7 @@ namespace FishingInfoOverlays
         public int BarExtraCheckFrequency { get; set; } = 0;
         public int[] BarScanRadius { get; set; } = [20, 20, 20, 20];
         public bool[] BarCrabPotEnabled { get; set; } = [true, true, true, true];
-        public bool[] OnlyFish { get; set; } = [false, false, false, false];
+        public int[] BarNonFishMode { get; set; } = [0, 0, 0, 0];
         public bool[] MinigamePreviewBar { get; set; } = [true, true, true, true];
         public bool[] MinigamePreviewRod { get; set; } = [true, true, true, true];
         public bool[] MinigamePreviewWater { get; set; } = [true, true, true, true];

@@ -88,7 +88,7 @@ namespace FishingInfoOverlays
         public bool showTackles;
         public int showPercentagesMode;
         public int sortMode;
-        public bool onlyFish;
+        public int nonFishMode;
         public bool extraIconsShowAlways;
         public bool extraIconsMaxSize;
         public bool extraIconsBundles;
@@ -373,7 +373,7 @@ namespace FishingInfoOverlays
                                 if (percent > 0)
                                 {
                                     data = fishEntry.data;
-                                    if (data.IsErrorItem || (onlyFish && data.ObjectType != FISH_TYPE)) continue;//skip if not fish, except trash
+                                    if (data.IsErrorItem || (nonFishMode == 2 && data.ObjectType != FISH_TYPE)) continue;//skip if not fish, except trash
 
                                     iconCount++;
                                     string fishNameLocalized = fishEntry.caught || hasSonar ? data.DisplayName : "???";
@@ -1338,6 +1338,7 @@ namespace FishingInfoOverlays
                         who.modData[nonFishCaughtID] += id;
                         return [0, 0];
                     }
+                    else if (nonFishMode == 1) return [0, 0];
                 }
             }
             return null;

@@ -72,8 +72,10 @@
 	"GenericMC.barCrabPotEnabled": "Crab Pot Preview Enabled",
 	"GenericMC.barCrabPotEnabledDesc": "Extends the preview to also work for Crab Pots.",
 
-	"GenericMC.barOnlyFish": "Only Fish",
-	"GenericMC.barOnlyFishDesc": "The bar will only show things from the official fish list (and trash), skipping things like furniture or notes. They will still contribute to percentage calculations. This is mainly for consistency's sake, since some of these items are already blacklisted (hidden). Keep in mind that there's a tiny chance that some mod didn't add its fish to this list, though those wouldn't really count as fish.",
+	"GenericMC.barNonFishMode": "Show non-fish",
+	"GenericMC.barNonFishModeDesc": "Whether the bar shows non-fish objects, like furniture and trash. Caught status of non-fish is tracked by the mod while the bar is enabled.\n: - Same as Fish: Treated like fish (per caught settings).\n - Always Caught: Non-fish always appear as caught (per caught settings).\n - Disabled: Non-fish are skipped (total percentages will still reflect them).",
+	"GenericMC.barNonFishMode0": "Same as Fish",
+	"GenericMC.barNonFishMode1": "Always Caught",
 
 	"GenericMC.MinigameLabel": "Fish Icon (Minigame)",
 	"GenericMC.MinigameDescription": "If enabled, the fishing minigame will show a preview of the fish you're catching:",

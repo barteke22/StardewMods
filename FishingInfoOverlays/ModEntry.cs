@@ -180,8 +180,12 @@ namespace FishingInfoOverlays
                 allowedValues: ["0", "1", "2"],
                 formatAllowedValue: value => value == "2" ? translate.Get($"GenericMC.Disabled") : translate.Get($"GenericMC.barSortMode{value}"));
 
-            GenericMC.AddBoolOption(ModManifest, () => config.OnlyFish[screen], (val) => config.OnlyFish[screen] = val,
-                () => translate.Get("GenericMC.barOnlyFish"), () => translate.Get("GenericMC.barOnlyFishDesc"));
+            GenericMC.AddTextOption(ModManifest, name: () => translate.Get("GenericMC.barNonFishMode"), tooltip: () => translate.Get("GenericMC.barNonFishModeDesc"),
+                getValue: () => config.BarNonFishMode[screen].ToString(),
+                setValue: value => config.BarNonFishMode[screen] = int.Parse(value),
+                allowedValues: ["0", "1", "2"],
+                formatAllowedValue: value => value == "2" ? translate.Get($"GenericMC.Disabled") : translate.Get($"GenericMC.barNonFishMode{value}"));
+
             GenericMC.AddBoolOption(ModManifest, () => config.BarCrabPotEnabled[screen], (val) => config.BarCrabPotEnabled[screen] = val,
                 () => translate.Get("GenericMC.barCrabPotEnabled"), () => translate.Get("GenericMC.barCrabPotEnabledDesc"));
 
@@ -326,7 +330,7 @@ namespace FishingInfoOverlays
             overlay.iconMode = config.BarIconMode[index];                                                                    //config: 0=Horizontal Icons, 1=Vertical Icons, 2=Vertical Icons + Text, 3=Off
             overlay.maxIcons = config.BarMaxIcons[index];                                                                    //config: ^Max amount of tackle + trash + fish icons
             overlay.maxIconsPerRow = config.BarMaxIconsPerRow[index];                                                        //config: ^How many per row/column.
-            overlay.onlyFish = config.OnlyFish[index];                                                                       //config: Whether to hide things like furniture.
+            overlay.nonFishMode = config.BarNonFishMode[index];                                                              //config: Whether to hide things like furniture.
             overlay.scanRadius = config.BarScanRadius[index];                                                                //config: 0: Only checks if can fish, 1-50: also checks if there's water within X tiles around player.
             overlay.showPercentagesMode = config.BarShowPercentagesMode[index];                                              //config: Whether it should show catch percentages.
             overlay.showTackles = config.BarShowBaitAndTackleInfo[index];                                                    //config: Whether it should show Bait and Tackle info.

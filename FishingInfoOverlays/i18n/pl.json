@@ -70,8 +70,10 @@
 	"GenericMC.barCrabPotEnabled": "Pułapki na Kraby Też",
 	"GenericMC.barCrabPotEnabledDesc": "Sprawia, że Pasek Info również działa gdy trzymasz pułapkę na kraby.",
 
-	"GenericMC.barOnlyFish": "Tylko Ryby",
-	"GenericMC.barOnlyFishDesc": "Pasek pokaże tylko rzeczy z oficjalnej listy ryb (i śmieci), pomijając rzeczy takie jak meble bądź notatki. Nadal będą przyczyniać się do obliczeń procentowych. Opcja dodana głównie ze względu na spójność, ponieważ niektóre z tych przedmiotów są już na czarnej liście (ukryte). Ostrzegam: Jest minimalna szansa, że jakiś mod nie dodał swoich ryb to tej listy, lecz nie liczyłyby się w tym przypadku jako ryby.",
+	"GenericMC.barNonFishMode": "Pokaż obiekty inne niż ryby",
+	"GenericMC.barNonFishModeDesc": "Czy pasek wyświetla obiekty inne niż ryby, takie jak meble i śmieci. Status złapania obiektów innych niż ryby jest śledzony przez mod, gdy pasek jest włączony.\n: - Tak samo jak ryby: Traktowane jak ryby (wedle ustawień złapania).\n - Zawsze złapane: Obiekty inne niż ryby zawsze pojawiają się jako złapane (wedle ustawień złapania).\n - Wyłącz: Obiekty inne niż ryby są pomijane (w procentach będą nadal uwzględniane).",
+	"GenericMC.barNonFishMode0": "Tak samo jak ryby",
+	"GenericMC.barNonFishMode1": "Zawsze złapane",
 
 	"GenericMC.MinigameLabel": "Ikona ryby (minigra)",
 	"GenericMC.MinigameDescription": "Po włączeniu minigry wędkarskiej będzie wyświetlany podgląd złowionej ryby:",

@@ -70,8 +70,10 @@
 	"GenericMC.barCrabPotEnabled": "カニかごプレビューを有効にする",
 	"GenericMC.barCrabPotEnabledDesc": "カニかごに対しても働くように変更します.",
 
-	"GenericMC.barOnlyFish": "魚のみ",
-	"GenericMC.barOnlyFishDesc": "バーには公式の魚リスト（とごみ）だけが示され、家具やメモのようなものはスキップされます.これらはまだパーセンテージの計算に寄与します.これは主に一貫性を保つためで、これらのアイテムのいくつかはすでにブラックリスト（示されない）になっているからです.あるMODがこのリストに魚を追加していない可能性もありますが、それらは実際には魚としてカウントされないことを覚えておいてください.",
+	"GenericMC.barNonFishMode": "魚以外のオブジェクトを表示",
+	"GenericMC.barNonFishModeDesc": "バーに家具やゴミなどの魚以外のオブジェクトを表示するかどうか. バーが有効になっている間、魚以外のオブジェクトの捕獲状況はMODによって追跡されます.\n: - 魚と同じ: 魚として扱われます（捕獲設定に従います）.\n - 常に捕獲済み: 魚以外のオブジェクトは常に捕獲済みとして表示されます（捕獲設定に従います）.\n - 使用しない: 魚以外のオブジェクトはスキップされます（合計パーセンテージには魚以外のオブジェクトもカウントされます）.",
+	"GenericMC.barNonFishMode0": "魚と同じ",
+	"GenericMC.barNonFishMode1": "常に捕獲済み",
 
 	"GenericMC.MinigameLabel": "魚アイコン（ミニゲーム）",
 	"GenericMC.MinigameDescription": "有効にすると、釣りミニゲームで釣った魚のプレビューが表示されます:",

@@ -70,8 +70,10 @@
 	"GenericMC.barCrabPotEnabled": "Vista Previa Trampas para Cangrejos Activa",
 	"GenericMC.barCrabPotEnabledDesc": "Extiende la vista previa para que también funcione con las trampas para cangrejos.",
 
-	"GenericMC.barOnlyFish": "Solo Peces",
-	"GenericMC.barOnlyFishDesc": "La barra solo mostrará peces oficiales y basura, ignorando otros objetos como muebles o notas. Estos aún cuentan para los porcentajes. Algunos mods podrían no incluir sus peces en la lista oficial.",
+	"GenericMC.barNonFishMode": "Mostrar objetos que no sean peces",
+	"GenericMC.barNonFishModeDesc": "Si la barra muestra objetos que no sean peces, como muebles y basura. El mod monitorea el estado de captura de los objetos que no sean peces mientras la barra esté habilitada.\n: - Igual que los peces: Se tratan como peces (según la configuración de captura).\n - Siempre capturado: Los objetos que no sean peces siempre aparecen como capturados (según la configuración de captura).\n - Desactivado: Se omiten los objetos que no sean peces (los porcentajes totales los seguirán reflejando).",
+	"GenericMC.barNonFishMode0": "Igual que los peces",
+	"GenericMC.barNonFishMode1": "Siempre capturado",
 
 	"GenericMC.MinigameLabel": "Ícono de pez (Minijuego)",
 	"GenericMC.MinigameDescription": "Si está activado, el minijuego de pesca mostrará una vista previa del pez que estás atrapando:",

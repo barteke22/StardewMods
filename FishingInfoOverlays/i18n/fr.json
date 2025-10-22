@@ -70,8 +70,10 @@
 	"GenericMC.barCrabPotEnabled": "Aperçu du casier de crabes",
 	"GenericMC.barCrabPotEnabledDesc": "Étend l’aperçu au casier de crabes.",
 
-	"GenericMC.barOnlyFish": "Seulement les poissons",
-	"GenericMC.barOnlyFishDesc": "La barre va uniquement montrer des choses provenant de la liste officielle des poissons (et déchets), passant sur des choses comme des meubles ou notes. Ils contribuent toujours au calcul des probabilités. C’est principalement par souci de cohérence, puisque certains de ces objets sont déjà sur liste noire (cachés). Gardez en tête qu’il y a une petite probabilité que certains mods n’ajoutent pas leurs poissons sur cette liste, même si ceux-ci ne compteraient pas vraiment comme des poissons.",
+	"GenericMC.barNonFishMode": "Afficher les objets autres que les poissons",
+	"GenericMC.barNonFishModeDesc": "Si la barre affiche les objets autres que les poissons, comme les meubles et les déchets. Le statut de capture des objets autres que les poissons est suivi par le modérateur lorsque la barre est activée.\n: - Identique à Poisson : Traité comme un poisson (selon les paramètres de capture).\n - Toujours capturé : Les objets autres que les poissons apparaissent toujours comme capturés (selon les paramètres de capture).\n - Désactivé : Les objets autres que les poissons sont ignorés (les pourcentages totaux les compteront quand même).",
+	"GenericMC.barNonFishMode0": "Identique à Poisson",
+	"GenericMC.barNonFishMode1": "Toujours capturé",
 
 	"GenericMC.MinigameLabel": "Icône de poisson (mini-jeu)",
 	"GenericMC.MinigameDescription": "Si cette option est activée, le mini-jeu de pêche affichera un aperçu du poisson que vous attrapez:",
