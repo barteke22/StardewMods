@@ -306,6 +306,7 @@ namespace FishingInfoOverlays
         {
             if (Context.IsWorldReady)
             {
+                int count = 0;
                 if (Context.IsMultiplayer)
                 {
                     foreach (IMultiplayerPeer peer in Helper.Multiplayer.GetConnectedPlayers())
@@ -313,10 +314,11 @@ namespace FishingInfoOverlays
                         if (peer.IsSplitScreen)
                         {
                             UpdateConfigPerScreenID(GMCM, peer.ScreenID.Value);
+                            count++;
                         }
                     }
                 }
-                else UpdateConfigPerScreenID(GMCM, Context.ScreenId);
+                if (count == 0) UpdateConfigPerScreenID(GMCM, Context.ScreenId);
             }
         }
         private void UpdateConfigPerScreenID(bool GMCM, int index)

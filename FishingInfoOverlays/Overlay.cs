@@ -32,6 +32,7 @@ namespace FishingInfoOverlays
 
 
         private Farmer who;
+        private GameLocation currentLoc;
         private List<FishEntry> fishHere = [];    //world fish preview data 
         private Dictionary<string, int> fishChancesDynamic = [];
         private Dictionary<string, int> fishChancesDynamicFailed = [];
@@ -106,6 +107,11 @@ namespace FishingInfoOverlays
         {
             if (maxIcons == 500 || e.Ticks % 9 == 0)
             {
+                showUI = false;
+                who = Game1.player;
+
+                if (Game1.eventUp || who.CurrentItem == null) return;//code stop conditions
+
                 if (hudMode)
                 {
                     fixedZoom = barScale / Game1.options.baseUIScale;
@@ -119,7 +125,6 @@ namespace FishingInfoOverlays
                 iconScale16 = (int)(16f * iconScale);
                 fixScale10 = FixIconScale(10f);
 
-                who = Game1.player;
                 FishingRod rod = who.CurrentItem as FishingRod;
 
                 hasSonar = false;
@@ -129,10 +134,9 @@ namespace FishingInfoOverlays
                     if (sonarMode == 0 && !hasSonar) return;
                 }
 
-                showUI = false;
-                if (iconMode != 3)
+                if (iconMode != 3 && (rod != null || (barCrabEnabled && "Crab Pot".Equals(who.CurrentItem.Name, StringComparison.Ordinal))))
                 {
-                    if (Game1.eventUp || who.CurrentItem == null || !(rod != null || who.CurrentItem is CrabPot && barCrabEnabled)) return;//code stop conditions
+                    currentLoc = who.currentLocation;
 
                     if (!foundWater || e.Ticks % 3 == 0)
                     {
@@ -141,7 +145,7 @@ namespace FishingInfoOverlays
                         foundWater = false;
                         showTile = false;
                         nearestWaterTile = new(99999f, 99999f);      //any water nearby + nearest water tile check
-                        if (who.currentLocation.canFishHere())
+                        if (currentLoc.canFishHere())
                         {
                             if (rod != null)
                             {
@@ -150,7 +154,7 @@ namespace FishingInfoOverlays
                                     showTile = true;
                                     int x = (int)Game1.currentCursorTile.X;
                                     int y = (int)Game1.currentCursorTile.Y;
-                                    if (!who.currentLocation.isTileBuildingFishable(x, y) && isTileFishable(who.currentLocation, x, y))
+                                    if (!currentLoc.isTileBuildingFishable(x, y) && currentLoc.isTileFishable(x, y))
                                     {
                                         nearestWaterTile = new(x, y);
                                         foundWater = true;
@@ -177,7 +181,7 @@ namespace FishingInfoOverlays
                                             if (positive) y += i;
                                             else y -= i;
                                         }
-                                        if (!who.currentLocation.isTileBuildingFishable(x, y) && isTileFishable(who.currentLocation, x, y))
+                                        if (!currentLoc.isTileBuildingFishable(x, y) && currentLoc.isTileFishable(x, y))
                                         {
                                             nearestWaterTile = new(x, y);
                                             foundWater = true;
@@ -194,12 +198,12 @@ namespace FishingInfoOverlays
                                 {
                                     for (int y = (int)scanTopLeft.Y; y < (int)scanBottomRight.Y; y++)
                                     {
-                                        if (!who.currentLocation.isTileBuildingFishable(x, y) && isTileFishable(who.currentLocation, x, y))
+                                        if (!currentLoc.isTileBuildingFishable(x, y) && currentLoc.isTileFishable(x, y))
                                         {
                                             Vector2 tile = new(x, y);
                                             float distance = Vector2.DistanceSquared(who.Tile, tile);
                                             float distanceNearest = Vector2.DistanceSquared(who.Tile, nearestWaterTile);
-                                            if (distance < distanceNearest || distance == distanceNearest && Game1.player.GetGrabTile() == tile) nearestWaterTile = tile;
+                                            if (distance < distanceNearest || distance == distanceNearest && who.GetGrabTile() == tile) nearestWaterTile = tile;
                                             foundWater = true;
                                         }
                                     }
@@ -268,14 +272,6 @@ namespace FishingInfoOverlays
                 }
             }
         }
-        private bool isTileFishable(GameLocation loc, int tileX, int tileY)
-        {
-            if (!loc.isWaterTile(tileX, tileY) || loc.doesTileHaveProperty(tileX, tileY, "NoFishing", "Back") != null || loc.hasTileAt(tileX, tileY, "Buildings"))
-            {
-                return loc.doesTileHaveProperty(tileX, tileY, "Water", "Buildings") != null;
-            }
-            return true;
-        }
 
 
         public void RenderedBoth()
@@ -291,7 +287,7 @@ namespace FishingInfoOverlays
 
 
                 //this.Monitor.Log("\n", LogLevel.Debug);
-                if (who.currentLocation is MineShaft && who.CurrentItem is CrabPot)//crab pot
+                if (who.currentLocation is MineShaft && "Crab Pot".Equals(who.CurrentItem?.Name, StringComparison.Ordinal))//crab pot
                 {
                     string warning = Translate.Get("Bar.CrabMineWarning");
                     DrawStringWithBorder(batch, font, warning, boxBottomLeft + new Vector2(iconScale16, 0), Color.Red, 0f, Vector2.Zero, FixIconScale(1f), SpriteEffects.None, 1f, colorBg); //text
@@ -308,133 +304,130 @@ namespace FishingInfoOverlays
                 boxHeight = 0;
                 boxBottomLeft = boxTopLeft;
 
-                if (who.CurrentItem is FishingRod rod)
+                if (showTackles && who.CurrentItem is FishingRod rod)
                 {
-                    if (showTackles)
+                    var tackles = rod.GetTackle();    //BAIT AND TACKLE (BOBBERS) PREVIEW
+                    tackles.Insert(0, rod.GetBait());
+                    foreach (var tackle in tackles)
                     {
-                        var tackles = rod.GetTackle();    //BAIT AND TACKLE (BOBBERS) PREVIEW
-                        tackles.Insert(0, rod.GetBait());
-                        foreach (var tackle in tackles)
+                        if (tackle != null)
                         {
-                            if (tackle != null)
+                            data = ItemRegistry.GetData(tackle.QualifiedItemId);
+                            source = data.GetSourceRect();
+                            if (backgroundMode == 0) AddBackground(batch, boxTopLeft, boxBottomLeft, iconCount, source, iconScale, boxWidth, boxHeight, showPercent, showExtras);
+
+                            Color baitC = Color.White;
+                            if (tackle is ColoredObject obj)
                             {
-                                data = ItemRegistry.GetData(tackle.QualifiedItemId);
-                                source = data.GetSourceRect();
-                                if (backgroundMode == 0) AddBackground(batch, boxTopLeft, boxBottomLeft, iconCount, source, iconScale, boxWidth, boxHeight, showPercent, showExtras);
-
-                                Color baitC = Color.White;
-                                if (tackle is ColoredObject obj)
+                                baitC = obj.color.Value;
+                                if (!obj.ColorSameIndexAsParentSheetIndex)
                                 {
-                                    baitC = obj.color.Value;
-                                    if (!obj.ColorSameIndexAsParentSheetIndex)
-                                    {
-                                        batch.Draw(data.GetTexture(), boxBottomLeft, source, Color.White, 0f, Vector2.Zero, FixIconScale(1.9f), SpriteEffects.None, 0.9f);
-                                        source = data.GetSourceRect(1);
-                                    }
-                                }
-                                batch.Draw(data.GetTexture(), boxBottomLeft, source, baitC, 0f, Vector2.Zero, FixIconScale(1.9f), SpriteEffects.None, 0.9f + 2E-05f);
-
-                                if (tackle.Quality == 4) batch.Draw(Game1.mouseCursors, boxBottomLeft + new Vector2(FixIconScale(13f), FixIconScale(showPercent ? 24 : 16)),
-                                    new Rectangle(346, 392, 8, 8), Color.White, 0f, Vector2.Zero, FixIconScale(1.9f), SpriteEffects.None, 1f);
-                                else
-                                {
-                                    int count = tackle.Category == Object.tackleCategory ? FishingRod.maxTackleUses - tackle.uses.Value : tackle.Stack;
-                                    Utility.drawTinyDigits(count, batch, boxBottomLeft + new Vector2(source.Width * iconScale - Utility.getWidthOfTinyDigitString(count, FixIconScale(2f)),
-                                    FixIconScale(showPercent ? 26 : 19)), FixIconScale(2f), 1f, colorText);
-                                }
-
-                                if (iconMode == 1) boxBottomLeft += new Vector2(0, source.Width * iconScale + (showPercent ? fixScale10 : 0));
-                                else boxBottomLeft += new Vector2(source.Width * iconScale + (showExtras && iconMode != 2 ? fixScale10 : 0), 0);
-                                iconCount++;
-                            }
-                        }
-                        if (iconMode == 2 && iconCount > 0)
-                        {
-                            boxBottomLeft = boxTopLeft + new Vector2(0, source.Width * iconScale + (showPercent ? fixScale10 : 0));
-                            if (iconCount == 3 && fishHere.Count > 3) iconCount = 2;
-                            boxWidth = iconCount * (source.Width + (showExtras ? 4.8f : 0)) * iconScale + boxTopLeft.X;
-                            boxHeight += source.Width * iconScale + (showPercent ? fixScale10 : 0);
-                            iconCount = 1;
-                        }
-                    }
-                    if (foundWater)
-                    {
-                        if (showTile)
-                        {
-                            batch.Draw(Game1.mouseCursors, new Vector2((int)nearestWaterTile.X * 64 - Game1.viewport.X, (int)nearestWaterTile.Y * 64 - Game1.viewport.Y), new Rectangle(652, 204, 44, 44),
-                                new Color(0, 255, 0, 0.5f), 0f, Vector2.Zero, 1.45f, SpriteEffects.None, 1f);
-                        }
-
-                        foreach (var fishEntry in fishHere)
-                        {
-                            if (iconCount < maxIcons)
-                            {
-                                int percent = (int)Math.Round(100f * fishEntry.count / fishChancesTotal); //chance of this fish
-                                if (percent > 0)
-                                {
-                                    data = fishEntry.data;
-                                    if (data.IsErrorItem || (nonFishMode == 2 && data.ObjectType != FISH_TYPE)) continue;//skip if not fish, except trash
-
-                                    iconCount++;
-                                    string fishNameLocalized = fishEntry.caught || hasSonar ? data.DisplayName : "???";
-                                    txt2d = data.GetTexture();
-                                    source = data.GetSourceRect();
-
-                                    batch.Draw(txt2d, FixSourceOffset(source, boxBottomLeft), source,
-                                        fishEntry.caught ? Color.White : Color.DarkSlateGray, 0f, Vector2.Zero, FixIconScale(FixRectScale(source, 1.9f)), SpriteEffects.None, 0.98f);//icon
-
-                                    if (showPercent) //percent text
-                                    {
-                                        if (showPercentagesMode == 0)
-                                        {
-                                            DrawStringWithBorder(batch, font, percent + "%", boxBottomLeft + new Vector2(8f * iconScale, FixIconScale(27f)),
-                                                fishEntry.caught ? colorText : colorText * 0.8f, 0f, new Vector2(font.MeasureString(percent + "%").X / 2f, 0f), FixIconScale(0.58f), SpriteEffects.None, 1f, colorBg);
-                                        }
-                                        else Utility.drawTinyDigits(percent, batch, boxBottomLeft + new Vector2((percent > 9 ? percent > 99 ? 1f : 3f : 5f) * iconScale, FixIconScale(27f)), FixIconScale(2f), 1f, colorText);
-                                    }
-                                    if (showExtras) //completion icons
-                                    {
-                                        if (fishEntry.needsMaxSize || fishEntry.needsCaught) batch.Draw(Game1.mouseCursors, boxBottomLeft + new Vector2(FixIconScale(31), FixIconScale(6)), new(338, 400, 8, 8), fishEntry.needsCaught ? Color.Peru : Color.Cyan, 0f, Vector2.Zero, FixIconScale(1.1f), SpriteEffects.None, 0.98f);
-                                        if (fishEntry.needsBundle) batch.Draw(Game1.mouseCursors, boxBottomLeft + new Vector2(FixIconScale(30.5f), FixIconScale(15)), new(330, 373, 16, 16), Color.White, 0f, Vector2.Zero, FixIconScale(0.6f), SpriteEffects.None, 0.98f);
-                                        if (fishEntry.needsAquarium) batch.Draw(Game1.objectSpriteSheet, boxBottomLeft + new Vector2(FixIconScale(31), FixIconScale(24)), new(128, 80, 16, 16), Color.White, 0f, Vector2.Zero, FixIconScale(0.6f), SpriteEffects.None, 1.98f);
-                                    }
-
-                                    if (data.ItemId == miniFish && minigameBar) //green minigame outline on bar
-                                    {
-                                        batch.Draw(background[0], new Rectangle((int)boxBottomLeft.X, (int)boxBottomLeft.Y, iconScale16, iconScale16), null, Color.GreenYellow, 0f, Vector2.Zero, SpriteEffects.None, 0.9f);
-                                    }
-
-                                    if (backgroundMode == 0) AddBackground(batch, boxTopLeft, boxBottomLeft, iconCount, defaultSource, iconScale, boxWidth, boxHeight, showPercent, showExtras);//circles
-
-                                    if (iconMode == 0)      //Horizontal Preview
-                                    {
-                                        if (iconCount % maxIconsPerRow == 0) boxBottomLeft = new Vector2(boxTopLeft.X, boxBottomLeft.Y + iconScale16 + (showPercent ? fixScale10 : 0)); //row switch
-                                        else boxBottomLeft += new Vector2(iconScale16 + (showExtras ? fixScale10 : 0), 0);
-                                    }
-                                    else                    //Vertical Preview
-                                    {
-                                        if (iconMode == 2 && !hideText)  // + text
-                                        {
-                                            DrawStringWithBorder(batch, font, fishNameLocalized, boxBottomLeft + new Vector2(FixIconScale(35) + (showExtras ? fixScale10 : 0), 0 + (showPercent ? FixIconScale(5) : 0)),
-                                                fishEntry.caught ? colorText : colorText * 0.65f, 0f, new Vector2(0, -3), FixIconScale(1f), SpriteEffects.None, 0.98f, colorBg); //text
-                                            boxWidth = Math.Max(boxWidth, boxBottomLeft.X + FixIconScale(font.MeasureString(fishNameLocalized).X) + iconScale16) + (showExtras ? FixIconScale(6f) : 0);
-                                        }
-
-                                        if (iconCount % maxIconsPerRow == 0) //row switch
-                                        {
-                                            if (iconMode == 2) boxBottomLeft = new Vector2(boxWidth + 20, boxTopLeft.Y);
-                                            else boxBottomLeft = new Vector2(boxBottomLeft.X + iconScale16 + (showExtras ? fixScale10 : 0), boxTopLeft.Y);
-                                        }
-                                        else boxBottomLeft += new Vector2(0, iconScale16 + (showPercent ? fixScale10 : 0));
-                                        if (iconMode == 2 && iconCount <= maxIconsPerRow) boxHeight += iconScale16 + (showPercent ? fixScale10 : 0);
-                                    }
+                                    batch.Draw(data.GetTexture(), boxBottomLeft, source, Color.White, 0f, Vector2.Zero, FixIconScale(1.9f), SpriteEffects.None, 0.9f);
+                                    source = data.GetSourceRect(1);
                                 }
                             }
+                            batch.Draw(data.GetTexture(), boxBottomLeft, source, baitC, 0f, Vector2.Zero, FixIconScale(1.9f), SpriteEffects.None, 0.9f + 2E-05f);
+
+                            if (tackle.Quality == 4) batch.Draw(Game1.mouseCursors, boxBottomLeft + new Vector2(FixIconScale(13f), FixIconScale(showPercent ? 24 : 16)),
+                                new Rectangle(346, 392, 8, 8), Color.White, 0f, Vector2.Zero, FixIconScale(1.9f), SpriteEffects.None, 1f);
+                            else
+                            {
+                                int count = tackle.Category == Object.tackleCategory ? FishingRod.maxTackleUses - tackle.uses.Value : tackle.Stack;
+                                Utility.drawTinyDigits(count, batch, boxBottomLeft + new Vector2(source.Width * iconScale - Utility.getWidthOfTinyDigitString(count, FixIconScale(2f)),
+                                FixIconScale(showPercent ? 26 : 19)), FixIconScale(2f), 1f, colorText);
+                            }
+
+                            if (iconMode == 1) boxBottomLeft += new Vector2(0, source.Width * iconScale + (showPercent ? fixScale10 : 0));
+                            else boxBottomLeft += new Vector2(source.Width * iconScale + (showExtras && iconMode != 2 ? fixScale10 : 0), 0);
+                            iconCount++;
                         }
                     }
-                    if (backgroundMode == 1) AddBackground(batch, boxTopLeft, boxBottomLeft, iconCount, defaultSource, iconScale, boxWidth, boxHeight, showPercent, showExtras);//rectangle
-
+                    if (iconMode == 2 && iconCount > 0)
+                    {
+                        boxBottomLeft = boxTopLeft + new Vector2(0, source.Width * iconScale + (showPercent ? fixScale10 : 0));
+                        if (iconCount == 3 && fishHere.Count > 3) iconCount = 2;
+                        boxWidth = iconCount * (source.Width + (showExtras ? 4.8f : 0)) * iconScale + boxTopLeft.X;
+                        boxHeight += source.Width * iconScale + (showPercent ? fixScale10 : 0);
+                        iconCount = 1;
+                    }
                 }
+                if (foundWater)
+                {
+                    if (showTile)
+                    {
+                        batch.Draw(Game1.mouseCursors, new Vector2((int)nearestWaterTile.X * 64 - Game1.viewport.X, (int)nearestWaterTile.Y * 64 - Game1.viewport.Y), new Rectangle(652, 204, 44, 44),
+                            new Color(0, 255, 0, 0.5f), 0f, Vector2.Zero, 1.45f, SpriteEffects.None, 1f);
+                    }
+
+                    foreach (var fishEntry in fishHere)
+                    {
+                        if (iconCount < maxIcons)
+                        {
+                            int percent = (int)Math.Round(100f * fishEntry.count / fishChancesTotal); //chance of this fish
+                            if (percent > 0)
+                            {
+                                data = fishEntry.data;
+                                if (data.IsErrorItem || (nonFishMode == 2 && data.ObjectType != FISH_TYPE)) continue;//skip if not fish, except trash
+
+                                iconCount++;
+                                string fishNameLocalized = fishEntry.caught || hasSonar ? data.DisplayName : "???";
+                                txt2d = data.GetTexture();
+                                source = data.GetSourceRect();
+
+                                batch.Draw(txt2d, FixSourceOffset(source, boxBottomLeft), source,
+                                    fishEntry.caught ? Color.White : Color.DarkSlateGray, 0f, Vector2.Zero, FixIconScale(FixRectScale(source, 1.9f)), SpriteEffects.None, 0.98f);//icon
+
+                                if (showPercent) //percent text
+                                {
+                                    if (showPercentagesMode == 0)
+                                    {
+                                        DrawStringWithBorder(batch, font, percent + "%", boxBottomLeft + new Vector2(8f * iconScale, FixIconScale(27f)),
+                                            fishEntry.caught ? colorText : colorText * 0.8f, 0f, new Vector2(font.MeasureString(percent + "%").X / 2f, 0f), FixIconScale(0.58f), SpriteEffects.None, 1f, colorBg);
+                                    }
+                                    else Utility.drawTinyDigits(percent, batch, boxBottomLeft + new Vector2((percent > 9 ? percent > 99 ? 1f : 3f : 5f) * iconScale, FixIconScale(27f)), FixIconScale(2f), 1f, colorText);
+                                }
+                                if (showExtras) //completion icons
+                                {
+                                    if (fishEntry.needsMaxSize || fishEntry.needsCaught) batch.Draw(Game1.mouseCursors, boxBottomLeft + new Vector2(FixIconScale(31), FixIconScale(6)), new(338, 400, 8, 8), fishEntry.needsCaught ? Color.Peru : Color.Cyan, 0f, Vector2.Zero, FixIconScale(1.1f), SpriteEffects.None, 0.98f);
+                                    if (fishEntry.needsBundle) batch.Draw(Game1.mouseCursors, boxBottomLeft + new Vector2(FixIconScale(30.5f), FixIconScale(15)), new(330, 373, 16, 16), Color.White, 0f, Vector2.Zero, FixIconScale(0.6f), SpriteEffects.None, 0.98f);
+                                    if (fishEntry.needsAquarium) batch.Draw(Game1.objectSpriteSheet, boxBottomLeft + new Vector2(FixIconScale(31), FixIconScale(24)), new(128, 80, 16, 16), Color.White, 0f, Vector2.Zero, FixIconScale(0.6f), SpriteEffects.None, 1.98f);
+                                }
+
+                                if (data.ItemId == miniFish && minigameBar) //green minigame outline on bar
+                                {
+                                    batch.Draw(background[0], new Rectangle((int)boxBottomLeft.X, (int)boxBottomLeft.Y, iconScale16, iconScale16), null, Color.GreenYellow, 0f, Vector2.Zero, SpriteEffects.None, 0.9f);
+                                }
+
+                                if (backgroundMode == 0) AddBackground(batch, boxTopLeft, boxBottomLeft, iconCount, defaultSource, iconScale, boxWidth, boxHeight, showPercent, showExtras);//circles
+
+                                if (iconMode == 0)      //Horizontal Preview
+                                {
+                                    if (iconCount % maxIconsPerRow == 0) boxBottomLeft = new Vector2(boxTopLeft.X, boxBottomLeft.Y + iconScale16 + (showPercent ? fixScale10 : 0)); //row switch
+                                    else boxBottomLeft += new Vector2(iconScale16 + (showExtras ? fixScale10 : 0), 0);
+                                }
+                                else                    //Vertical Preview
+                                {
+                                    if (iconMode == 2 && !hideText)  // + text
+                                    {
+                                        DrawStringWithBorder(batch, font, fishNameLocalized, boxBottomLeft + new Vector2(FixIconScale(35) + (showExtras ? fixScale10 : 0), 0 + (showPercent ? FixIconScale(5) : 0)),
+                                            fishEntry.caught ? colorText : colorText * 0.65f, 0f, new Vector2(0, -3), FixIconScale(1f), SpriteEffects.None, 0.98f, colorBg); //text
+                                        boxWidth = Math.Max(boxWidth, boxBottomLeft.X + FixIconScale(font.MeasureString(fishNameLocalized).X) + iconScale16) + (showExtras ? FixIconScale(6f) : 0);
+                                    }
+
+                                    if (iconCount % maxIconsPerRow == 0) //row switch
+                                    {
+                                        if (iconMode == 2) boxBottomLeft = new Vector2(boxWidth + 20, boxTopLeft.Y);
+                                        else boxBottomLeft = new Vector2(boxBottomLeft.X + iconScale16 + (showExtras ? fixScale10 : 0), boxTopLeft.Y);
+                                    }
+                                    else boxBottomLeft += new Vector2(0, iconScale16 + (showPercent ? fixScale10 : 0));
+                                    if (iconMode == 2 && iconCount <= maxIconsPerRow) boxHeight += iconScale16 + (showPercent ? fixScale10 : 0);
+                                }
+                            }
+                        }
+                    }
+                }
+                if (backgroundMode == 1) AddBackground(batch, boxTopLeft, boxBottomLeft, iconCount, defaultSource, iconScale, boxWidth, boxHeight, showPercent, showExtras);//rectangle
+
                 batch.End();
                 batch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise);
             }
@@ -444,6 +437,7 @@ namespace FishingInfoOverlays
             if (isMinigame && Game1.activeClickableMenu is BobberBar bar)
             {
                 who = Game1.player;
+                currentLoc = who.currentLocation;
                 FishingRod rod = who.CurrentItem as FishingRod;
                 if (rod != null) hasSonar = rod.GetTackleQualifiedItemIDs().Contains("(O)SonarBobber");
 
@@ -489,7 +483,7 @@ namespace FishingInfoOverlays
                 }
 
                 //fish sprite in water
-                if (minigameWater)
+                if (minigameWater && Game1.ticks % 20 == 0)
                 {
                     Item item = ItemRegistry.Create(miniFish);
                     FishTankFurniture tank = new("2322", Vector2.Zero);
@@ -531,25 +525,30 @@ namespace FishingInfoOverlays
                     int bobberTileX = (int)(bobber.X / 64f);
                     int bobberTileY = (int)(bobber.Y / 64f);
                     int bobberTileY2 = bobberTileY + 1;
-                    if (bobberTileY2 < who.currentLocation.map.Layers[0].LayerHeight && !who.currentLocation.isTileFishable(bobberTileX, bobberTileY2))//water edge handling
+                    if (bobberTileY2 < currentLoc.map.Layers[0].LayerHeight && !currentLoc.isTileFishable(bobberTileX, bobberTileY2))//water edge handling
                     {
                         rotation -= 0.5f;
                         position.Y -= 4f * size;
                     }
                     if (flip)
                     {
-                        if (bobberTileX + 1 < who.currentLocation.map.Layers[0].LayerWidth && !who.currentLocation.isTileFishable(bobberTileX + 1, rotation < 0f ? bobberTileY2 : bobberTileY)) flip = false;
+                        if (bobberTileX + 1 < currentLoc.map.Layers[0].LayerWidth && !currentLoc.isTileFishable(bobberTileX + 1, rotation < 0f ? bobberTileY2 : bobberTileY)) flip = false;
                     }
-                    else if (bobberTileX - 1 >= 0 && !who.currentLocation.isTileFishable(bobberTileX - 1, rotation < 0f ? bobberTileY2 : bobberTileY)) flip = true;
-                    if (!flip) position.X -= 18f * size;
+                    else if (bobberTileX - 1 >= 0 && !currentLoc.isTileFishable(bobberTileX - 1, rotation < 0f ? bobberTileY2 : bobberTileY)) flip = true;
+                    if (!flip)
+                    {
+                        rotation = -rotation;
+                        position.X -= 18f * size;
+                    }
 
-                    who.currentLocation.TemporarySprites.Add(new TemporaryAnimatedSprite(txt2d.Name, source, position, flip, 0f, Color.White)
+                    float alpha = hasSonar ? 0.5f + bar.distanceFromCatching * 0.4f : sonarMode > 1 ? 0.25f + bar.distanceFromCatching * 0.5f : bar.distanceFromCatching * 0.75f;
+                    currentLoc.TemporarySprites.Add(new TemporaryAnimatedSprite(txt2d.Name, source, position, flip, 0f, Color.White)
                     {
                         scale = size,
-                        interval = 16f,
-                        rotation = flip ? rotation : -rotation,
-                        alpha = hasSonar ? 0.5f + bar.distanceFromCatching * 0.4f : sonarMode > 1 ? 0.25f + bar.distanceFromCatching * 0.5f : bar.distanceFromCatching * 0.75f
-                    });
+                        interval = 320f,
+                        rotation = rotation,
+                        alpha = alpha
+                    });//todo: sync multiplayer? via mod message?
                 }
             }
         }
@@ -597,7 +596,7 @@ namespace FishingInfoOverlays
             var hardcoded = AddHardcoded(bobberTile, false);
             if (hardcoded != "-2")
             {
-                Dictionary<string, float> data = GetFishFromLocationData(who.currentLocation.Name, bobberTile, 5, who, !who.fishCaught.Any(), false, who.currentLocation, null);
+                Dictionary<string, float> data = GetFishFromLocationData(currentLoc.Name, bobberTile, 5, who, !who.fishCaught.Any(), false, currentLoc, null);
 
                 if (hardcoded != "-1")
                 {
@@ -923,7 +922,7 @@ namespace FishingInfoOverlays
                 {
                     who = new Farmer();
                     foreach (var m in Game1.player.mailReceived) who.mailReceived.Add(m);
-                    who.currentLocation = Game1.player.currentLocation;
+                    who.currentLocation = currentLoc;
                     who.setTileLocation(Game1.player.Tile);
                     who.setSkillLevel("Fishing", Game1.player.FishingLevel);
                     FishingRod rod2 = rod.getOne() as FishingRod;
@@ -968,7 +967,7 @@ namespace FishingInfoOverlays
                                 who.stats.Increment("PreciseFishCaught", 1);
                                 Game1.stats.TimesFished++;
                                 rod2.isFishing = true;
-                                item = who.currentLocation.getFish(0, rod2.GetBait()?.ItemId, 5, who, 100, bobberTile);
+                                item = currentLoc.getFish(0, rod2.GetBait()?.ItemId, 5, who, 100, bobberTile);
                                 rod2.isFishing = false;
                                 Game1.stats.TimesFished--;
                                 try
@@ -1059,13 +1058,13 @@ namespace FishingInfoOverlays
         private string AddHardcoded(Vector2 bobberTile, bool dynamic)//-2 skip dynamic, -1 dynamic, above -1 = item to add to dynamic
         {
             FishingRod rod = who.CurrentTool as FishingRod;
-            if (who.currentLocation is IslandLocation)
+            if (currentLoc is IslandLocation)
             {
                 if (Utility.CreateRandom(Game1.stats.DaysPlayed, Game1.stats.TimesFished + 1, Game1.uniqueIDForThisGame).NextDouble() < 0.15 && (!Game1.player.team.limitedNutDrops.ContainsKey("IslandFishing") || Game1.player.team.limitedNutDrops["IslandFishing"] < 5)) return "(O)73";//nut
 
-                if (who.currentLocation is IslandSouthEast && bobberTile.X >= 17 && bobberTile.X <= 21 && bobberTile.Y >= 19 && bobberTile.Y <= 23)
+                if (currentLoc is IslandSouthEast && bobberTile.X >= 17 && bobberTile.X <= 21 && bobberTile.Y >= 19 && bobberTile.Y <= 23)
                 {
-                    if (!(who.currentLocation as IslandSouthEast).fishedWalnut.Value)
+                    if (!(currentLoc as IslandSouthEast).fishedWalnut.Value)
                     {
                         fishHere = [new("(O)73", 100)];
                     }
@@ -1080,14 +1079,14 @@ namespace FishingInfoOverlays
             }
             else if (!dynamic)
             {
-                if (who.currentLocation is Railroad)
+                if (currentLoc is Railroad)
                 {
                     if (who.secretNotesSeen.Contains(GameLocation.NECKLACE_SECRET_NOTE_INDEX) && !who.hasOrWillReceiveMail(GameLocation.CAROLINES_NECKLACE_MAIL))
                     {
                         return GameLocation.CAROLINES_NECKLACE_ITEM_QID;
                     }
                 }
-                else if (who.currentLocation is Forest)
+                else if (currentLoc is Forest)
                 {
                     if (bobberTile.X > 50f && bobberTile.X < 66f && bobberTile.Y > 100f)
                     {
@@ -1116,7 +1115,7 @@ namespace FishingInfoOverlays
                         }
                     }
                 }
-                else if (who.currentLocation is MineShaft mine)
+                else if (currentLoc is MineShaft mine)
                 {
                     if (!rod.QualifiedItemId.Contains("TrainingRod"))
                     {
@@ -1158,12 +1157,12 @@ namespace FishingInfoOverlays
             bool isMariner = who.professions.Contains(10);
 
             double fishChance = 1f;
-            if (!isMariner && who.currentLocation.TryGetFishAreaForTile(who.Tile, out var _, out var data))
+            if (!isMariner && currentLoc.TryGetFishAreaForTile(who.Tile, out var _, out var data))
             {
                 fishChance = 1f - (double?)data?.CrabPotJunkChance ?? 0.2;
             }
 
-            IList<string> crabPotFishForTile = who.currentLocation.GetCrabPotFishForTile(who.Tile);
+            IList<string> crabPotFishForTile = currentLoc.GetCrabPotFishForTile(who.Tile);
             foreach (KeyValuePair<string, string> item in fishData)
             {
                 if (!item.Value.Contains("trap"))
