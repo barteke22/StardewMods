@@ -918,13 +918,13 @@ namespace FishingInfoOverlays
         {
             try
             {
-                if (Game1.player.CurrentItem is FishingRod rod)  //dummy workaround for preventing player from getting special items
+                if (who.CurrentItem is FishingRod rod)  //dummy workaround for preventing player from getting special items
                 {
-                    who = new Farmer();
-                    foreach (var m in Game1.player.mailReceived) who.mailReceived.Add(m);
-                    who.currentLocation = currentLoc;
-                    who.setTileLocation(Game1.player.Tile);
-                    who.setSkillLevel("Fishing", Game1.player.FishingLevel);
+                    Farmer dummy = new();
+                    foreach (var m in who.mailReceived) dummy.mailReceived.Add(m);
+                    dummy.currentLocation = currentLoc;
+                    dummy.setTileLocation(who.Tile);
+                    dummy.setSkillLevel("Fishing", who.FishingLevel);
                     FishingRod rod2 = rod.getOne() as FishingRod;
                     rod2.UpgradeLevel = rod.UpgradeLevel;
                     foreach (var attch in rod.attachments)
@@ -935,12 +935,12 @@ namespace FishingInfoOverlays
                             rod2.attachments.Add(attch.getOne() as Object);
                         }
                     }
-                    who.CurrentTool = rod2;
-                    who.luckLevel.Value = Game1.player.LuckLevel;
-                    foreach (var f in Game1.player.fishCaught) who.fishCaught.Add(f);
-                    foreach (var m in Game1.player.secretNotesSeen) who.secretNotesSeen.Add(m);
-                    who.stats.Values = [];
-                    foreach (var m in Game1.player.stats.Values) who.stats.Set(m.Key, m.Value);
+                    dummy.CurrentTool = rod2;
+                    dummy.luckLevel.Value = who.LuckLevel;
+                    foreach (var f in who.fishCaught) dummy.fishCaught.Add(f);
+                    foreach (var m in who.secretNotesSeen) dummy.secretNotesSeen.Add(m);
+                    dummy.stats.Values = [];
+                    foreach (var m in who.stats.Values) dummy.stats.Set(m.Key, m.Value);
 
                     if (fishChancesDynamic.Count == 0)
                     {
@@ -964,10 +964,10 @@ namespace FishingInfoOverlays
                             Item item;
                             if (fish == "-1")//dynamic
                             {
-                                who.stats.Increment("PreciseFishCaught", 1);
+                                dummy.stats.Increment("PreciseFishCaught", 1);
                                 Game1.stats.TimesFished++;
                                 rod2.isFishing = true;
-                                item = currentLoc.getFish(0, rod2.GetBait()?.ItemId, 5, who, 100, bobberTile);
+                                item = currentLoc.getFish(0, rod2.GetBait()?.ItemId, 5, dummy, 100, bobberTile);
                                 rod2.isFishing = false;
                                 Game1.stats.TimesFished--;
                                 try
@@ -1046,7 +1046,6 @@ namespace FishingInfoOverlays
                             }
                         }
                     }
-                    who = Game1.player;
                 }
             }
             catch (Exception ex)
@@ -1077,16 +1076,19 @@ namespace FishingInfoOverlays
                     return "-2";//prevents altering game state in dynamic
                 }
             }
+            else if (currentLoc is Railroad)
+            {
+                if (who.secretNotesSeen.Contains(GameLocation.NECKLACE_SECRET_NOTE_INDEX) && !who.hasOrWillReceiveMail(GameLocation.CAROLINES_NECKLACE_MAIL))
+                {
+                    fishHere = [new(GameLocation.CAROLINES_NECKLACE_ITEM_QID, 100)];
+                    fishChancesTotal = 100;
+                    fishChancesDynamic = [];
+                    return "-2";
+                }
+            }
             else if (!dynamic)
             {
-                if (currentLoc is Railroad)
-                {
-                    if (who.secretNotesSeen.Contains(GameLocation.NECKLACE_SECRET_NOTE_INDEX) && !who.hasOrWillReceiveMail(GameLocation.CAROLINES_NECKLACE_MAIL))
-                    {
-                        return GameLocation.CAROLINES_NECKLACE_ITEM_QID;
-                    }
-                }
-                else if (currentLoc is Forest)
+                if (currentLoc is Forest)
                 {
                     if (bobberTile.X > 50f && bobberTile.X < 66f && bobberTile.Y > 100f)
                     {
