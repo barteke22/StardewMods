@@ -1016,7 +1016,9 @@ namespace FishingInfoOverlays
                             fishChancesDynamicTotal += 1;
 
                             //if fish not in last X attempts, redo lists
-                            if (item.Category != Object.junkCategory)
+                            // Secret Notes, chance of them are too low, they will always reset the dynamic list
+                            bool isSecretNote = fish == "(O)79" || fish == "(O)ichortower.SecretNoteFramework_DefaultNote";
+                            if (item.Category != Object.junkCategory && !isSecretNote)
                             {
                                 fishChancesDynamic.TryGetValue(fish, out val);
                                 float chance = (float)val / fishChancesDynamicTotal * 100f;
