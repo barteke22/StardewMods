@@ -64,7 +64,6 @@ namespace FishingInfoOverlays
 
         public static string nonFishCaughtID;
         public static Func<FishingRod, Farmer, int> getAddedDistance;
-        public static bool hudMode;
         public static Color colorBg;
         public static Color colorText;
         public static bool modAquarium;
@@ -112,16 +111,8 @@ namespace FishingInfoOverlays
 
                 if (Game1.eventUp || who.CurrentItem == null) return;//code stop conditions
 
-                if (hudMode)
-                {
-                    fixedZoom = barScale / Game1.options.baseUIScale;
-                    iconScale = 2f * fixedZoom;
-                }
-                else
-                {
-                    fixedZoom = barScale / Game1.options.zoomLevel;
-                    iconScale = Game1.pixelZoom / 2f * fixedZoom;
-                }
+                fixedZoom = barScale / Game1.options.zoomLevel;
+                iconScale = Game1.pixelZoom / 2f * fixedZoom;
                 iconScale16 = (int)(16f * iconScale);
                 fixScale10 = FixIconScale(10f);
 
@@ -140,7 +131,7 @@ namespace FishingInfoOverlays
 
                     if (!foundWater || e.Ticks % 3 == 0)
                     {
-                        boxTopLeft = barPosition / (hudMode ? Game1.options.baseUIScale : Game1.options.zoomLevel);
+                        boxTopLeft = barPosition / Game1.options.zoomLevel;
 
                         foundWater = false;
                         showTile = false;

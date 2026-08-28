@@ -237,24 +237,15 @@ namespace FishingInfoOverlays
         {
             if (Context.IsWorldReady)
             {
-                if (!Overlay.hudMode)
-                {
-                    Helper.Events.Display.RenderedHud -= RenderedHud;
-                    overlays.Value.RenderedBoth();
-                }
+                overlays.Value.RenderedBoth();
                 overlays.Value.RenderedMinigame(e);
             }
-        }
-        private void RenderedHud(object sender, RenderedHudEventArgs e)
-        {
-            if (Context.IsWorldReady) overlays.Value.RenderedBoth();
         }
 
         private void MenuChanged(object sender, MenuChangedEventArgs e)   //Minigame data
         {
             if (Context.IsWorldReady)
             {
-                UpdateRenderMode();
                 overlays.Value.MenuChanged(sender, e);
             }
         }
@@ -270,7 +261,6 @@ namespace FishingInfoOverlays
 
         private void Warped(object sender, WarpedEventArgs e)
         {
-            UpdateRenderMode();
             overlays.Value.OnWarped(sender, e);
         }
 
@@ -299,8 +289,6 @@ namespace FishingInfoOverlays
                 Overlay.background[0] = WhiteCircle(17, 30);
                 Overlay.background[1] = WhitePixel();
             }
-
-            UpdateRenderMode(true);
         }
         private void UpdateConfigPerScreen(bool GMCM)
         {
@@ -347,21 +335,6 @@ namespace FishingInfoOverlays
             overlay.minigameWater = config.MinigamePreviewWater[index];                                                      //config: Fish preview in water.
             overlay.minigameSonar = config.MinigamePreviewSonar[index];                                                      //config: Fish preview on sonar display.
         }
-
-        private void UpdateRenderMode(bool reset = false) //checks whether UI or Zoom is closer to 100% and applies rendering in that mode
-        {
-            float dist = Math.Abs(Game1.options.zoomLevel - 1f);
-            float distHud = Math.Abs(Game1.options.uiScale - 1f);
-            bool hud = dist > distHud;
-
-            if (hud != Overlay.hudMode || reset)
-            {
-                Overlay.hudMode = hud;
-                if (hud) Helper.Events.Display.RenderedHud += RenderedHud;
-                else Helper.Events.Display.RenderedHud -= RenderedHud;
-            }
-        }
-
 
         private static Texture2D WhitePixel() //returns a single pixel texture that can be recoloured and resized to make up a background
         {
